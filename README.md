@@ -1,0 +1,2 @@
+# slim
+A Typescript Platform
