@@ -11,14 +11,16 @@ utils:
 
 clean:
 	@for dir in $(SUBDIRS); do \
-		find . -name CMakeCache.txt -delete; \
-		find . -name cmake_install.cmake -delete; \
-		find . -type d -name CMakeFiles -print0|xargs -0 rm -rf --; \
+		find $$dir -name Makefile -delete; \
+		find $$dir -name CMakeCache.txt -delete; \
+		find $$dir -name cmake_install.cmake -delete; \
+		find $$dir -type d -name CMakeFiles -print0|xargs -0 rm -rf --; \
 	done
 
 cleaner: clean
-	@find utilities -type d -name bin -print0|xargs -0 rm -rf --
-	@find program -type d -name bin -print0|xargs -0 rm -rf --
+	@for dir in $(SUBDIRS); do \
+		find $$dir -type d -name bin -print0|xargs -0 rm -rf --; \
+	done
 
 none:
 	@echo Usage: make [:target]
@@ -28,4 +30,3 @@ none:
 	@echo "\tutils"
 	@echo "\tclean"
 	@echo "\tcleaner"
-	@echo "\tcleanest"

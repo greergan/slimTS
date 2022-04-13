@@ -1,5 +1,9 @@
 # Third party dependencies
 
+## The libuv event loop
+<a href="https://github.com/libuv/libuv">Source code</a>
+<a href="http://docs.libuv.org/en/v1.x/">Documentation</a>
+
 ## Google's V8 Javascript Engine
 <a href="https://github.com/v8/v8/blob/main/LICENSE">The V8 License</a>
 <a href="https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up">Install depot_tools</a>
