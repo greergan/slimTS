@@ -4,20 +4,24 @@
 #include <uv.h>
 #include <stdlib.h>
 #include <string>
-namespace slim::server {
-    struct Http {
+namespace slim::http {
+    uv_loop_t* server_loop;
+    void init(uv_loop_t *loop) { server_loop = loop; }
+    struct Server {
         private:
-            uv_loop_t *loop;
             uv_tcp_t server;
             int error;
         public:
-        Http(uv_loop_t* loop, const int port=8080, const char* ip_address="0.0.0.0") : loop{loop} {
+        Server(const int port=8080, const char* ip_address="0.0.0.0") {
             sockaddr_in addr;
-            slim::log::system::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(loop, &server));
+            slim::log::system::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(server_loop, &server));
             slim::log::system::handle_libuv_error("Address error: ", uv_ip4_addr(ip_address, port, &addr));
             slim::log::system::handle_libuv_error("Bind error: ", uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0));
             slim::log::system::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server, 512, on_connection));
             slim::log::system::notice("Slim HTTP server listening on ", ip_address, " port ", port);
+        }
+        ~Server() {
+            std::cout << "destructing\n";
         }
         static void allocate(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
             buf->base = (char *)malloc(suggested_size);
@@ -36,10 +40,14 @@ namespace slim::server {
             free(buf->base);
         }
     };
+    Server* http_server;
+    void start(const int port=8080, const char* ip_address="0.0.0.0") {
+        http_server = new Server(port, ip_address);
+    }
+    void stop() { if(http_server != NULL) delete http_server; }
 };
 #endif
 /*
-uv_loop_t *loop;
 static void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
     if(nread < 0) {
         if(buf->base)
@@ -97,7 +105,7 @@ static void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
         fprintf(stderr, "Allocate error: %s\n", strerror(errno));
         return;
     }
-    r = uv_tcp_init(loop, (uv_tcp_t*) stream);
+    r = uv_tcp_init(server_loop, (uv_tcp_t*) stream);
     if(r) {
         fprintf(stderr, "Socket creation error: %s: %s\n", uv_err_name(r), uv_strerror(r));
     return;

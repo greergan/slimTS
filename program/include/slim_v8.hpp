@@ -3,25 +3,10 @@
 #include <assert.h>
 #include <v8.h>
 #include <libplatform/libplatform.h>
+
+#include <slim_server.hpp>
+
 using namespace v8;
-/* using v8::ArrayBuffer;
-using v8::Context;
-using v8::ExtensionConfiguration;
-using v8::FunctionCallbackInfo;
-using v8::FunctionTemplate;
-using v8::HandleScope;
-using v8::Isolate;
-using v8::Local;
-using v8::Message;
-using v8::NewStringType;
-using v8::ObjectTemplate;
-using v8::Platform;
-using v8::Script;
-using v8::ScriptOrigin;
-using v8::String;
-using v8::TryCatch;
-using v8::V8;
-using v8::Value; */
 const char* ToCString(const String::Utf8Value& value) {
     return *value ? *value : "<string conversion failed>";
 }
@@ -42,18 +27,23 @@ void Print(const FunctionCallbackInfo<Value>& args) {
     printf("\n");
     fflush(stdout);
 }
+void HttpListen(const FunctionCallbackInfo<Value>& args) {
+    HandleScope handle_scope(args.GetIsolate());
+    slim::http::start();
+}
 namespace slim::veight {
     using namespace v8;
-    class Process {
+    struct Process {
         private:
             Isolate* isolate;
             Local<ObjectTemplate> global;
             ExtensionConfiguration* extensions;
             std::unique_ptr<Platform> platform;
             Isolate::CreateParams create_params;
-        protected:
         public:
             void RegisterFunctions() {
+                this->global->Set(String::NewFromUtf8(this->isolate, "http", NewStringType::kNormal).ToLocalChecked(),
+                                    FunctionTemplate::New(this->isolate, HttpListen));
                 this->global->Set(String::NewFromUtf8(this->isolate, "print", NewStringType::kNormal).ToLocalChecked(),
                                     FunctionTemplate::New(this->isolate, Print));
             }
@@ -73,7 +63,6 @@ namespace slim::veight {
                 V8::Dispose();
                 V8::DisposePlatform();
                 delete this->create_params.array_buffer_allocator;
-                std::cout << "destructing\n";
             }
             void CreateGlobal() {
                 if(this->global.IsEmpty()) {
@@ -85,9 +74,6 @@ namespace slim::veight {
             }
             Local<Context> GetNewContext(Isolate* isolate) {
                 return Context::New(isolate, NULL, this->global);
-            }
-            void MessageLoop(Isolate* isolate) {
-                //while (platform::PumpMessageLoop(this->platform, isolate)) continue;
             }
             bool RunScript(Isolate* isolate, Local<String> source, Local<Value> name, bool print_result=true, bool report_exceptions=true) {
                 HandleScope handle_scope(isolate);
