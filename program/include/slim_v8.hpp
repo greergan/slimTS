@@ -73,6 +73,7 @@ namespace slim::veight {
                 V8::Dispose();
                 V8::DisposePlatform();
                 delete this->create_params.array_buffer_allocator;
+                std::cout << "destructing\n";
             }
             void CreateGlobal() {
                 if(this->global.IsEmpty()) {

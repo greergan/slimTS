@@ -25,19 +25,12 @@ namespace slim::log::system {
             int facility = LOG_LOCAL7;
             template<class... Args>
             _base_log_info(const char* level, Args... args) {
-                fold_message_args(level, args...);
-            }
-            ~_base_log_info() {
-                std::cout << "destructing\n";
-            }
-        private:
-            template<class... Args>
-            void fold_message_args(const char* level, Args... args) {
-                std::stringstream messagestream;
+                std::ostringstream messagestream;
                 messagestream << level << ": ";
                 (messagestream << ... << std::forward<Args>(args));
                 message = messagestream.str();
             }
+            ~_base_log_info() {}
     };
     void write_syslog(uv_work_t* request) {
         _base_log_info *log_info = (_base_log_info*) request->data;
