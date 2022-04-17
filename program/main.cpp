@@ -1,7 +1,8 @@
 #define VERSION "0.0"
 #include <iostream>
 #include <uv.h>
-#include <slim_v8.hpp>
+#include <veight.hpp>
+#include <system.hpp>
 void on_uv_walk(uv_handle_t* handle, void* arg) { uv_close(handle, NULL); }
 void on_sigint_received(uv_signal_t *handle, int signum) {
     slim::log::system::notice("Slim server shutting down");

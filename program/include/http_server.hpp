@@ -1,6 +1,6 @@
-#ifndef __SLIM__SERVER__HPP
-#define __SLIM__SERVER__HPP
-#include <slim_log.hpp>
+#ifndef __SLIM__HTTP__SERVER__HPP
+#define __SLIM__HTTP__SERVER__HPP
+#include <logger.hpp>
 #include <uv.h>
 #include <stdlib.h>
 #include <string>

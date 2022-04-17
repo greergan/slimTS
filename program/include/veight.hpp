@@ -3,9 +3,7 @@
 #include <assert.h>
 #include <v8.h>
 #include <libplatform/libplatform.h>
-
-#include <slim_server.hpp>
-
+#include <http_server.hpp>
 using namespace v8;
 const char* ToCString(const String::Utf8Value& value) {
     return *value ? *value : "<string conversion failed>";
@@ -42,6 +40,7 @@ namespace slim::veight {
             Isolate::CreateParams create_params;
         public:
             void RegisterFunctions() {
+                //this->global->Set(String::NewFromUtf8(this->isolate, "version"), String::NewFromUtf8(this->isolate, "0.0"), ReadOnly);
                 this->global->Set(String::NewFromUtf8(this->isolate, "http", NewStringType::kNormal).ToLocalChecked(),
                                     FunctionTemplate::New(this->isolate, HttpListen));
                 this->global->Set(String::NewFromUtf8(this->isolate, "print", NewStringType::kNormal).ToLocalChecked(),

@@ -15,22 +15,21 @@ namespace slim::log::system {
     void init(uv_loop_t *loop) {
         log_loop = loop;
     }
-    class _base_log_info {
-        public:
-            uv_work_t request;
-            int priority;
-            int options = LOG_CONS | LOG_PID;
-            std::string message;
-            std::string program = "slim";
-            int facility = LOG_LOCAL7;
-            template<class... Args>
-            _base_log_info(const char* level, Args... args) {
-                std::ostringstream messagestream;
-                messagestream << level << ": ";
-                (messagestream << ... << std::forward<Args>(args));
-                message = messagestream.str();
-            }
-            ~_base_log_info() {}
+    struct _base_log_info {
+        uv_work_t request;
+        int priority;
+        int options = LOG_CONS | LOG_PID;
+        std::string message;
+        std::string program = "slim";
+        int facility = LOG_LOCAL7;
+        template<class... Args>
+        _base_log_info(const char* level, Args... args) {
+            std::ostringstream messagestream;
+            messagestream << level << ": ";
+            (messagestream << ... << std::forward<Args>(args));
+            message = messagestream.str();
+        }
+        ~_base_log_info() {}
     };
     void write_syslog(uv_work_t* request) {
         _base_log_info *log_info = (_base_log_info*) request->data;
