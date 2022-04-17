@@ -29,6 +29,11 @@ void HttpListen(const FunctionCallbackInfo<Value>& args) {
     HandleScope handle_scope(args.GetIsolate());
     slim::http::start();
 }
+
+struct Log {
+    static void notice() { std::cout << "notice\n"; }
+};
+
 namespace slim::veight {
     using namespace v8;
     struct Process {
@@ -38,6 +43,17 @@ namespace slim::veight {
             ExtensionConfiguration* extensions;
             std::unique_ptr<Platform> platform;
             Isolate::CreateParams create_params;
+            //extensions
+            Log* log = new Log();
+            void ExposeLog(Local<Context> context) {
+                
+                Local<ObjectTemplate> log_template = ObjectTemplate::New(this->isolate);
+                log_template->SetInternalFieldCount(6);
+                //Local<Object> log_object = log_template->NewInstance(context).ToLocalChecked();
+                //log_object->SetInternalField(0, External::New(this->isolate, log));
+                //log_object->Set(String::NewFromUtf8("notice").ToLocalChecked(), v8::FunctionCallback(log->notice), ReadOnly);
+                //this->global->Set(String::NewFromUtf8(this->isolate, "log").ToLocalChecked(), log_object, ReadOnly);
+            }
         public:
             void RegisterFunctions() {
                 //this->global->Set(String::NewFromUtf8(this->isolate, "version"), String::NewFromUtf8(this->isolate, "0.0"), ReadOnly);
@@ -62,6 +78,7 @@ namespace slim::veight {
                 V8::Dispose();
                 V8::DisposePlatform();
                 delete this->create_params.array_buffer_allocator;
+                delete log;
             }
             void CreateGlobal() {
                 if(this->global.IsEmpty()) {
