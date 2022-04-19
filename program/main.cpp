@@ -1,7 +1,9 @@
 #define VERSION "0.0"
 #include <iostream>
 #include <uv.h>
+#include <http_server.hpp>
 #include <veight.hpp>
+#include <logger.hpp>
 void on_uv_walk(uv_handle_t* handle, void* arg) { uv_close(handle, NULL); }
 void on_sigint_received(uv_signal_t *handle, int signum) {
     slim::log::system::notice("Slim server shutting down");
@@ -23,22 +25,27 @@ int main(int argc, char *argv[]) {
     Isolate::Scope isolate_scope(isolate);
     HandleScope handle_scope(isolate);
     process.CreateGlobal();
-    process.RegisterFunctions();
     Local<Context> context = process.GetNewContext(isolate);
     if(context.IsEmpty()) {
         slim::log::system::critical("Error creating context");
         exit(1);
     }
     else {
-        slim::log::system::notice("Slim server initialized");
+        slim::log::system::info("Slim server initialized");
         v8::Isolate::Scope isolate_scope(isolate);
         HandleScope handle_scope(isolate);
         Context::Scope context_scope(context);
-        v8::Local<v8::Value> log_instance = slim::log::system::expose(isolate);
-        v8::Maybe result = context->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "log"), log_instance);
-        if(!result.IsNothing()) {}
-
-        Local<String> source = String::NewFromUtf8Literal(isolate, "http();log.notice('hello world');");
+        slim::log::system::expose(isolate, context);       
+        slim::http::expose(isolate, context);
+        Local<String> source = String::NewFromUtf8Literal(isolate, 
+        R"(
+            log.notice('hello world');
+            const s = slim.http({"port": 8080, "host": "0.0.0.0"});
+            
+/*             for await (const conn of server) {
+                handle(conn);
+            } */
+        )");
         Local<String> name = String::NewFromUtf8Literal(isolate, "test");
         bool success = process.RunScript(isolate, source, name);
     }
