@@ -94,12 +94,13 @@ namespace slim::log::system {
         }
     }
     void _notice(const v8::FunctionCallbackInfo<v8::Value> &args) {
+        std::cerr << "log.notice called \n";
         //notice(args);
     }
-    v8::Local<v8::Value> expose(v8::Isolate* isolate) {
+    void expose(v8::Isolate* isolate, v8::Local<v8::Context> context) {
         v8pp::module log_module(isolate);
         log_module.set("notice", &_notice);
-        return log_module.new_instance();
+        v8::Maybe result = context->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "log"), log_module.new_instance());
     }
 };
 #endif
