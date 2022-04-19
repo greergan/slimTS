@@ -7,23 +7,6 @@ using namespace v8;
 const char* ToCString(const String::Utf8Value& value) {
     return *value ? *value : "<string conversion failed>";
 }
-void Print(const FunctionCallbackInfo<Value>& args) {
-    bool first = true;
-    for(int i = 0; i < args.Length(); i++) {
-        HandleScope handle_scope(args.GetIsolate());
-        if(first) {
-            first = false;
-        }
-        else {
-            printf(" ");
-        }
-        String::Utf8Value str(args.GetIsolate(), args[i]);
-        const char* cstr = ToCString(str);
-        printf("%s", cstr);
-    }
-    printf("\n");
-    fflush(stdout);
-}
 namespace slim::veight {
     using namespace v8;
     struct Process {
@@ -34,10 +17,6 @@ namespace slim::veight {
             std::unique_ptr<Platform> platform;
             Isolate::CreateParams create_params;
         public:
-            void RegisterFunctions() {
-                //this->global->Set(String::NewFromUtf8(this->isolate, "version"), String::NewFromUtf8(this->isolate, "0.0"), ReadOnly);
-                this->global->Set(String::NewFromUtf8(this->isolate, "print").ToLocalChecked(), FunctionTemplate::New(this->isolate, Print));
-            }
             Process(int argc, char* argv[]) {
                 V8::InitializeICUDefaultLocation(argv[0]);
                 V8::InitializeExternalStartupData(argv[0]);
