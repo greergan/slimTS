@@ -2,7 +2,6 @@
 #include <iostream>
 #include <uv.h>
 #include <veight.hpp>
-#include <system.hpp>
 void on_uv_walk(uv_handle_t* handle, void* arg) { uv_close(handle, NULL); }
 void on_sigint_received(uv_signal_t *handle, int signum) {
     slim::log::system::notice("Slim server shutting down");
@@ -32,8 +31,14 @@ int main(int argc, char *argv[]) {
     }
     else {
         slim::log::system::notice("Slim server initialized");
+        v8::Isolate::Scope isolate_scope(isolate);
+        HandleScope handle_scope(isolate);
         Context::Scope context_scope(context);
-        Local<String> source = String::NewFromUtf8Literal(isolate, "http()");
+        v8::Local<v8::Value> log_instance = slim::log::system::expose(isolate);
+        v8::Maybe result = context->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "log"), log_instance);
+        if(!result.IsNothing()) {}
+
+        Local<String> source = String::NewFromUtf8Literal(isolate, "http();log.notice('hello world');");
         Local<String> name = String::NewFromUtf8Literal(isolate, "test");
         bool success = process.RunScript(isolate, source, name);
     }
