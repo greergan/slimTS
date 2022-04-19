@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <v8.h>
 #include <libplatform/libplatform.h>
+#include <v8pp/module.hpp>
 #include <http_server.hpp>
 using namespace v8;
 const char* ToCString(const String::Utf8Value& value) {
@@ -30,9 +31,16 @@ void HttpListen(const FunctionCallbackInfo<Value>& args) {
     slim::http::start();
 }
 
-struct Log {
-    static void notice() { std::cout << "notice\n"; }
-};
+namespace exposed::log {
+    void notice(const v8::FunctionCallbackInfo<v8::Value> &args) { std::cout << "notice\n"; }
+    //template<class... Args>
+    v8::Local<v8::Value> init(v8::Isolate* isolate) {
+        v8pp::module log_module(isolate);
+        log_module.set("notice", &notice);
+        return log_module.new_instance();
+    }
+}
+
 
 namespace slim::veight {
     using namespace v8;
@@ -43,24 +51,11 @@ namespace slim::veight {
             ExtensionConfiguration* extensions;
             std::unique_ptr<Platform> platform;
             Isolate::CreateParams create_params;
-            //extensions
-            Log* log = new Log();
-            void ExposeLog(Local<Context> context) {
-                
-                Local<ObjectTemplate> log_template = ObjectTemplate::New(this->isolate);
-                log_template->SetInternalFieldCount(6);
-                //Local<Object> log_object = log_template->NewInstance(context).ToLocalChecked();
-                //log_object->SetInternalField(0, External::New(this->isolate, log));
-                //log_object->Set(String::NewFromUtf8("notice").ToLocalChecked(), v8::FunctionCallback(log->notice), ReadOnly);
-                //this->global->Set(String::NewFromUtf8(this->isolate, "log").ToLocalChecked(), log_object, ReadOnly);
-            }
         public:
             void RegisterFunctions() {
                 //this->global->Set(String::NewFromUtf8(this->isolate, "version"), String::NewFromUtf8(this->isolate, "0.0"), ReadOnly);
-                this->global->Set(String::NewFromUtf8(this->isolate, "http", NewStringType::kNormal).ToLocalChecked(),
-                                    FunctionTemplate::New(this->isolate, HttpListen));
-                this->global->Set(String::NewFromUtf8(this->isolate, "print", NewStringType::kNormal).ToLocalChecked(),
-                                    FunctionTemplate::New(this->isolate, Print));
+                this->global->Set(String::NewFromUtf8(this->isolate, "http").ToLocalChecked(), FunctionTemplate::New(this->isolate, HttpListen));
+                this->global->Set(String::NewFromUtf8(this->isolate, "print").ToLocalChecked(), FunctionTemplate::New(this->isolate, Print));
             }
             Process(int argc, char* argv[]) {
                 V8::InitializeICUDefaultLocation(argv[0]);
@@ -71,14 +66,12 @@ namespace slim::veight {
                 V8::SetFlagsFromCommandLine(&argc, argv, true);
                 this->create_params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
                 this->isolate = Isolate::New(this->create_params);
-                //this->extensions = new ExtensionConfiguration();
             }
             ~Process() {
                 this->isolate->Dispose();
                 V8::Dispose();
                 V8::DisposePlatform();
-                delete this->create_params.array_buffer_allocator;
-                delete log;
+                delete create_params.array_buffer_allocator;
             }
             void CreateGlobal() {
                 if(this->global.IsEmpty()) {
