@@ -6,6 +6,7 @@
 #include <cstdarg>
 #include <syslog.h>
 #include <uv.h>
+#include <v8pp/module.hpp>
 namespace slim::log::console
 {
     
@@ -42,67 +43,63 @@ namespace slim::log::system {
         log_info->~_base_log_info();
         delete request;
     }
-    struct critical {
-        template<class... Args>
-        critical(Args... args) {
-            _base_log_info* log_info = new _base_log_info("CRITICAL", args...);
-            log_info->request.data = (void*) log_info;
-            log_info->priority = LOG_CRIT;
-            log_info->options = log_info->options | LOG_PERROR;
-            uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
-        }
-    };
-    struct debug {
-        template<class... Args>
-        debug(Args... args) {
-            _base_log_info* log_info = new _base_log_info("DEBUG", args...);
-            log_info->request.data = (void*) log_info;
-            log_info->priority = LOG_DEBUG;
-            uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
-        }
-    };
-    struct error {
-        template<class... Args>
-        error(Args... args) {
-            _base_log_info* log_info = new _base_log_info("ERROR", args...);
-            log_info->request.data = (void*) log_info;
-            log_info->priority = LOG_ERR;
-            uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
-        }
-    };
-    struct info {
-        template<class... Args>
-        info(Args... args) {
-            _base_log_info* log_info = new _base_log_info("INFO", args...);
-            log_info->request.data = (void*) log_info;
-            log_info->priority = LOG_INFO;
-            uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
-        }
-    };
-    struct notice {
-        template<class... Args>
-        notice(Args... args) {
-            _base_log_info* log_info = new _base_log_info("NOTICE", args...);
-            log_info->request.data = (void*) log_info;
-            log_info->priority = LOG_NOTICE;
-            log_info->options = log_info->options | LOG_PERROR;
-            uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
-        }
-    };
-    struct warn {
-        template<class... Args>
-        warn(Args... args) {
-            _base_log_info* log_info = new _base_log_info("WARN", args...);
-            log_info->request.data = (void*) log_info;
-            log_info->priority = LOG_WARNING;
-            uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
-        }
-    };
+    template<class... Args>
+    static void critical(Args... args) {
+        _base_log_info* log_info = new _base_log_info("CRITICAL", args...);
+        log_info->request.data = (void*) log_info;
+        log_info->priority = LOG_CRIT;
+        log_info->options = log_info->options | LOG_PERROR;
+        uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
+    }
+    template<class... Args>
+    static void debug(Args... args) {
+        _base_log_info* log_info = new _base_log_info("DEBUG", args...);
+        log_info->request.data = (void*) log_info;
+        log_info->priority = LOG_DEBUG;
+        uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
+    }
+    template<class... Args>
+    static void error(Args... args) {
+        _base_log_info* log_info = new _base_log_info("ERROR", args...);
+        log_info->request.data = (void*) log_info;
+        log_info->priority = LOG_ERR;
+        uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
+    }
+    template<class... Args>
+    static void info(Args... args) {
+        _base_log_info* log_info = new _base_log_info("INFO", args...);
+        log_info->request.data = (void*) log_info;
+        log_info->priority = LOG_INFO;
+        uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
+    }
+    template<class... Args>
+    static void notice(Args... args) {
+        _base_log_info* log_info = new _base_log_info("NOTICE", args...);
+        log_info->request.data = (void*) log_info;
+        log_info->priority = LOG_NOTICE;
+        log_info->options = log_info->options | LOG_PERROR;
+        uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
+    }
+    template<class... Args>
+    static void warn(Args... args) {
+        _base_log_info* log_info = new _base_log_info("WARN", args...);
+        log_info->request.data = (void*) log_info;
+        log_info->priority = LOG_WARNING;
+        uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
+    }
     void handle_libuv_error(const char* message, int error) {
         if(error) {
             critical(message, uv_strerror(error));
             exit(error);
         }
+    }
+    void _notice(const v8::FunctionCallbackInfo<v8::Value> &args) {
+        //notice(args);
+    }
+    v8::Local<v8::Value> expose(v8::Isolate* isolate) {
+        v8pp::module log_module(isolate);
+        log_module.set("notice", &_notice);
+        return log_module.new_instance();
     }
 };
 #endif
