@@ -3,8 +3,6 @@
 #include <assert.h>
 #include <v8.h>
 #include <libplatform/libplatform.h>
-#include <v8pp/module.hpp>
-#include <http_server.hpp>
 using namespace v8;
 const char* ToCString(const String::Utf8Value& value) {
     return *value ? *value : "<string conversion failed>";
@@ -26,22 +24,6 @@ void Print(const FunctionCallbackInfo<Value>& args) {
     printf("\n");
     fflush(stdout);
 }
-void HttpListen(const FunctionCallbackInfo<Value>& args) {
-    HandleScope handle_scope(args.GetIsolate());
-    slim::http::start();
-}
-
-namespace exposed::log {
-    void notice(const v8::FunctionCallbackInfo<v8::Value> &args) { std::cout << "notice\n"; }
-    //template<class... Args>
-    v8::Local<v8::Value> init(v8::Isolate* isolate) {
-        v8pp::module log_module(isolate);
-        log_module.set("notice", &notice);
-        return log_module.new_instance();
-    }
-}
-
-
 namespace slim::veight {
     using namespace v8;
     struct Process {
@@ -54,7 +36,6 @@ namespace slim::veight {
         public:
             void RegisterFunctions() {
                 //this->global->Set(String::NewFromUtf8(this->isolate, "version"), String::NewFromUtf8(this->isolate, "0.0"), ReadOnly);
-                this->global->Set(String::NewFromUtf8(this->isolate, "http").ToLocalChecked(), FunctionTemplate::New(this->isolate, HttpListen));
                 this->global->Set(String::NewFromUtf8(this->isolate, "print").ToLocalChecked(), FunctionTemplate::New(this->isolate, Print));
             }
             Process(int argc, char* argv[]) {
