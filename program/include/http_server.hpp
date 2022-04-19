@@ -1,9 +1,15 @@
 #ifndef __SLIM__HTTP__SERVER__HPP
 #define __SLIM__HTTP__SERVER__HPP
-#include <logger.hpp>
 #include <uv.h>
 #include <stdlib.h>
 #include <string>
+#include <logger.hpp>
+#include <v8pp/class.hpp>
+#include <v8pp/module.hpp>
+std::string ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+    v8::String::Utf8Value utf8_value(isolate, value);
+    return std::string(*utf8_value);
+}
 namespace slim::http {
     uv_loop_t* server_loop;
     void init(uv_loop_t *loop) { server_loop = loop; }
@@ -12,13 +18,13 @@ namespace slim::http {
             uv_tcp_t server;
             int error;
         public:
-        Server(const int port=8080, const char* ip_address="0.0.0.0") {
+        Server(const int port, const char* host) {
             sockaddr_in addr;
             slim::log::system::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(server_loop, &server));
-            slim::log::system::handle_libuv_error("Address error: ", uv_ip4_addr(ip_address, port, &addr));
+            slim::log::system::handle_libuv_error("Address error: ", uv_ip4_addr(host, port, &addr));
             slim::log::system::handle_libuv_error("Bind error: ", uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0));
             slim::log::system::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server, 512, on_connection));
-            slim::log::system::notice("Slim HTTP server listening on ", ip_address, " port ", port);
+            slim::log::system::notice("Slim HTTP server listening on ", host, " port ", port);
         }
         ~Server() {
             std::cout << "destructing\n";
@@ -41,10 +47,37 @@ namespace slim::http {
         }
     };
     Server* http_server;
-    void start(const int port=8080, const char* ip_address="0.0.0.0") {
-        http_server = new Server(port, ip_address);
+    void start(const v8::FunctionCallbackInfo<v8::Value> &args) {
+        if(args.Length() == 0) {
+            //throw error
+        }
+        else {
+            v8::Isolate* isolate = args.GetIsolate();
+            v8::HandleScope scope(isolate);
+            v8::Local<v8::Context> context = isolate->GetCurrentContext();
+            v8::Local<v8::Object> properties = args[0]->ToObject(context).ToLocalChecked();
+            if(!properties.IsEmpty()) {
+                v8::Local<v8::Name> port_name = v8::String::NewFromUtf8(isolate, "port").ToLocalChecked();
+                v8::Local<v8::Name> host_name = v8::String::NewFromUtf8(isolate, "host").ToLocalChecked();
+                v8::Local<v8::Value> port_value = properties->Get(context, port_name).ToLocalChecked();
+                std::string host = ValueToString(isolate, properties->Get(context, host_name).ToLocalChecked());
+                int port = (port_value->IsInt32()) ? port_value->Int32Value(context).FromJust() : 0;
+                if(port > 0 && host != "undefined") {
+                    http_server = new Server(port, host.c_str());
+                }
+                else {
+                    //throw an error;
+                }
+            }
+
+        }
     }
     void stop() { if(http_server != NULL) delete http_server; }
+    void expose(v8::Isolate* isolate, v8::Local<v8::Context> context) {
+        v8pp::module server_module(isolate);
+        server_module.set("http", &start);
+        v8::Maybe result = context->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "slim"), server_module.new_instance());
+    }
 };
 #endif
 /*
