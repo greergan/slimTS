@@ -4,11 +4,8 @@
 #include <stdlib.h>
 #include <string>
 #include <logger.hpp>
+#include <utilities.hpp>
 #include <v8pp/module.hpp>
-std::string ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
-    v8::String::Utf8Value utf8_value(isolate, value);
-    return std::string(*utf8_value);
-}
 namespace slim::http {
     uv_loop_t* server_loop;
     void init(uv_loop_t *loop) { server_loop = loop; }
@@ -23,11 +20,9 @@ namespace slim::http {
             slim::log::system::handle_libuv_error("Address error: ", uv_ip4_addr(host, port, &addr));
             slim::log::system::handle_libuv_error("Bind error: ", uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0));
             slim::log::system::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server, 512, on_connection));
-            slim::log::system::notice("Slim HTTP server listening on ", host, " port ", port);
+            slim::log::system::info("Slim HTTP server listening on ", host, " port ", port);
         }
-        ~Server() {
-            std::cout << "destructing\n";
-        }
+        ~Server() = default;
         static void allocate(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
             buf->base = (char *)malloc(suggested_size);
             buf->len = suggested_size;
@@ -59,7 +54,7 @@ namespace slim::http {
                 v8::Local<v8::Name> port_name = v8::String::NewFromUtf8(isolate, "port").ToLocalChecked();
                 v8::Local<v8::Name> host_name = v8::String::NewFromUtf8(isolate, "host").ToLocalChecked();
                 v8::Local<v8::Value> port_value = properties->Get(context, port_name).ToLocalChecked();
-                std::string host = ValueToString(isolate, properties->Get(context, host_name).ToLocalChecked());
+                std::string host = slim::utilies::ValueToString(isolate, properties->Get(context, host_name).ToLocalChecked());
                 int port = (port_value->IsInt32()) ? port_value->Int32Value(context).FromJust() : 0;
                 if(port > 0 && host != "undefined") {
                     http_server = new Server(port, host.c_str());
@@ -70,6 +65,7 @@ namespace slim::http {
             }
 
         }
+        //args.GetReturnValue().Set(err);
     }
     void stop() { if(http_server != NULL) delete http_server; }
     void expose(v8::Isolate* isolate, v8::Local<v8::Context> context) {
