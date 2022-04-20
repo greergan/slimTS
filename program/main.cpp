@@ -4,6 +4,7 @@
 #include <http_server.hpp>
 #include <veight.hpp>
 #include <logger.hpp>
+#include <console.hpp>
 void on_uv_walk(uv_handle_t* handle, void* arg) { uv_close(handle, NULL); }
 void on_sigint_received(uv_signal_t *handle, int signum) {
     slim::log::system::notice("Slim server shutting down");
@@ -35,15 +36,21 @@ int main(int argc, char *argv[]) {
         v8::Isolate::Scope isolate_scope(isolate);
         HandleScope handle_scope(isolate);
         Context::Scope context_scope(context);
-        slim::log::system::expose(isolate, context);       
+
         slim::http::expose(isolate, context);
+        slim::console::expose(isolate, context);
+        slim::log::system::expose(isolate, context);       
+        
+        
         Local<String> source = String::NewFromUtf8Literal(isolate, 
         R"(
-            log.notice('hello world');
-            const s = slim.http({"port": 8080, "host": "0.0.0.0"});
+            //const http_stream = slim.http({"port": 8080, "host": "0.0.0.0"});
+            console.clear();
+            console.configure({"log": {"text": "red", "background": "default", "dim": true}});
+            console.log("working it out");
             
-/*             for await (const conn of server) {
-                handle(conn);
+/*             for await (const request of http_stream) {
+                handle(request);
             } */
         )");
         Local<String> name = String::NewFromUtf8Literal(isolate, "test");
