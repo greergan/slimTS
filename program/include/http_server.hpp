@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string>
 #include <logger.hpp>
-#include <v8pp/class.hpp>
 #include <v8pp/module.hpp>
 std::string ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
     v8::String::Utf8Value utf8_value(isolate, value);
