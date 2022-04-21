@@ -1,10 +1,13 @@
 SUBDIRS = utilities program
-default_target: none
 
+default_target: none
 all: slim utils
 
 slim:
 	@cd program && if [ !CMakeFiles ] || [ !CMakeCache.txt  ] || [ !CMakeLists.txt ] || [ !Makefile ]; then cmake .;fi && make
+
+slimdebug:
+	@cd program && if [ !CMakeFiles ] || [ !CMakeCache.txt  ] || [ !CMakeLists.txt ] || [ !Makefile ]; then cmake -DDEBUG=1 .;fi && make
 
 utils:
 	@cd utilities && if [ !CMakeFiles ] || [ !CMakeCache.txt  ] || [ !CMakeLists.txt ] || [ !Makefile ]; then cmake .;fi && make
@@ -18,9 +21,7 @@ clean:
 	done
 
 cleaner: clean
-	@for dir in $(SUBDIRS); do \
-		find $$dir -type d -name bin -print0|xargs -0 rm -rf --; \
-	done
+	@find . -type d -name bin -print0|xargs -0 rm -rf --;
 
 none:
 	@echo Usage: make [:target]
