@@ -58,7 +58,7 @@ namespace slim::console::colors {
         {"bright blue", 94},
         {"bright magenta", 95},
         {"bright cyan", 96},
-        {"bright white", 97}
+        {"bright white", 97},
     };
     std::unordered_map<std::string, int> background {
         {"default", 49},
@@ -91,11 +91,11 @@ namespace slim::console {
         v8::Local<v8::Object> configurations = slim::utilities::GetObject(isolate, args[0]);
         v8::Local<v8::Object> log_configuration = slim::utilities::GetObject(isolate, "log", configurations);
         if(log_configuration->IsObject() && slim::utilities::PropertyCount(isolate, log_configuration) > 0) {
-            std::string text_color = slim::utilities::StringValue(isolate, "text", log_configuration);
+            std::string text_color = slim::utilities::StringValue(isolate, "text_color", log_configuration);
             if(text_color != "undefined") {
                 slim::console::configuration::log.text_color = text_color;
             }
-            std::string background_color = slim::utilities::StringValue(isolate, "background", log_configuration);
+            std::string background_color = slim::utilities::StringValue(isolate, "background_color", log_configuration);
             if(background_color != "undefined") {
                 slim::console::configuration::log.background_color = background_color;
             }
@@ -103,19 +103,31 @@ namespace slim::console {
             if(dim->IsBoolean()) {
                 slim::console::configuration::log.dim = dim->BooleanValue(isolate);
             }
+            v8::Local<v8::Value> bold = slim::utilities::GetValue(isolate, "bold", log_configuration);
+            if(bold->IsBoolean()) {
+                slim::console::configuration::log.bold = bold->BooleanValue(isolate);
+            }
+            v8::Local<v8::Value> italic = slim::utilities::GetValue(isolate, "italic", log_configuration);
+            if(italic->IsBoolean()) {
+                slim::console::configuration::log.italic = italic->BooleanValue(isolate);
+            }
+            v8::Local<v8::Value> underline = slim::utilities::GetValue(isolate, "underline", log_configuration);
+            if(underline->IsBoolean()) {
+                slim::console::configuration::log.underline = underline->BooleanValue(isolate);
+            }
         }
     }
     struct out {
-        int text;
-        int background;
+        int text_color;
+        int background_color;
         std::string bold;
         std::string dim;
         std::string italic;
         std::string underline;
         template<typename T>
         out(T &config) {
-            text = slim::console::colors::text[config.text_color];
-            background = slim::console::colors::background[config.background_color];
+            text_color = slim::console::colors::text[config.text_color];
+            background_color = slim::console::colors::background[config.background_color];
             bold = (config.bold) ? "1;" : "";
             dim = (config.dim) ? "2;" : "";
             italic = (config.italic) ? "3;" : "";
@@ -123,11 +135,11 @@ namespace slim::console {
         };
         template<typename T>
         out &operator<<(const T& _t) {
-            std::cerr << "\x1B[" << italic << underline << dim << bold << text << ";" << background << "m" << _t << "\x1B[0m";
+            std::cerr << "\x1B[" << underline << italic << dim << bold << text_color << ";" << background_color << "m" << _t << "\x1B[0m";
             return *this;
         }
         out &operator<<(std::ostream& (*fp)(std::ostream&)) {
-            std::cerr << "\x1B[" << italic << underline << dim << bold << text << ";" << background << "m" << fp << "\x1B[0m";
+            std::cerr << "\x1B[" << underline << italic << dim << bold << text_color << ";" << background_color << "m" << fp << "\x1B[0m";
             return *this;
         }
     };
