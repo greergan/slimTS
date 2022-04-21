@@ -7,11 +7,7 @@
 #include <syslog.h>
 #include <uv.h>
 #include <v8pp/module.hpp>
-namespace slim::log::console
-{
-    
-};
-namespace slim::log::system {
+namespace slim::log {
     uv_loop_t *log_loop;
     void init(uv_loop_t *loop) {
         log_loop = loop;
@@ -97,10 +93,10 @@ namespace slim::log::system {
         std::cerr << "log.notice called \n";
         //notice(args);
     }
-    void expose(v8::Isolate* isolate, v8::Local<v8::Context> context) {
+    void expose(v8::Isolate* isolate) {
         v8pp::module log_module(isolate);
         log_module.set("notice", &_notice);
-        v8::Maybe result = context->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "log"), log_module.new_instance());
+        isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "log"), log_module.new_instance()).ToChecked();
     }
 };
 #endif
