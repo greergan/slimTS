@@ -3,8 +3,9 @@
 #include <string>
 #include <v8.h>
 namespace slim::utilities {
-    template <typename T>
-    v8::Local<v8::Object> GetObject(v8::Isolate* isolate, T object);
+    int ArrayCount(v8::Local<v8::Value> value);
+    template <typename Thing>
+    v8::Local<v8::Object> GetObject(v8::Isolate* isolate, Thing object);
     v8::Local<v8::Object> GetObject(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     v8::Local<v8::Value> GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     int IntValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
@@ -15,9 +16,15 @@ namespace slim::utilities {
     std::string StringValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
     std::string StringValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
 
-    template <typename T>
-    v8::Local<v8::Object> GetObject(v8::Isolate* isolate, T object) {
-        return object->ToObject(isolate->GetCurrentContext()).ToLocalChecked();
+    int ArrayCount(v8::Local<v8::Value> value) {
+        if(value->IsArray()) {
+            return v8::Handle<v8::Array>::Cast(value)->Length();
+        }
+        return 0;
+    }
+    template <typename Thing>
+    v8::Local<v8::Object> GetObject(v8::Isolate* isolate, Thing thingy) {
+        return (thingy->IsObject()) ? thingy->ToObject(isolate->GetCurrentContext()).ToLocalChecked() : v8::Object::New(isolate);
     }
     v8::Local<v8::Object> GetObject(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
         return GetObject(isolate, GetValue(isolate, string, object));
