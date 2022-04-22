@@ -268,7 +268,7 @@ namespace slim::console {
         std::mutex mtx;
         std::cerr.precision(slim::console::configuration::precision);
         out output = out(configuration);
-        mtx.lock();
+        std::lock_guard<std::mutex> lk(mtx);
         for(int i = 0; i < args.Length(); i++) {
             if(args[i]->IsNumber()) { output << slim::utilities::NumberValue(isolate, args[i]); }
             else if(args[i]->IsString()) { output << slim::utilities::StringValue(isolate, args[i]); }
@@ -278,8 +278,7 @@ namespace slim::console {
             else { output << "Typeof " << slim::utilities::StringValue(isolate, args[i]->TypeOf(isolate)); }
             if(i != args.Length() - 1) { std::cerr << " "; }
         }
-        std::cerr << "\n";
-        mtx.unlock();
+        output << "\n";
     }
     void print(const FunctionCallbackInfo<Value>& args, slim::console::configuration_templates::ExtendedConfiguration& configuration, bool expand_object=false) {
         out output = out(configuration);
