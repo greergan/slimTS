@@ -44,9 +44,18 @@ int main(int argc, char *argv[]) {
             const http_stream = slim.http();
             //const http_stream = slim.http({"port": 8080, "host": "0.0.0.0"});
             console.clear();
-            console.configure({"log": {"text": "red", "background": "default", "dim": true, "underline": true}});
-            console.log("working it out");
-            
+            console.configure({"log": {"custom_text_color": 208, "custom_background_color" : 237, "italic": true }});
+            console.log("console.log");
+            console.configure({"dir": {"custom_text_color": 22, "custom_background_color" : 237, "bold": true }});
+            console.dir("console.dir");
+            console.error("console.error");
+            console.debug("console.debug");
+            console.info("console.info");
+            console.todo("console.todo");
+            console.configure({"trace": {"propogate": true }});
+            console.trace("console.trace");
+            console.configure({"warn":  {"remainder": {"inherit": true}}});
+            console.warn("console.warn");
 /*             for await (const request of http_stream) {
                 handle(request);
             } */
