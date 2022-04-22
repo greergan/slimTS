@@ -6,7 +6,6 @@
 #include <cstdarg>
 #include <syslog.h>
 #include <uv.h>
-#include <v8pp/module.hpp>
 namespace slim::log {
     uv_loop_t *log_loop;
     void init(uv_loop_t *loop) {
@@ -26,7 +25,7 @@ namespace slim::log {
             (messagestream << ... << std::forward<Args>(args));
             message = messagestream.str();
         }
-        ~_base_log_info() {}
+        ~_base_log_info() = default;
     };
     void write_syslog(uv_work_t* request) {
         _base_log_info *log_info = (_base_log_info*) request->data;
@@ -92,11 +91,6 @@ namespace slim::log {
     void _notice(const v8::FunctionCallbackInfo<v8::Value> &args) {
         std::cerr << "log.notice called \n";
         //notice(args);
-    }
-    void expose(v8::Isolate* isolate) {
-        v8pp::module log_module(isolate);
-        log_module.set("notice", &_notice);
-        isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "log"), log_module.new_instance()).ToChecked();
     }
 };
 #endif

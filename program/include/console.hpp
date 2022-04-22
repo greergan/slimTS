@@ -1,11 +1,8 @@
 #ifndef __SLIM__CONSOLE__HPP
 #define __SLIM__CONSOLE_HPP
-#include <any>
 #include <mutex>
 #include <unordered_map>
 #include <utilities.hpp>
-#include <v8pp/convert.hpp>
-#include <v8pp/module.hpp>
 #include <v8pp/json.hpp>
 /*
  * Reference https://console.spec.whatwg.org/#printer
@@ -16,6 +13,8 @@ namespace slim::console::configuration_templates {
         bool bold = false;
         bool italic = false;
         bool underline = false;
+        bool slow_blink = false;
+        bool fast_blink = false;
         bool expand_object = false;
         std::string rgb_text = "";
         std::string rbg_background = "";
@@ -297,20 +296,5 @@ namespace slim::console {
     void warn(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::warn); }
     void console_assert() {}
     void clear() { std::cerr << "\x1B[2J\x1B[H"; }
-    void expose(v8::Isolate* isolate) {
-        v8pp::module console_module(isolate);
-        console_module.set("assert", &console_assert);
-        console_module.set("configure", &configure);
-        console_module.set("clear", &clear);
-        console_module.set("debug", &debug);
-        console_module.set("dir", &dir);
-        console_module.set("error", &error);
-        console_module.set("info", &info);
-        console_module.set("log", &log);
-        console_module.set("todo", &todo);
-        console_module.set("trace", &trace);
-        console_module.set("warn", &warn);
-        isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "console"), console_module.new_instance()).ToChecked();
-    }
 }
 #endif

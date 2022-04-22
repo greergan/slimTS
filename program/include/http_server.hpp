@@ -3,24 +3,25 @@
 #include <uv.h>
 #include <stdlib.h>
 #include <string>
-#include <logger.hpp>
+#include <log.hpp>
 #include <utilities.hpp>
-#include <v8pp/module.hpp>
 namespace slim::http {
-    uv_loop_t* server_loop;
+    struct Server;
+    static uv_loop_t* server_loop;
+    uv_tcp_t server;
+    int port;
+    std::string host;
+    Server* http_server;
     void init(uv_loop_t *loop) { server_loop = loop; }
     struct Server {
-        private:
-            uv_tcp_t server;
-            int error;
-        public:
-        Server(const int port, const char* host) {
+        Server(const int iport, const std::string ihost) {
+            port = iport;
+            host = ihost;
             sockaddr_in addr;
             slim::log::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(server_loop, &server));
-            slim::log::handle_libuv_error("Address error: ", uv_ip4_addr(host, port, &addr));
+            slim::log::handle_libuv_error("Address error: ", uv_ip4_addr(host.c_str(), port, &addr));
             slim::log::handle_libuv_error("Bind error: ", uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0));
             slim::log::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server, 512, on_connection));
-            slim::log::info("Slim HTTP server listening on ", host, " port ", port);
         }
         ~Server() = default;
         static void allocate(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
@@ -40,7 +41,6 @@ namespace slim::http {
             free(buf->base);
         }
     };
-    Server* http_server;
     void start(const v8::FunctionCallbackInfo<v8::Value> &args) {
         if(args.Length() == 0) {
             slim::log::debug("throw error 1 in slim::http::start");
@@ -60,14 +60,15 @@ namespace slim::http {
                 }
             }
         }
-        slim::log::debug("add return value to http start");
+        slim::log::debug("slim::http::start add return value");
+        slim::log::notice("slim::http::server listening on ", host, ":", port);
         //args.GetReturnValue().Set(err);
     }
-    void stop() { if(http_server != NULL) delete http_server; }
-    void expose(v8::Isolate* isolate) {
-        v8pp::module server_module(isolate);
-        server_module.set("http", &start);
-        isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8pp::to_v8(isolate, "slim"), server_module.new_instance()).ToChecked();
+    void stop() {
+        if(http_server != NULL) {
+            slim::log::notice("slim::http::server stopping");
+            delete http_server;
+        }
     }
 };
 #endif
