@@ -7,7 +7,7 @@
 #include <syslog.h>
 #include <uv.h>
 namespace slim::log {
-    uv_loop_t *log_loop;
+    static uv_loop_t *log_loop;
     void init(uv_loop_t *loop) {
         log_loop = loop;
     }
