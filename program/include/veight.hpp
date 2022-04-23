@@ -1,117 +1,90 @@
 #ifndef __SLIM__V8__HPP
 #define __SLIM__V8__HPP
 #include <assert.h>
+#include <sstream>
 #include <v8.h>
 #include <libplatform/libplatform.h>
-using namespace v8;
-const char* ToCString(const String::Utf8Value& value) {
-    return *value ? *value : "<string conversion failed>";
-}
+#include <console.hpp>
+#include <utilities.hpp>
 namespace slim::veight {
-    using namespace v8;
-    struct Process {
-        private:
-            Isolate* isolate;
-            Local<ObjectTemplate> global;
-            ExtensionConfiguration* extensions;
-            std::unique_ptr<Platform> platform;
-            Isolate::CreateParams create_params;
-        public:
-            Process(int argc, char* argv[]) {
-                V8::InitializeICUDefaultLocation(argv[0]);
-                V8::InitializeExternalStartupData(argv[0]);
-                this->platform = v8::platform::NewDefaultPlatform();
-                V8::InitializePlatform(platform.get());
-                V8::Initialize();
-                V8::SetFlagsFromCommandLine(&argc, argv, true);
-                this->create_params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-                this->isolate = Isolate::New(this->create_params);
+    v8::Local<v8::Script> CompileScript(std::string source, std::string name);
+    void CreateGlobal(void);
+    v8::Local<v8::Context> GetNewContext(void);
+    void ReportException(v8::TryCatch* try_catch);
+    bool RunScript(v8::Local<v8::Script> script);
+    void init(int argc, char* argv[]);
+    void start(void);
+    void stop(void);
+    v8::Isolate* isolate;
+    v8::Local<v8::ObjectTemplate> global;
+    v8::ExtensionConfiguration* extensions;
+    std::unique_ptr<v8::Platform> platform;
+    v8::Isolate::CreateParams create_params;
+    void CreateGlobal() {
+        global = v8::ObjectTemplate::New(isolate);
+    }
+    v8::Local<v8::Script> CompileScript(std::string source, std::string name) {
+        v8::ScriptOrigin origin(isolate, slim::utilities::StringToValue(isolate, name));
+        v8::MaybeLocal<v8::Script> script = v8::Script::Compile(isolate->GetCurrentContext(), slim::utilities::StringToString(isolate, source), &origin);
+        return script.ToLocalChecked();
+    }
+    v8::Local<v8::Context> GetNewContext() {
+        return v8::Context::New(isolate, NULL, global);
+    }
+    void init(int argc, char* argv[]) {
+        v8::V8::InitializeICUDefaultLocation(argv[0]);
+        v8::V8::InitializeExternalStartupData(argv[0]);
+        platform = v8::platform::NewDefaultPlatform();
+        v8::V8::InitializePlatform(platform.get());
+        v8::V8::Initialize();
+        v8::V8::SetFlagsFromCommandLine(&argc, argv, true);
+        create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+        isolate = v8::Isolate::New(create_params);
+    }
+    void ReportException(v8::TryCatch* try_catch) {
+        v8::Local<v8::Message> message = try_catch->Message();
+        std::string exception_string = slim::utilities::StringValue(isolate, try_catch->Exception());
+        if(message.IsEmpty()) {
+            //slim::console::error(exception_string);
+        }
+        else {
+            std::string script_line = slim::utilities::ScriptLine(isolate, message);
+            std::string script_file_name = slim::utilities::ScriptFileName(isolate, message);
+            int script_line_number = slim::utilities::ScriptLineNumber(isolate, message);
+            std::string stack_trace = slim::utilities::ScriptStackTrace(isolate, try_catch);
+            int end_column = message->GetEndColumn(isolate->GetCurrentContext()).FromJust();
+            int start_column = message->GetStartColumn(isolate->GetCurrentContext()).FromJust();
+            std::ostringstream messagestream;
+            messagestream << script_file_name << ":" << script_line_number << ": " << exception_string << "\n";
+            messagestream << script_line << "\n";
+            for(int i = 0; i < start_column; i++) {
+                messagestream << " ";
             }
-            ~Process() {
-                this->isolate->Dispose();
-                V8::Dispose();
-                V8::DisposePlatform();
-                delete create_params.array_buffer_allocator;
+            for(int i = start_column; i < end_column; i++) {
+                messagestream << "^";
             }
-            void CreateGlobal() {
-                if(this->global.IsEmpty()) {
-                    this->global = ObjectTemplate::New(this->isolate);
-                }
+            messagestream << "\n";
+            if(stack_trace.length() > 0) {
+                messagestream << stack_trace << "\n";
             }
-            Isolate* GetIsolate() {
-                return this->isolate;
-            }
-            Local<Context> GetNewContext(Isolate* isolate) {
-                return Context::New(isolate, NULL, this->global);
-            }
-            bool RunScript(Isolate* isolate, Local<String> source, Local<Value> name, bool print_result=true, bool report_exceptions=true) {
-                HandleScope handle_scope(isolate);
-                TryCatch try_catch(isolate);
-                ScriptOrigin origin(isolate, name);
-                Local<Context> context(isolate->GetCurrentContext());
-                Local<Script> script;
-                if(!Script::Compile(context, source, &origin).ToLocal(&script)) {
-                    if(report_exceptions)
-                        ReportException(isolate, &try_catch);
-                    return false;
-                }
-                else {
-                    Local<Value> result;
-                    if(!script->Run(context).ToLocal(&result)) {
-                        assert(try_catch.HasCaught());
-                        if(report_exceptions)
-                            ReportException(isolate, &try_catch);
-                        return false;
-                    }
-                    else {
-                        assert(!try_catch.HasCaught());
-                        if(print_result && !result->IsUndefined()) {
-                            String::Utf8Value str(isolate, result);
-                            const char* cstr = ToCString(str);
-                            printf("%s\n", cstr);
-                        }
-                        return true;
-                    }
-                }
-            }
-            void ReportException(Isolate* isolate, TryCatch* try_catch) {
-                HandleScope handle_scope(isolate);
-                String::Utf8Value exception(isolate, try_catch->Exception());
-                const char* exception_string = ToCString(exception);
-                Local<Message> message = try_catch->Message();
-                if(message.IsEmpty()) {
-                    fprintf(stderr, "%s\n", exception_string);
-                }
-                else {
-                    // Print (filename):(line number): (message).
-                    String::Utf8Value filename(isolate, message->GetScriptOrigin().ResourceName());
-                    Local<Context> context(isolate->GetCurrentContext());
-                    const char* filename_string = ToCString(filename);
-                    int linenum = message->GetLineNumber(context).FromJust();
-                    fprintf(stderr, "%s:%i: %s\n", filename_string, linenum, exception_string);
-                    // Print line of source code.
-                    String::Utf8Value sourceline(isolate, message->GetSourceLine(context).ToLocalChecked());
-                    const char* sourceline_string = ToCString(sourceline);
-                    fprintf(stderr, "%s\n", sourceline_string);
-                    // Print wavy underline (GetUnderline is deprecated).
-                    int start = message->GetStartColumn(context).FromJust();
-                    for(int i = 0; i < start; i++) {
-                        fprintf(stderr, " ");
-                    }
-                    int end = message->GetEndColumn(context).FromJust();
-                    for(int i = start; i < end; i++) {
-                        fprintf(stderr, "^");
-                    }
-                    fprintf(stderr, "\n");
-                    Local<Value> stack_trace_string;
-                    if(try_catch->StackTrace(context).ToLocal(&stack_trace_string)
-                        && stack_trace_string->IsString() && stack_trace_string.As<String>()->Length() > 0) {
-                        String::Utf8Value stack_trace(isolate, stack_trace_string);
-                        const char* err = ToCString(stack_trace);
-                        fprintf(stderr, "%s\n", err);
-                    }
-                }
-            }
-    };
+            std::cerr << messagestream.str();
+        }
+    }
+    bool RunScript(v8::Local<v8::Script> script) {
+        v8::TryCatch try_catch(isolate);
+        v8::Local<v8::Value> result = script->Run(isolate->GetCurrentContext()).ToLocalChecked();
+        if(try_catch.HasCaught()) {
+            ReportException(&try_catch);
+            return false;
+        }
+        std::cout << slim::utilities::StringValue(isolate, result);
+        return true;
+    }
+    void stop() {
+        isolate->Dispose();
+        v8::V8::Dispose();
+        v8::V8::DisposePlatform();
+        delete create_params.array_buffer_allocator;
+    }
 };
 #endif

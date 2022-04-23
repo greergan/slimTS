@@ -1,8 +1,9 @@
 #ifndef __SLIM__CONSOLE__HPP
-#define __SLIM__CONSOLE_HPP
+#define __SLIM__CONSOLE__HPP
 #include <mutex>
 #include <unordered_map>
 #include <utilities.hpp>
+#include <v8.h>
 #include <v8pp/json.hpp>
 /*
  * Reference https://console.spec.whatwg.org/#printer
@@ -100,6 +101,18 @@ namespace slim::console::colors {
     };
 }
 namespace slim::console {
+    void console_assert();
+    void clear();
+    void dir(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void debug(const v8::FunctionCallbackInfo<v8::Value>& args);
+    //void error(const std::string error_string);
+    void error(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void info(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void log(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void todo(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void trace(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void warn(const v8::FunctionCallbackInfo<v8::Value>& args);
+
     void copy_console_configuration(const slim::console::configuration_templates::Configuration* source, slim::console::configuration_templates::Configuration* destination) {
         destination->dim = source->dim;
         destination->bold = source->bold;
@@ -152,7 +165,7 @@ namespace slim::console {
             }
         }
     }
-    void configure(const FunctionCallbackInfo<Value>& args) {
+    void configure(const v8::FunctionCallbackInfo<v8::Value>& args) {
         if(!args[0]->IsObject()) { return; }
         v8::Isolate* isolate = args.GetIsolate();
         v8::HandleScope scope(isolate);
@@ -261,7 +274,7 @@ namespace slim::console {
             return *this;
         }
     };
-    void print(const FunctionCallbackInfo<Value>& args, slim::console::configuration_templates::Configuration& configuration, bool expand_object=false) {
+    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::configuration_templates::Configuration& configuration, bool expand_object=false) {
         if(args.Length() == 0) { return; }
         v8::Isolate* isolate = args.GetIsolate();
         v8::HandleScope scope(isolate);
@@ -280,19 +293,24 @@ namespace slim::console {
         }
         output << "\n";
     }
-    void print(const FunctionCallbackInfo<Value>& args, slim::console::configuration_templates::ExtendedConfiguration& configuration, bool expand_object=false) {
+    void print(const std::string value, slim::console::configuration_templates::ExtendedConfiguration& configuration) {
+        out output = out(configuration);
+        output << value << "\n";
+    }
+    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::configuration_templates::ExtendedConfiguration& configuration, bool expand_object=false) {
         out output = out(configuration);
         output << configuration.level_string << ": ";
         print(args, configuration.remainder, true);
     }
-    void dir(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::dir, true); }
-    void debug(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::debug); }
-    void error(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::error); }
-    void info(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::info); }
-    void log(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::log); }
-    void todo(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::todo); }
-    void trace(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::trace); }
-    void warn(const FunctionCallbackInfo<Value>& args) { print(args, slim::console::configuration::warn); }
+    void dir(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::dir, true); }
+    void debug(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::debug); }
+    //void error(const std::string error_string) { print(error_string, slim::console::configuration::error); }
+    void error(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::error); }
+    void info(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::info); }
+    void log(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::log); }
+    void todo(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::todo); }
+    void trace(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::trace); }
+    void warn(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::warn); }
     void console_assert() {}
     void clear() { std::cerr << "\x1B[2J\x1B[H"; }
 }
