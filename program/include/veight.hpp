@@ -51,12 +51,7 @@ namespace slim::veight {
     void ReportException(v8::TryCatch* try_catch) {
         v8::Local<v8::Message> message = try_catch->Message();
         std::string exception_string = slim::utilities::StringValue(veight.isolate, try_catch->Exception());
-        if(message.IsEmpty()) {
-            //slim::console::error(exception_string);
-        }
-        else {
-            std::cerr << slim::utilities::ScriptStackTrace(veight.isolate, try_catch) << "\n";
-        }
+        throw(slim::utilities::ScriptStackTrace(veight.isolate, try_catch));
     }
     bool RunScript(v8::Local<v8::Script> script) {
         if(!script.IsEmpty()) {
@@ -64,7 +59,6 @@ namespace slim::veight {
             v8::MaybeLocal<v8::Value> result = script->Run(veight.isolate->GetCurrentContext());
             if(try_catch.HasCaught()) {
                 ReportException(&try_catch);
-                return false;
             }
         }
         return true;
@@ -77,6 +71,7 @@ namespace slim::veight {
             v8::V8::Dispose();
             v8::V8::DisposePlatform();
             delete veight.create_params.array_buffer_allocator;
+            veight.initilaized = false;
         }
     }
 };

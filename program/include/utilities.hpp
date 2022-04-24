@@ -1,7 +1,8 @@
 #ifndef __SLIM__UTILITIES__HPP
 #define __SLIM__UTILITIES__HPP
-#include <string>
 #include <v8.h>
+#include <string>
+#include <string_view>
 namespace slim::utilities {
     int ArrayCount(v8::Local<v8::Value> value);
     template <typename Thing>
@@ -22,7 +23,9 @@ namespace slim::utilities {
     template <typename Thing>
     std::string StringValue(v8::Isolate* isolate, Thing thingy);
     std::string StringValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
-
+    template <typename Thing>
+    std::string_view StringViewValue(v8::Isolate* isolate, Thing thingy);
+    std::string_view StringViewValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     int ArrayCount(v8::Local<v8::Value> value) {
         if(value->IsArray()) {
             return v8::Handle<v8::Array>::Cast(value)->Length();
@@ -83,6 +86,14 @@ namespace slim::utilities {
     }
     std::string StringValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
         return StringValue(isolate, GetValue(isolate, string, object));
+    }
+    template <typename Thing>
+    std::string_view StringViewValue(v8::Isolate* isolate, Thing thingy) {
+        v8::String::Utf8Value utf8_value(isolate, thingy);
+        return std::string_view(*utf8_value);
+    }
+    std::string_view StringViewValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
+        return StringViewValue(isolate, GetValue(isolate, string, object));
     }
 }
 #endif

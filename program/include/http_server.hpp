@@ -3,44 +3,56 @@
 #include <uv.h>
 #include <stdlib.h>
 #include <string>
+#include <string_view>
 #include <log.hpp>
 #include <utilities.hpp>
 namespace slim::http {
-    struct Server;
-    static uv_loop_t* server_loop;
-    uv_tcp_t server;
-    int port;
-    std::string host;
-    Server* http_server;
-    void init(uv_loop_t *loop) { server_loop = loop; }
     struct Server {
-        Server(const int iport, const std::string ihost) {
-            port = iport;
-            host = ihost;
-            sockaddr_in addr;
-            slim::log::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(server_loop, &server));
-            slim::log::handle_libuv_error("Address error: ", uv_ip4_addr(host.c_str(), port, &addr));
-            slim::log::handle_libuv_error("Bind error: ", uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0));
-            slim::log::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server, 512, on_connection));
+        uv_loop_t* loop;
+        uv_tcp_t http_server;
+        sockaddr_in addr;
+    } server;
+    void init(uv_loop_t *loop);
+    static void allocate(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
+    static void on_close(uv_handle_t* peer);
+    static void on_connection(uv_stream_t* server, const int status);
+    bool start(const int port, const std::string_view host);
+    void start(const v8::FunctionCallbackInfo<v8::Value> &args);
+    void stop(void);
+    static void allocate(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+        buf->base = (char *)malloc(suggested_size);
+        buf->len = suggested_size;
+    }
+    void init(uv_loop_t *loop) {
+        server.loop = loop;
+        slim::log::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(server.loop, &server.http_server));
+    }
+    static void on_close(uv_handle_t* peer) {
+        free(peer);
+    }
+    static void on_connection(uv_stream_t* server, const int status) {
+        slim::log::info("slim::http::server::connection");
+        if(status) {
+            slim::log::warn("Connect error: ", uv_err_name(status), ": ", uv_strerror(status));
+            return;
         }
-        ~Server() = default;
-        static void allocate(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
-            buf->base = (char *)malloc(suggested_size);
-            buf->len = suggested_size;
-        }
-        static void on_close(uv_handle_t* peer) { free(peer); }
-        static void on_connection(uv_stream_t* server, const int status) {
-            slim::log::info("New HTTP connection");
-            if(status) {
-                slim::log::warn("Connect error: ", uv_err_name(status), ": ", uv_strerror(status));
+    }
+    static void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+        if(nread <= 0) {
+            if(buf) {
+                free(buf->base);
                 return;
             }
         }
-        static void on_read(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
-            if(nread <= 0) { if(buf) free(buf->base); return; }
-            free(buf->base);
-        }
-    };
+        free(buf->base);
+    }
+    bool start(const int port, const std::string host) {
+        slim::log::handle_libuv_error("Address error: ", uv_ip4_addr(host.c_str(), port, &server.addr));
+        slim::log::handle_libuv_error("Bind error: ", uv_tcp_bind(&server.http_server, (const struct sockaddr*)&server.addr, 0));
+        slim::log::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server.http_server, 512, on_connection));
+        slim::log::notice("slim::http::server listening on ", host, ":", port);
+        return true;
+    }
     void start(const v8::FunctionCallbackInfo<v8::Value> &args) {
         if(args.Length() == 0) {
             slim::log::debug("throw error 1 in slim::http::start");
@@ -53,21 +65,14 @@ namespace slim::http {
                 std::string host = slim::utilities::StringValue(isolate, "host", start_arguments);
                 int port = slim::utilities::IntValuePositive(isolate, "port", start_arguments);
                 if(port > 0 && host != "undefined") {
-                    http_server = new Server(port, host.c_str());
+                    if(start(port, host)) {
+                        args.GetReturnValue().SetEmptyString();
+                    }
                 }
                 else {
                     slim::log::debug("throw error 2 in slim::http::start");
                 }
             }
-        }
-        slim::log::debug("slim::http::start add return value");
-        slim::log::notice("slim::http::server listening on ", host, ":", port);
-        //args.GetReturnValue().Set(err);
-    }
-    void stop() {
-        if(http_server != NULL) {
-            slim::log::notice("slim::http::server stopping");
-            delete http_server;
         }
     }
 };

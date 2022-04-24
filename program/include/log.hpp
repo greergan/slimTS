@@ -7,7 +7,7 @@
 #include <syslog.h>
 #include <uv.h>
 namespace slim::log {
-    static uv_loop_t *log_loop;
+    uv_loop_t *log_loop;
     void init(uv_loop_t *loop) {
         log_loop = loop;
     }
@@ -51,6 +51,7 @@ namespace slim::log {
         _base_log_info* log_info = new _base_log_info("DEBUG", args...);
         log_info->request.data = (void*) log_info;
         log_info->priority = LOG_DEBUG;
+        log_info->options = log_info->options | LOG_PERROR;
         uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
     }
     template<class... Args>
@@ -88,8 +89,8 @@ namespace slim::log {
             exit(error);
         }
     }
-    void _notice(const v8::FunctionCallbackInfo<v8::Value> &args) {
-        std::cerr << "log.notice called \n";
+    void warn(const v8::FunctionCallbackInfo<v8::Value> &args) {
+        std::cerr << "log.warn called \n";
         //notice(args);
     }
 };

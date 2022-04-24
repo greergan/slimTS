@@ -3,14 +3,21 @@
 #include <uv.h>
 #include <log.hpp>
 namespace slim::uv {
-    void on_sigint_received(uv_signal_t *handle, int signum);
     static uv_loop_t* main_loop;
-    uv_signal_t *sigint = new uv_signal_t;
-    uv_loop_t* init() {
+    uv_signal_t *sigint;
+    uv_loop_t* GetLoop(void);
+    void init(void);
+    void on_sigint_received(uv_signal_t *handle, int signum);
+    void start(void);
+    void stop(void);
+    uv_loop_t* GetLoop() {
+        return main_loop;
+    }
+    void init() {
+        sigint = new uv_signal_t;
         uv_signal_init(uv_default_loop(), sigint);
         uv_signal_start(sigint, on_sigint_received, SIGINT);
         main_loop = uv_default_loop();
-        return main_loop;
     }
     void on_sigint_received(uv_signal_t *handle, int signum) {
         if(uv_loop_close(handle->loop) == UV_EBUSY) {
@@ -22,7 +29,9 @@ namespace slim::uv {
     }
     void stop() {
         uv_loop_close(main_loop);
-        delete sigint;
+        if(sigint != NULL) {
+            delete sigint;
+        }            
     }
 }
 #endif
