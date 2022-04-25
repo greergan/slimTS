@@ -101,8 +101,8 @@ namespace slim::console::colors {
     };
 }
 namespace slim::console {
-    void console_assert();
-    void clear();
+    void console_assert(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void clear(const v8::FunctionCallbackInfo<v8::Value>& args);
     void dir(const v8::FunctionCallbackInfo<v8::Value>& args);
     void debug(const v8::FunctionCallbackInfo<v8::Value>& args);
     //void error(const std::string error_string);
@@ -112,7 +112,6 @@ namespace slim::console {
     void todo(const v8::FunctionCallbackInfo<v8::Value>& args);
     void trace(const v8::FunctionCallbackInfo<v8::Value>& args);
     void warn(const v8::FunctionCallbackInfo<v8::Value>& args);
-
     void copy_console_configuration(const slim::console::configuration_templates::Configuration* source, slim::console::configuration_templates::Configuration* destination) {
         destination->dim = source->dim;
         destination->bold = source->bold;
@@ -311,7 +310,7 @@ namespace slim::console {
     void todo(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::todo); }
     void trace(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::trace); }
     void warn(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::warn); }
-    void console_assert() {}
-    void clear() { std::cerr << "\x1B[2J\x1B[H"; }
+    void console_assert(const v8::FunctionCallbackInfo<v8::Value>& args) {}
+    void clear(const v8::FunctionCallbackInfo<v8::Value>& args) { std::cerr << "\x1B[2J\x1B[H"; }
 }
 #endif

@@ -36,14 +36,23 @@ namespace slim {
         }
         v8::Context::Scope context_scope(context);
         expose();
-        std::string source = R"(//console.clear();
+        std::string source = R"(
+            console.clear();
             console.configure({"todo":  {"remainder": {"inherit": true}}});
-            console.todo("finish console.configure.propogate");
-            const result = slim.http({"port": 8080, "host": "0.0.0.0"});
-            console.log(result);
-            slim.log.warn();
-            //slim.log();
-            //console.todo("add slim.configuration.console.log.text_color = value");
+            console.todo("working");
+            console.warn(console.configuration.warn.text_color);
+            const point = Point;
+            point.x=10;
+            console.log(point.x)
+            console.log(Point.x)
+            console.warn("here");
+            //fetch();
+/*             (async ()=> {
+                async function computeAnswer() {
+                    return Promise.resolve(42);
+                }
+                console.log(await computeAnswer());
+            })(); */
         )";
         v8::TryCatch try_catch(slim::veight::GetIsolate());
         v8::Local<v8::Script> script = slim::veight::CompileScript(source, "console_testing");
