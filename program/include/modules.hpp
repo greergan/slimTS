@@ -8,7 +8,7 @@
 #include <fetch.hpp>
 #include <http_server.hpp>
 #include <utilities.hpp>
-#include <module_accessors.hpp>
+#include <module.hpp>
 
 /*
  *  https://v8docs.nodesource.com/node-16.13/index.html
@@ -18,82 +18,32 @@
  *                                    Local< FunctionTemplate > constructor = Local< FunctionTemplate >() ) 	
  * 
  */
-
-namespace slim::utilities {
-    struct module {
-        private:
-            v8::Isolate* isolate;
-            v8::Local<v8::Name> v8_name;
-            v8::Local<v8::ObjectTemplate> module_template;
-            v8::Local<v8::Object> new_instance() {
-                return module_template->NewInstance(isolate->GetCurrentContext()).ToLocalChecked();
-            }
-        public:
-            explicit module(v8::Isolate* isolate, std::string name) : isolate{isolate} {
-                module_template = v8::ObjectTemplate::New(isolate);
-                module_template->SetInternalFieldCount(1);
-                v8_name = slim::utilities::StringToName(isolate, name);
-            }
-            module(module const&) = delete;
-	        module& operator=(module const&) = delete;
-	        module(module&&) = default;
-	        module& operator=(module&&) = default;
-            void add_module(std::string name, module* submodule) {
-                v8::HandleScope scope(isolate);
-                module_template->Set(slim::utilities::StringToName(isolate, name), submodule->module_template);
-            }
-            void expose_module() {
-                isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8_name, new_instance()).ToChecked();
-            }
-            v8::Local<v8::ObjectTemplate> get_module() {
-                return module_template;
-            }
-            template<typename Function, typename Signature = typename std::decay<Function>::type>
-            void set(std::string name, Function&& function) {
-                v8::HandleScope scope(isolate);
-                module_template->Set(slim::utilities::StringToName(isolate, name), v8::FunctionTemplate::New(isolate, std::forward<Signature>(function)));
-                /*
-                 * Sort out how to wrap signature-less functions
-                 * v8::Local<v8::External>::New(isolate, value->pext);
-                 * 
-                 * Sort out how to wrap lambda's
-                 * log_module.set("warn", [&](const v8::FunctionCallbackInfo<v8::Value>& args){slim::log::warn(args);});
-                 * slim_module.set("http", [&](const v8::FunctionCallbackInfo<v8::Value>& args){slim::http::start(args);});
-                 * 
-                 */
-                
-            }
-    };
-};
-
-
-
 namespace slim::modules {
-    slim::utilities::module AssembleConsoleConfiguration(v8::Isolate* isolate);
-    void ExposeConsole(v8::Isolate* isolate);
-    slim::utilities::module AssembleConsoleConfiguration(v8::Isolate* isolate) {
-        slim::utilities::module warn_module(isolate, "warn");
-        warn_module
+    slim::module::module AssembleConsoleConfiguration(v8::Isolate* isolate) {
+        slim::module::module warn_module(isolate, "warn");
+        warn_module.add_property("bold", &slim::console::configuration::warn.bold);
+        warn_module.add_property("dim", &slim::console::configuration::warn.dim);
+        warn_module.add_property("text_color", &slim::console::configuration::warn.text_color);
         //slim::modules::accessors::GetWarnTextColor
 
-        slim::utilities::module configuration_module(isolate, "configuration");
+        slim::module::module configuration_module(isolate, "configuration");
         configuration_module.add_module("warn", &warn_module);
         return configuration_module;
     }
     void ExposeConsole(v8::Isolate* isolate) {
-        slim::utilities::module configuration = AssembleConsoleConfiguration(isolate);
-        slim::utilities::module console_module(isolate, "console");
-        console_module.set("assert", &slim::console::console_assert);
-        console_module.set("configure", &slim::console::configure);
-        console_module.set("clear", &slim::console::clear);
-        console_module.set("debug", &slim::console::debug);
-        console_module.set("dir", &slim::console::dir);
-        console_module.set("error", &slim::console::error);
-        console_module.set("info", &slim::console::info);
-        console_module.set("log", &slim::console::log);
-        console_module.set("todo", &slim::console::todo);
-        console_module.set("trace", &slim::console::trace);
-        console_module.set("warn", &slim::console::warn);
+        slim::module::module configuration = AssembleConsoleConfiguration(isolate);
+        slim::module::module console_module(isolate, "console");
+        console_module.add_function("assert", &slim::console::console_assert);
+        console_module.add_function("configure", &slim::console::configure);
+        console_module.add_function("clear", &slim::console::clear);
+        console_module.add_function("debug", &slim::console::debug);
+        console_module.add_function("dir", &slim::console::dir);
+        console_module.add_function("error", &slim::console::error);
+        console_module.add_function("info", &slim::console::info);
+        console_module.add_function("log", &slim::console::log);
+        console_module.add_function("todo", &slim::console::todo);
+        console_module.add_function("trace", &slim::console::trace);
+        console_module.add_function("warn", &slim::console::warn);
         console_module.add_module("configuration", &configuration);
         console_module.expose_module();
     }

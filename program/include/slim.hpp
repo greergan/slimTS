@@ -37,15 +37,13 @@ namespace slim {
         v8::Context::Scope context_scope(context);
         expose();
         std::string source = R"(
-            console.clear();
-            console.configure({"todo":  {"remainder": {"inherit": true}}});
-            console.todo("working");
-            console.warn(console.configuration.warn.text_color);
-            const point = Point;
-            point.x=10;
-            console.log(point.x)
-            console.log(Point.x)
-            console.warn("here");
+            //console.clear();
+            console.warn(console.configuration.warn)
+            console.configuration.warn.text_color = "blue";
+            console.configuration.warn.dim = true;
+            console.configuration.warn.bold = true;
+            console.warn(console.configuration.warn)
+
             //fetch();
 /*             (async ()=> {
                 async function computeAnswer() {
