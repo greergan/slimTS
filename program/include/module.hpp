@@ -29,16 +29,6 @@ namespace slim::module {
             }
     };
 };
-namespace slim::module::accessors {
-    void GetProperty(v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value>& info) {
-        v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
-        info.GetReturnValue().Set(static_cast<slim::module::PropertyPointer*>(data->Value())->GetV8Value(info.GetIsolate()));
-    }
-    void SetProperty(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void>& info) {
-        v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
-        static_cast<slim::module::PropertyPointer*>(data->Value())->SetValue(info.GetIsolate(), value);
-    }
-};
 namespace slim::module {
     struct module {
         module(v8::Isolate* isolate, std::string name): isolate{isolate} {
@@ -67,9 +57,16 @@ namespace slim::module {
         }
         void add_property(std::string name, auto&& property) {
             v8::HandleScope scope(isolate);
+            auto getter = [](v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value>& info){
+                v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
+                info.GetReturnValue().Set(static_cast<slim::module::PropertyPointer*>(data->Value())->GetV8Value(info.GetIsolate()));
+            };
+            auto setter = [](v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void>& info) {
+                    v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
+                    static_cast<slim::module::PropertyPointer*>(data->Value())->SetValue(info.GetIsolate(), value);
+            };
             PropertyPointer* property_pointer = new PropertyPointer(property);
-            module_template->SetAccessor(slim::utilities::StringToName(isolate, name),
-                slim::module::accessors::GetProperty, slim::module::accessors::SetProperty, v8::External::New(isolate, (void*)property_pointer));
+            module_template->SetAccessor(slim::utilities::StringToName(isolate, name), getter, setter, v8::External::New(isolate, (void*)property_pointer));
         }
         void expose_module() {
             isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8_name, new_instance()).ToChecked();
