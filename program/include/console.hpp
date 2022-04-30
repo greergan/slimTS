@@ -17,10 +17,12 @@ namespace slim::console::configuration_templates {
         bool slow_blink = false;
         bool fast_blink = false;
         bool expand_object = false;
+
         std::string rgb_text = "";
         std::string rbg_background = "";
         int custom_text_color = -1;
         int custom_background_color = -1;
+
         std::string text_color = "default";
         std::string background_color = "default";
     };
@@ -30,6 +32,12 @@ namespace slim::console::configuration_templates {
         Configuration message_text{};
         Configuration message_value{};
         Configuration remainder{};
+        std::unordered_map<std::string, slim::console::configuration_templates::Configuration*> sub_configurations {
+            {"location", &location},
+            {"message_text", &message_text},
+            {"message_value", &message_value},
+            {"remainder", &remainder}
+        };
         ExtendedConfiguration(const std::string level, const std::string color="default") : level_string{level} {
             text_color = color;
         }
@@ -49,7 +57,13 @@ namespace slim::console::configuration {
     slim::console::configuration_templates::ExtendedConfiguration warn("WARN", "yellow");
     std::unordered_map<std::string, slim::console::configuration_templates::Configuration*> configurations {
         {"dir", &dir},
-        {"log", &log}
+        {"log", &log},
+        {"debug", &debug},
+        {"error", &error},
+        {"info", &info},
+        {"todo", &todo},
+        {"trace", &trace},
+        {"warn", &warn}
     };
     std::unordered_map<std::string, slim::console::configuration_templates::ExtendedConfiguration*> extended_configurations {
         {"debug", &debug},

@@ -42,7 +42,8 @@ namespace slim {
             console.configuration.warn.text_color = "blue";
             console.configuration.warn.dim = true;
             console.configuration.warn.bold = true;
-            console.warn(console.configuration.warn)
+            console.configuration.warn.remainder.text_color = "red";
+            console.warn(console.configuration.warn.remainder)
 
             //fetch();
 /*             (async ()=> {

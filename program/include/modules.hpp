@@ -19,15 +19,33 @@
  * 
  */
 namespace slim::modules {
+    slim::module::module CreateSectionModule(v8::Isolate* isolate, const std::string level, slim::console::configuration_templates::Configuration* configuration) {
+        slim::module::module section_module(isolate, level);
+        section_module.add_property("fast_blink", &configuration->fast_blink);
+        section_module.add_property("slow_blink", &configuration->slow_blink);
+        section_module.add_property("underline", &configuration->underline);
+        section_module.add_property("italic", &configuration->italic);
+        section_module.add_property("dim", &configuration->dim);
+        section_module.add_property("bold", &configuration->bold);
+        section_module.add_property("expand_object", &configuration->expand_object);
+        section_module.add_property("background_color", &configuration->background_color);
+        section_module.add_property("text_color", &configuration->text_color);
+        return section_module;
+    }
     slim::module::module AssembleConsoleConfiguration(v8::Isolate* isolate) {
-        slim::module::module warn_module(isolate, "warn");
-        warn_module.add_property("bold", &slim::console::configuration::warn.bold);
-        warn_module.add_property("dim", &slim::console::configuration::warn.dim);
-        warn_module.add_property("text_color", &slim::console::configuration::warn.text_color);
-        //slim::modules::accessors::GetWarnTextColor
-
         slim::module::module configuration_module(isolate, "configuration");
-        configuration_module.add_module("warn", &warn_module);
+        for(auto level: {"log", "dir"}) {
+            auto section_module = CreateSectionModule(isolate, level, slim::console::configuration::configurations[level]);
+            configuration_module.add_module(level, &section_module);
+        }
+        for(auto level: {"debug", "error", "info", "todo", "trace", "warn"}) {
+            auto section_module = CreateSectionModule(isolate, level, slim::console::configuration::extended_configurations[level]);
+                for(auto sub_level: {"location", "message_text", "message_value", "remainder"}) {
+                    auto sub_section_module = CreateSectionModule(isolate, sub_level, slim::console::configuration::extended_configurations[level]->sub_configurations[sub_level]);
+                    section_module.add_module(sub_level, &(sub_section_module));
+                }
+            configuration_module.add_module(level, &section_module);
+        }
         return configuration_module;
     }
     void ExposeConsole(v8::Isolate* isolate) {
