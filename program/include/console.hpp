@@ -39,7 +39,7 @@ namespace slim::console {
     };
 }
 namespace slim::console::configuration {
-    slim::console::Configuration dir{}, log{};
+    slim::console::Configuration dir{.expand_object=true}, log{};
     slim::console::ExtendedConfiguration debug("DEBUG", "red");
     slim::console::ExtendedConfiguration error("ERROR", "red");
     slim::console::ExtendedConfiguration info("INFO", "default");
@@ -86,9 +86,9 @@ namespace slim::console {
     }
     void configure_console(v8::Isolate* isolate, const v8::Local<v8::Object> object, slim::console::Configuration* configuration) {
         if(object->IsObject() && slim::utilities::PropertyCount(isolate, object) > 0) {
-            auto text_color = slim::utilities::StringValue(isolate,slim::utilities::GetValue(isolate, "text_color", object));
-            if(text_color != "undefined") {
-                configuration->text_color = text_color;
+            auto text_color = slim::utilities::GetValue(isolate, "text_color", object);
+            if(!text_color->IsNull()) {
+                configuration->text_color = slim::utilities::StringValue(isolate, text_color);
             }
             auto background_color = slim::utilities::StringValue(isolate, "background_color", object);
             if(background_color != "undefined") {
@@ -134,13 +134,12 @@ namespace slim::console {
         for(auto level: {"debug", "error", "info", "todo", "trace", "warn"}) {
             auto configuration = slim::utilities::GetObject(isolate, level, configurations);
             if(slim::utilities::PropertyCount(isolate, configuration) > 0) {
-                slim::console::Configuration* section;
                 auto section_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[level]);
                 configure_console(isolate, configuration, section_configuration);
                 for(auto subsection_name: {"location", "remainder"}) {
                     auto sub_configuration = slim::utilities::GetObject(isolate, subsection_name, configuration);
                     if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
-                        section = &section_configuration->location;
+                        auto section = &section_configuration->location;
                         auto inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                         if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
                             copy_console_configuration(section_configuration, section);
@@ -154,7 +153,7 @@ namespace slim::console {
                 if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
                     auto inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                     if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
-                        section = &section_configuration->message_text;
+                        auto section = &section_configuration->message_text;
                         copy_console_configuration(section_configuration, section);
                         section = &section_configuration->message_value;
                         copy_console_configuration(section_configuration, section);
@@ -162,7 +161,7 @@ namespace slim::console {
                     else {
                         auto message_configuration = slim::utilities::GetObject(isolate, "text", configuration);
                         if(slim::utilities::PropertyCount(isolate, message_configuration) > 0) {
-                            section = &section_configuration->message_text;
+                            auto section = &section_configuration->message_text;
                             inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                             if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
                                 copy_console_configuration(section_configuration, section);
@@ -173,7 +172,7 @@ namespace slim::console {
                         }
                         message_configuration = slim::utilities::GetObject(isolate, "value", configuration);
                         if(slim::utilities::PropertyCount(isolate, message_configuration) > 0) {
-                            section = &section_configuration->message_value;
+                            auto section = &section_configuration->message_value;
                             inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                             if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
                                 copy_console_configuration(section_configuration, section);
@@ -216,7 +215,7 @@ namespace slim::console {
             return *this;
         }
     };
-    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::Configuration& configuration, bool expand_object=false) {
+    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::Configuration& configuration) {
         if(args.Length() == 0) { return; }
         auto isolate = args.GetIsolate();
         v8::HandleScope scope(isolate);
@@ -235,16 +234,12 @@ namespace slim::console {
         }
         output << "\n";
     }
-    void print(const std::string value, slim::console::ExtendedConfiguration& configuration) {
-        auto output = out(configuration);
-        output << value << "\n";
-    }
-    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::ExtendedConfiguration& configuration, bool expand_object=false) {
+    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::ExtendedConfiguration& configuration) {
         auto output = out(configuration);
         output << configuration.level_string << ": ";
-        print(args, configuration.remainder, true);
+        print(args, configuration.remainder);
     }
-    void dir(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::dir, true); }
+    void dir(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::dir); }
     void debug(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::debug); }
     //void error(const std::string error_string) { print(error_string, slim::console::configuration::error); }
     void error(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::error); }

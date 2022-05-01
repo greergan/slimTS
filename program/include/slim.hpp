@@ -38,13 +38,11 @@ namespace slim {
         expose();
         std::string source = R"(
             //console.clear();
-            console.warn(console.configuration.warn)
-            console.configuration.warn.text_color = "blue";
-            console.configuration.warn.dim = true;
-            console.configuration.warn.bold = true;
-            console.configuration.warn.remainder.text_color = "red";
-            console.warn(console.configuration.warn.remainder)
-
+            console.warn(console.configuration.warn.remainder.text_color)
+            console.configure({"warn":{"remainder":{"text_color": "red"}}});
+            console.warn(console.configuration.warn.remainder.text_color)
+            console.configure({"warn":{"remainder":{"text_color": "green"}}});
+            console.warn(console.configuration.warn.remainder.text_color)
             //fetch();
 /*             (async ()=> {
                 async function computeAnswer() {
