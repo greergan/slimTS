@@ -10,14 +10,16 @@
 #include <http_server.hpp>
 namespace slim {
     void expose(void);
-    void init(int argc, char* argv[]);
-    void start(void);
     void stop(void);
-    void init(int argc, char* argv[]) {
-        slim::uv::init();
-        slim::log::init(slim::uv::GetLoop());
-        slim::http::init(slim::uv::GetLoop());
-        slim::veight::init(argc, argv);
+    void start(int argc, char* argv[]) {
+        if(argc == 2) {
+            std::cerr << argv[1] << "\n";
+/*             slim::uv::init();
+            slim::log::init(slim::uv::GetLoop());
+            slim::http::init(slim::uv::GetLoop());
+            slim::veight::init(argc, argv); */
+            //run(const std::string source);
+        }
     }
     void stop() {
         slim::veight::stop();
@@ -26,9 +28,13 @@ namespace slim {
     void expose() {
         slim::modules::expose(slim::veight::GetIsolate());
     }
-    void RunTest() {
-        v8::Isolate::Scope isolate_scope(slim::veight::GetIsolate());
-        v8::HandleScope handle_scope(slim::veight::GetIsolate());
+    void run(const std::string source) {
+        if(source.length() < 2) {
+            return;
+        }
+        auto isolate = slim::veight::GetIsolate();
+        v8::Isolate::Scope isolate_scope(isolate);
+        v8::HandleScope handle_scope(isolate);
         slim::veight::CreateGlobal();
         v8::Local<v8::Context> context = slim::veight::GetNewContext();
         if(context.IsEmpty()) {
@@ -36,22 +42,7 @@ namespace slim {
         }
         v8::Context::Scope context_scope(context);
         expose();
-        std::string source = R"(
-            //console.clear();
-            console.warn(console.configuration.warn.remainder.text_color)
-            console.configure({"warn":{"remainder":{"text_color": "red"}}});
-            console.warn(console.configuration.warn.remainder.text_color)
-            console.configure({"warn":{"remainder":{"text_color": "green"}}});
-            console.warn(console.configuration.warn.remainder.text_color)
-            //fetch();
-/*             (async ()=> {
-                async function computeAnswer() {
-                    return Promise.resolve(42);
-                }
-                console.log(await computeAnswer());
-            })(); */
-        )";
-        v8::TryCatch try_catch(slim::veight::GetIsolate());
+        v8::TryCatch try_catch(isolate);
         v8::Local<v8::Script> script = slim::veight::CompileScript(source, "console_testing");
         if(try_catch.HasCaught()) {
             slim::veight::ReportException(&try_catch);
