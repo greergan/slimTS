@@ -1,6 +1,5 @@
 #ifndef __SLIM__V8__HPP
 #define __SLIM__V8__HPP
-#include <assert.h>
 #include <sstream>
 #include <v8.h>
 #include <libplatform/libplatform.h>
@@ -31,7 +30,11 @@ namespace slim::veight {
     }
     v8::Local<v8::Script> CompileScript(std::string source, std::string name) {
         v8::ScriptOrigin origin(veight.isolate, slim::utilities::StringToValue(veight.isolate, name));
+        v8::TryCatch try_catch(veight.isolate);
         v8::MaybeLocal<v8::Script> script = v8::Script::Compile(veight.isolate->GetCurrentContext(), slim::utilities::StringToString(veight.isolate, source), &origin);
+        if(try_catch.HasCaught()) {
+            ReportException(&try_catch);
+        }
         return script.ToLocalChecked();
     }
     v8::Local<v8::Context> GetNewContext() {
@@ -49,9 +52,16 @@ namespace slim::veight {
         veight.initilaized = true;
     }
     void ReportException(v8::TryCatch* try_catch) {
-        v8::Local<v8::Message> message = try_catch->Message();
-        std::string exception_string = slim::utilities::StringValue(veight.isolate, try_catch->Exception());
-        throw(slim::utilities::ScriptStackTrace(veight.isolate, try_catch));
+        std::stringstream exception_string;
+        auto isolate = try_catch->Message()->GetIsolate();
+        auto context = isolate->GetCurrentContext();
+        exception_string << slim::utilities::StringValue(isolate, try_catch->Exception()) << "\n";
+        exception_string << slim::utilities::StringValue(isolate, try_catch->Message()->GetSourceLine(context).ToLocalChecked()) << "\n";
+        for(int i = 0; i < try_catch->Message()->GetStartColumn(); i++) {
+            exception_string << " ";
+        }
+        exception_string << "^" << "\n";
+        throw(exception_string.str());
     }
     bool RunScript(v8::Local<v8::Script> script) {
         if(!script.IsEmpty()) {
