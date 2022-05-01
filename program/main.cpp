@@ -3,8 +3,7 @@
 #include <slim.hpp>
 int main(int argc, char *argv[]) {
     try {
-        slim::init(argc, argv);
-        slim::RunTest();
+        slim::start(argc, argv);
     }
     catch(std::string exception) {
         std::cerr << exception << "\n";
@@ -16,6 +15,5 @@ int main(int argc, char *argv[]) {
         slim::stop();
         exit(1);
     }
-    slim::stop();
     return 0;
 }
