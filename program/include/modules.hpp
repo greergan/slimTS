@@ -19,8 +19,9 @@
  * 
  */
 namespace slim::modules {
-    slim::module::module CreateSectionModule(v8::Isolate* isolate, const std::string level, slim::console::configuration_templates::Configuration* configuration) {
+    slim::module::module CreateSectionModule(v8::Isolate* isolate, const std::string level, auto configuration) {
         slim::module::module section_module(isolate, level);
+        section_module.add_property("precision", &configuration->precision);
         section_module.add_property("fast_blink", &configuration->fast_blink);
         section_module.add_property("slow_blink", &configuration->slow_blink);
         section_module.add_property("underline", &configuration->underline);
@@ -35,13 +36,16 @@ namespace slim::modules {
     slim::module::module AssembleConsoleConfiguration(v8::Isolate* isolate) {
         slim::module::module configuration_module(isolate, "configuration");
         for(auto level: {"log", "dir"}) {
-            auto section_module = CreateSectionModule(isolate, level, slim::console::configuration::configurations[level]);
+            auto level_configuration = std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[level]);
+            auto section_module = CreateSectionModule(isolate, level, level_configuration);
             configuration_module.add_module(level, &section_module);
         }
         for(auto level: {"debug", "error", "info", "todo", "trace", "warn"}) {
-            auto section_module = CreateSectionModule(isolate, level, slim::console::configuration::extended_configurations[level]);
+            auto level_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[level]);
+            auto section_module = CreateSectionModule(isolate, level, level_configuration);
                 for(auto sub_level: {"location", "message_text", "message_value", "remainder"}) {
-                    auto sub_section_module = CreateSectionModule(isolate, sub_level, slim::console::configuration::extended_configurations[level]->sub_configurations[sub_level]);
+                    auto sub_level_configuration = std::any_cast<slim::console::Configuration*>(level_configuration->sub_configurations[sub_level]);
+                    auto sub_section_module = CreateSectionModule(isolate, sub_level, sub_level_configuration);
                     section_module.add_module(sub_level, &(sub_section_module));
                 }
             configuration_module.add_module(level, &section_module);

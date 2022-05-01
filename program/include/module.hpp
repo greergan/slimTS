@@ -6,7 +6,7 @@
 #include <utilities.hpp>
 namespace slim::module {
     class PropertyPointer {
-        std::variant<bool*, std::string*> property;
+        std::variant<bool*, std::string*, int*> property;
         public:
             PropertyPointer(auto&& property): property{property} { }
             ~PropertyPointer() {}
@@ -17,6 +17,9 @@ namespace slim::module {
                 else if(std::holds_alternative<bool*>(property)) {
                     return v8::Boolean::New(isolate, *std::get<bool*>(property)).As<v8::Value>();
                 }
+                else if(std::holds_alternative<int*>(property)) {
+                    return v8::Int32::New(isolate, *std::get<int*>(property)).As<v8::Value>();
+                }
                 return slim::utilities::StringToString(isolate, "").As<v8::Value>(); 
             }
             void SetValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
@@ -25,6 +28,9 @@ namespace slim::module {
                 }
                 else if(std::holds_alternative<bool*>(property)) {
                     *std::get<bool*>(property) = value->BooleanValue(isolate);
+                }
+                else if(std::holds_alternative<int*>(property)) {
+                    *std::get<int*>(property) = value->Int32Value(isolate->GetCurrentContext()).FromJust();
                 }
             }
     };

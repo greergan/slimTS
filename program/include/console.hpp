@@ -1,6 +1,7 @@
 #ifndef __SLIM__CONSOLE__HPP
 #define __SLIM__CONSOLE__HPP
 #include <mutex>
+#include <any>
 #include <unordered_map>
 #include <utilities.hpp>
 #include <v8.h>
@@ -8,8 +9,10 @@
 /*
  * Reference https://console.spec.whatwg.org/#printer
  */
-namespace slim::console::configuration_templates {
+
+namespace slim::console {
     struct Configuration {
+        int precision = 10;
         bool dim = false;
         bool bold = false;
         bool italic = false;
@@ -17,12 +20,6 @@ namespace slim::console::configuration_templates {
         bool slow_blink = false;
         bool fast_blink = false;
         bool expand_object = false;
-
-        std::string rgb_text = "";
-        std::string rbg_background = "";
-        int custom_text_color = -1;
-        int custom_background_color = -1;
-
         std::string text_color = "default";
         std::string background_color = "default";
     };
@@ -32,11 +29,9 @@ namespace slim::console::configuration_templates {
         Configuration message_text{};
         Configuration message_value{};
         Configuration remainder{};
-        std::unordered_map<std::string, slim::console::configuration_templates::Configuration*> sub_configurations {
-            {"location", &location},
-            {"message_text", &message_text},
-            {"message_value", &message_value},
-            {"remainder", &remainder}
+        std::unordered_map<std::string, slim::console::Configuration*> sub_configurations {
+            {"location", &location}, {"message_text", &message_text},
+            {"message_value", &message_value}, {"remainder", &remainder}
         };
         ExtendedConfiguration(const std::string level, const std::string color="default") : level_string{level} {
             text_color = color;
@@ -44,74 +39,28 @@ namespace slim::console::configuration_templates {
     };
 }
 namespace slim::console::configuration {
-    int precision = 10;
-}
-namespace slim::console::configuration {
-    slim::console::configuration_templates::Configuration dir{};
-    slim::console::configuration_templates::Configuration log{};
-    slim::console::configuration_templates::ExtendedConfiguration debug("DEBUG", "red");
-    slim::console::configuration_templates::ExtendedConfiguration error("ERROR", "red");
-    slim::console::configuration_templates::ExtendedConfiguration info("INFO", "default");
-    slim::console::configuration_templates::ExtendedConfiguration todo("TODO", "blue");
-    slim::console::configuration_templates::ExtendedConfiguration trace("TRACE", "blue");
-    slim::console::configuration_templates::ExtendedConfiguration warn("WARN", "yellow");
-    std::unordered_map<std::string, slim::console::configuration_templates::Configuration*> configurations {
-        {"dir", &dir},
-        {"log", &log},
-        {"debug", &debug},
-        {"error", &error},
-        {"info", &info},
-        {"todo", &todo},
-        {"trace", &trace},
-        {"warn", &warn}
-    };
-    std::unordered_map<std::string, slim::console::configuration_templates::ExtendedConfiguration*> extended_configurations {
-        {"debug", &debug},
-        {"error", &error},
-        {"info", &info},
-        {"todo", &todo},
-        {"trace", &trace},
-        {"warn", &warn}
+    slim::console::Configuration dir{}, log{};
+    slim::console::ExtendedConfiguration debug("DEBUG", "red");
+    slim::console::ExtendedConfiguration error("ERROR", "red");
+    slim::console::ExtendedConfiguration info("INFO", "default");
+    slim::console::ExtendedConfiguration todo("TODO", "blue");
+    slim::console::ExtendedConfiguration trace("TRACE", "blue");
+    slim::console::ExtendedConfiguration warn("WARN", "yellow");
+    std::unordered_map<std::string, std::any> configurations {
+        {"dir", &dir}, {"log", &log}, {"debug", &debug}, {"error", &error},
+        {"info", &info}, {"todo", &todo}, {"trace", &trace}, {"warn", &warn}
     };
 }
 namespace slim::console::colors {
     std::unordered_map<std::string, int> text {
-        {"default", 39},
-        {"black", 30},
-        {"red", 31},
-        {"green", 32},
-        {"yellow", 33},
-        {"blue", 34},
-        {"magenta", 35},
-        {"cyan", 36},
-        {"white", 37},
-        {"bright black", 90},
-        {"bright red", 91},
-        {"bright green", 92},
-        {"bright yellow", 93},
-        {"bright blue", 94},
-        {"bright magenta", 95},
-        {"bright cyan", 96},
-        {"bright white", 97},
+        {"default", 39}, {"black", 30}, {"red", 31}, {"green", 32}, {"yellow", 33}, {"blue", 34},
+        {"magenta", 35}, {"cyan", 36}, {"white", 37}, {"bright black", 90}, {"bright red", 91}, {"bright green", 92},
+        {"bright yellow", 93}, {"bright blue", 94}, {"bright magenta", 95}, {"bright cyan", 96}, {"bright white", 97},
     };
     std::unordered_map<std::string, int> background {
-        {"default", 49},
-        {"black", 40},
-        {"red", 41},
-        {"green", 42},
-        {"yellow", 43},
-        {"blue", 44},
-        {"magenta", 45},
-        {"cyan", 46},
-        {"white", 47},
-        {"bright black", 100},
-        {"bright red", 101},
-        {"bright green", 102},
-        {"bright yellow", 103},
-        {"bright blue", 104},
-        {"bright magenta", 105},
-        {"bright cyan", 106},
-        {"bright white", 107}
+        {"default", 49}, {"black", 40}, {"red", 41}, {"green", 42}, {"yellow", 43}, {"blue", 44},
+        {"magenta", 45}, {"cyan", 46}, {"white", 47}, {"bright black", 100}, {"bright red", 101}, {"bright green", 102},
+        {"bright yellow", 103}, {"bright blue", 104}, {"bright magenta", 105}, {"bright cyan", 106}, {"bright white", 107}
     };
 }
 namespace slim::console {
@@ -126,53 +75,46 @@ namespace slim::console {
     void todo(const v8::FunctionCallbackInfo<v8::Value>& args);
     void trace(const v8::FunctionCallbackInfo<v8::Value>& args);
     void warn(const v8::FunctionCallbackInfo<v8::Value>& args);
-    void copy_console_configuration(const slim::console::configuration_templates::Configuration* source, slim::console::configuration_templates::Configuration* destination) {
+    void copy_console_configuration(const slim::console::Configuration* source, slim::console::Configuration* destination) {
         destination->dim = source->dim;
         destination->bold = source->bold;
         destination->italic = source->italic;
         destination->underline = source->underline;
-        destination->rgb_text = source->rgb_text;
-        destination->rbg_background = source->rbg_background;
-        destination->custom_text_color = source->custom_text_color;
-        destination->custom_background_color = source->custom_background_color;
+        destination->precision = source->precision;
         destination->text_color = source->text_color;
         destination->background_color = source->background_color;
     }
-    void configure_console(v8::Isolate* isolate, const v8::Local<v8::Object> object, slim::console::configuration_templates::Configuration* configuration) {
+    void configure_console(v8::Isolate* isolate, const v8::Local<v8::Object> object, slim::console::Configuration* configuration) {
         if(object->IsObject() && slim::utilities::PropertyCount(isolate, object) > 0) {
-            int custom_text_color = slim::utilities::IntValuePositive(isolate, "custom_text_color", object);
-            if(custom_text_color > -1 && custom_text_color <= 255) {
-                configuration->custom_text_color = custom_text_color;
-            }
-            int custom_background_color = slim::utilities::IntValuePositive(isolate, "custom_background_color", object);
-            if(custom_background_color > -1 && custom_background_color <= 255) {
-                configuration->custom_background_color = custom_background_color;
-            }
-            std::string text_color = slim::utilities::StringValue(isolate, "text_color", object);
+            auto text_color = slim::utilities::StringValue(isolate,slim::utilities::GetValue(isolate, "text_color", object));
             if(text_color != "undefined") {
                 configuration->text_color = text_color;
             }
-            std::string background_color = slim::utilities::StringValue(isolate, "background_color", object);
+            auto background_color = slim::utilities::StringValue(isolate, "background_color", object);
             if(background_color != "undefined") {
                 configuration->background_color = background_color;
             }
-            v8::Local<v8::Value> dim = slim::utilities::GetValue(isolate, "dim", object);
+            auto precision = slim::utilities::GetValue(isolate, "precision", object);
+            if(precision->IsInt32()) {
+                configuration->precision = precision->Int32Value(isolate->GetCurrentContext()).FromJust();
+            }
+            auto dim = slim::utilities::GetValue(isolate, "dim", object);
             if(dim->IsBoolean()) {
                 configuration->dim = dim->BooleanValue(isolate);
             }
-            v8::Local<v8::Value> bold = slim::utilities::GetValue(isolate, "bold", object);
+            auto bold = slim::utilities::GetValue(isolate, "bold", object);
             if(bold->IsBoolean()) {
                 configuration->bold = bold->BooleanValue(isolate);
             }
-            v8::Local<v8::Value> italic = slim::utilities::GetValue(isolate, "italic", object);
+            auto italic = slim::utilities::GetValue(isolate, "italic", object);
             if(italic->IsBoolean()) {
                 configuration->italic = italic->BooleanValue(isolate);
             }
-            v8::Local<v8::Value> underline = slim::utilities::GetValue(isolate, "underline", object);
+            auto underline = slim::utilities::GetValue(isolate, "underline", object);
             if(underline->IsBoolean()) {
                 configuration->underline = underline->BooleanValue(isolate);
             }
-            v8::Local<v8::Value> expand_object = slim::utilities::GetValue(isolate, "underline", object);
+            auto expand_object = slim::utilities::GetValue(isolate, "underline", object);
             if(underline->IsBoolean()) {
                 configuration->expand_object = expand_object->BooleanValue(isolate);
             }
@@ -180,39 +122,37 @@ namespace slim::console {
     }
     void configure(const v8::FunctionCallbackInfo<v8::Value>& args) {
         if(!args[0]->IsObject()) { return; }
-        v8::Isolate* isolate = args.GetIsolate();
+        auto isolate = args.GetIsolate();
         v8::HandleScope scope(isolate);
-        v8::Local<v8::Object> configurations = slim::utilities::GetObject(isolate, args[0]);
-        v8::Local<v8::Object> configuration;
+        auto configurations = slim::utilities::GetObject(isolate, args[0]);
         for(auto level: {"dir", "log"}) {
-            configuration = slim::utilities::GetObject(isolate, level, configurations);
+            auto configuration = slim::utilities::GetObject(isolate, level, configurations);
             if(slim::utilities::PropertyCount(isolate, configuration) > 0) {
-                configure_console(isolate, configuration, slim::console::configuration::configurations[level]);
+                configure_console(isolate, configuration, std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[level]));
             }
         }
         for(auto level: {"debug", "error", "info", "todo", "trace", "warn"}) {
-            configuration = slim::utilities::GetObject(isolate, level, configurations);
+            auto configuration = slim::utilities::GetObject(isolate, level, configurations);
             if(slim::utilities::PropertyCount(isolate, configuration) > 0) {
-                v8::Local<v8::Value> inherit;
-                v8::Local<v8::Object> sub_configuration;
-                v8::Local<v8::Object> sub_sub_configuration;
-                slim::console::configuration_templates::Configuration* section;
-                slim::console::configuration_templates::ExtendedConfiguration* section_configuration = slim::console::configuration::extended_configurations[level];
+                slim::console::Configuration* section;
+                auto section_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[level]);
                 configure_console(isolate, configuration, section_configuration);
-                sub_configuration = slim::utilities::GetObject(isolate, "location", configuration);
-                if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
-                    section = &section_configuration->location;
-                    inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
-                    if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
-                        copy_console_configuration(section_configuration, section);
-                    }
-                    else {    
-                        configure_console(isolate, sub_configuration, section);
+                for(auto subsection_name: {"location", "remainder"}) {
+                    auto sub_configuration = slim::utilities::GetObject(isolate, subsection_name, configuration);
+                    if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
+                        section = &section_configuration->location;
+                        auto inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
+                        if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
+                            copy_console_configuration(section_configuration, section);
+                        }
+                        else {    
+                            configure_console(isolate, sub_configuration, section);
+                        }
                     }
                 }
-                sub_configuration = slim::utilities::GetObject(isolate, "message", configuration);
+                auto sub_configuration = slim::utilities::GetObject(isolate, "message", configuration);
                 if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
-                    inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
+                    auto inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                     if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
                         section = &section_configuration->message_text;
                         copy_console_configuration(section_configuration, section);
@@ -220,39 +160,28 @@ namespace slim::console {
                         copy_console_configuration(section_configuration, section);
                     }
                     else {
-                        sub_sub_configuration = slim::utilities::GetObject(isolate, "text", configuration);
-                        if(slim::utilities::PropertyCount(isolate, sub_sub_configuration) > 0) {
+                        auto message_configuration = slim::utilities::GetObject(isolate, "text", configuration);
+                        if(slim::utilities::PropertyCount(isolate, message_configuration) > 0) {
                             section = &section_configuration->message_text;
                             inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                             if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
                                 copy_console_configuration(section_configuration, section);
                             }
                             else {
-                                configure_console(isolate, sub_sub_configuration, section);
+                                configure_console(isolate, message_configuration, section);
                             }
                         }
-                        sub_sub_configuration = slim::utilities::GetObject(isolate, "value", configuration);
-                        if(slim::utilities::PropertyCount(isolate, sub_sub_configuration) > 0) {
+                        message_configuration = slim::utilities::GetObject(isolate, "value", configuration);
+                        if(slim::utilities::PropertyCount(isolate, message_configuration) > 0) {
                             section = &section_configuration->message_value;
                             inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                             if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
                                 copy_console_configuration(section_configuration, section);
                             }
                             else {
-                                configure_console(isolate, sub_sub_configuration, section);
+                                configure_console(isolate, message_configuration, section);
                             }
                         }
-                    }
-                }
-                sub_configuration = slim::utilities::GetObject(isolate, "remainder", configuration);
-                if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
-                    section = &section_configuration->remainder;
-                    inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
-                    if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
-                        copy_console_configuration(section_configuration, section);
-                    }
-                    else {    
-                        configure_console(isolate, sub_configuration, section);
                     }
                 }
             }
@@ -274,12 +203,12 @@ namespace slim::console {
             dim = (configuration.dim) ? "\33[2m" : "";
             italic = (configuration.italic) ? "\33[3m" : "";
             underline = (configuration.underline) ? "\33[4m" : "";
-            if(configuration.custom_text_color > -1) {
+/*             if(configuration.custom_text_color > -1) {
                 text_color = "\33[38;5;" + std::to_string(configuration.custom_text_color) + "m";
             }
             if(configuration.custom_background_color > -1) {
                 background_color = "\33[48;5;" + std::to_string(configuration.custom_background_color) + "m";
-            }
+            } */
         };
         template<typename Thing>
         out &operator<<(const Thing& thingy) {
@@ -287,13 +216,13 @@ namespace slim::console {
             return *this;
         }
     };
-    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::configuration_templates::Configuration& configuration, bool expand_object=false) {
+    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::Configuration& configuration, bool expand_object=false) {
         if(args.Length() == 0) { return; }
-        v8::Isolate* isolate = args.GetIsolate();
+        auto isolate = args.GetIsolate();
         v8::HandleScope scope(isolate);
         std::mutex mtx;
-        std::cerr.precision(slim::console::configuration::precision);
-        out output = out(configuration);
+        std::cerr.precision(configuration.precision);
+        auto output = out(configuration);
         std::lock_guard<std::mutex> lk(mtx);
         for(int i = 0; i < args.Length(); i++) {
             if(args[i]->IsNumber()) { output << slim::utilities::NumberValue(isolate, args[i]); }
@@ -306,12 +235,12 @@ namespace slim::console {
         }
         output << "\n";
     }
-    void print(const std::string value, slim::console::configuration_templates::ExtendedConfiguration& configuration) {
-        out output = out(configuration);
+    void print(const std::string value, slim::console::ExtendedConfiguration& configuration) {
+        auto output = out(configuration);
         output << value << "\n";
     }
-    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::configuration_templates::ExtendedConfiguration& configuration, bool expand_object=false) {
-        out output = out(configuration);
+    void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::ExtendedConfiguration& configuration, bool expand_object=false) {
+        auto output = out(configuration);
         output << configuration.level_string << ": ";
         print(args, configuration.remainder, true);
     }
