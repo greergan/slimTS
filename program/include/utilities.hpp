@@ -12,10 +12,10 @@ namespace slim::utilities {
     int IntValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     double NumberValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
     int PropertyCount(v8::Isolate* isolate, v8::Local<v8::Object> object);
-    std::string ScriptFileName(v8::Isolate* isolate, v8::Local<v8::Message> message);
-    int ScriptLineNumber(v8::Isolate* isolate, v8::Local<v8::Message> message);
-    std::string ScriptLine(v8::Isolate* isolate, v8::Local<v8::Message> message);
-    std::string ScriptStackTrace(v8::Isolate* isolate, v8::TryCatch* try_catch);
+    std::string ScriptFileName(v8::Local<v8::Message> message);
+    int ScriptLineNumber(v8::Local<v8::Message> message);
+    std::string ScriptLine(v8::Local<v8::Message> message);
+    std::string ScriptStackTrace(v8::TryCatch* try_catch);
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Function> function);
     v8::Local<v8::Name> StringToName(v8::Isolate* isolate, std::string string);
     v8::Local<v8::String> StringToString(v8::Isolate* isolate, std::string string);
@@ -55,16 +55,17 @@ namespace slim::utilities {
     int PropertyCount(v8::Isolate *isolate, v8::Local<v8::Object> object) {
         return object->GetPropertyNames(isolate->GetCurrentContext()).ToLocalChecked()->Length();
     }
-    std::string ScriptFileName(v8::Isolate* isolate, v8::Local<v8::Message> message) {
-        return StringValue(isolate, message->GetScriptOrigin().ResourceName());
+    std::string ScriptFileName(v8::Local<v8::Message> message) {
+        return StringValue(message->GetIsolate(), message->GetScriptOrigin().ResourceName());
     }
-    std::string ScriptLine(v8::Isolate* isolate, v8::Local<v8::Message> message) {
-         return StringValue(isolate, message->GetSourceLine(isolate->GetCurrentContext()).ToLocalChecked());
+    std::string ScriptLine(v8::Local<v8::Message> message) {
+         return StringValue(message->GetIsolate(), message->GetSourceLine(message->GetIsolate()->GetCurrentContext()).ToLocalChecked());
     }
-    int ScriptLineNumber(v8::Isolate* isolate, v8::Local<v8::Message> message) {
-        return message->GetLineNumber(isolate->GetCurrentContext()).FromJust();
+    int ScriptLineNumber(v8::Local<v8::Message> message) {
+        return message->GetLineNumber(message->GetIsolate()->GetCurrentContext()).FromJust();
     }
-    std::string ScriptStackTrace(v8::Isolate* isolate, v8::TryCatch* try_catch) {
+    std::string ScriptStackTrace(v8::TryCatch* try_catch) {
+        auto isolate = try_catch->Message()->GetIsolate();
         return StringValue(isolate, try_catch->StackTrace(isolate->GetCurrentContext()).ToLocalChecked());
     }
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Value> function) {
