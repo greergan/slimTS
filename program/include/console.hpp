@@ -45,35 +45,18 @@ namespace slim::console {
         destination->precision = source->precision;
         destination->text_color = source->text_color;
         destination->background_color = source->background_color;
+        destination->expand_object = source->expand_object;
     }
     void configure_console(v8::Isolate* isolate, const v8::Local<v8::Object> object, slim::console::Configuration* configuration) {
         if(object->IsObject() && slim::utilities::PropertyCount(isolate, object) > 0) {
             configuration->text_color = slim::utilities::SlimColorValue(isolate, slim::utilities::GetValue(isolate, "text_color", object));
             configuration->text_color = slim::utilities::SlimColorValue(isolate, slim::utilities::GetValue(isolate, "background_color", object));
-            auto precision = slim::utilities::GetValue(isolate, "precision", object);
-            if(precision->IsInt32()) {
-                configuration->precision = precision->Int32Value(isolate->GetCurrentContext()).FromJust();
-            }
-            auto bool_value = slim::utilities::GetValue(isolate, "dim", object);
-            if(bool_value->IsBoolean()) {
-                configuration->dim = bool_value->BooleanValue(isolate);
-            }
-            bool_value = slim::utilities::GetValue(isolate, "bold", object);
-            if(bool_value->IsBoolean()) {
-                configuration->bold = bool_value->BooleanValue(isolate);
-            }
-            bool_value = slim::utilities::GetValue(isolate, "italic", object);
-            if(bool_value->IsBoolean()) {
-                configuration->italic = bool_value->BooleanValue(isolate);
-            }
-            bool_value = slim::utilities::GetValue(isolate, "underline", object);
-            if(bool_value->IsBoolean()) {
-                configuration->underline = bool_value->BooleanValue(isolate);
-            }
-            bool_value = slim::utilities::GetValue(isolate, "expand_object", object);
-            if(bool_value->IsBoolean()) {
-                configuration->expand_object = bool_value->BooleanValue(isolate);
-            }
+            configuration->precision  = slim::utilities::SlimIntValue(isolate,   slim::utilities::GetValue(isolate, "precision", object));
+            configuration->dim = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "dim", object));
+            configuration->bold = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "bold", object));
+            configuration->italic = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "italic", object));
+            configuration->underline = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "underline", object));
+            configuration->expand_object = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "expand_object", object));
         }
     }
     void configure(const v8::FunctionCallbackInfo<v8::Value>& args) {
@@ -221,6 +204,7 @@ namespace slim::console {
         std::lock_guard<std::mutex> lk(mtx);
         for(int i = 0; i < args.Length(); i++) {
             if(args[i]->IsNumber()) { output << slim::utilities::NumberValue(isolate, args[i]); }
+            else if(args[i]->IsBoolean()) { output << args[i]->BooleanValue(isolate); }
             else if(args[i]->IsString()) { output << slim::utilities::StringValue(isolate, args[i]); }
             else if(args[i]->IsFunction()) { output << "Function " << slim::utilities::StringFunction(isolate, args[i]); }
             else if(args[i]->IsArray()) { output << "Array(" << slim::utilities::ArrayCount(args[i]) << ") " << v8pp::json_str(isolate, args[i]); }

@@ -29,8 +29,8 @@ namespace slim::modules {
         section_module.add_property("dim", &configuration->dim);
         section_module.add_property("bold", &configuration->bold);
         section_module.add_property("expand_object", &configuration->expand_object);
-        section_module.add_property("background_color", &configuration->background_color, true);
-        section_module.add_property("text_color", &configuration->text_color, true);
+        section_module.add_property("background_color", &configuration->background_color);
+        section_module.add_property("text_color", &configuration->text_color);
         return section_module;
     }
     slim::module::module AssembleConsoleConfiguration(v8::Isolate* isolate) {

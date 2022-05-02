@@ -20,7 +20,9 @@ namespace slim::utilities {
     int ScriptLineNumber(v8::Local<v8::Message> message);
     std::string ScriptLine(v8::Local<v8::Message> message);
     std::string ScriptStackTrace(v8::TryCatch* try_catch);
+    bool SlimBoolValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
     std::string SlimColorValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
+    int SlimIntValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Function> function);
     v8::Local<v8::Name> StringToName(v8::Isolate* isolate, std::string string);
     v8::Local<v8::String> StringToString(v8::Isolate* isolate, std::string string);
@@ -76,6 +78,12 @@ namespace slim::utilities {
         auto isolate = try_catch->Message()->GetIsolate();
         return StringValue(isolate, try_catch->StackTrace(isolate->GetCurrentContext()).ToLocalChecked());
     }
+    bool SlimBoolValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+        if(!value->IsBoolean()) {
+            isolate->ThrowException(slim::utilities::StringToString(isolate, "boolean value expected"));
+        }  
+        return value->BooleanValue(isolate);
+    }
     std::string SlimColorValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
         std::string return_value;
         if(value->IsString()) {
@@ -119,6 +127,12 @@ namespace slim::utilities {
             }
         }
         return return_value;
+    }
+    int SlimIntValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+        if(!value->IsInt32()) {
+            isolate->ThrowException(slim::utilities::StringToString(isolate, "integer value expected"));
+        }  
+        return value->Int32Value(isolate->GetCurrentContext()).FromJust();
     }
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Value> function) {
         return StringValue(isolate, function->ToString(isolate->GetCurrentContext()).ToLocalChecked());
