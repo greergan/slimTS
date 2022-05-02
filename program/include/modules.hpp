@@ -35,6 +35,7 @@ namespace slim::modules {
     }
     slim::module::module AssembleConsoleConfiguration(v8::Isolate* isolate) {
         slim::module::module configuration_module(isolate, "configuration");
+        configuration_module.add_function("copy", &slim::console::copy_configuration);
         for(auto level: {"log", "dir"}) {
             auto level_configuration = std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[level]);
             auto section_module = CreateSectionModule(isolate, level, level_configuration);

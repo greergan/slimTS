@@ -65,6 +65,7 @@ namespace slim::console::colors {
 }
 namespace slim::console {
     void console_assert(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void copy_configuration(const v8::FunctionCallbackInfo<v8::Value>& args);
     void clear(const v8::FunctionCallbackInfo<v8::Value>& args);
     void dir(const v8::FunctionCallbackInfo<v8::Value>& args);
     void debug(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -182,6 +183,47 @@ namespace slim::console {
                         }
                     }
                 }
+            }
+        }
+    }
+    void copy_configuration(const v8::FunctionCallbackInfo<v8::Value>& args) {
+        auto isolate = args.GetIsolate();
+        auto copy_expects = "copy expects exactly 2 string arguments";
+        if(args.Length() != 2) {
+            isolate->ThrowException(slim::utilities::StringToString(isolate, copy_expects));
+        }
+        if(!args[0]->IsString() || !args[1]->IsString()) {
+            isolate->ThrowException(slim::utilities::StringToString(isolate, copy_expects));
+        }
+        auto from = slim::utilities::StringValue(isolate, args[0]);
+        auto to = slim::utilities::StringValue(isolate, args[1]);
+        if(from == to) {
+            isolate->ThrowException(slim::utilities::StringToString(isolate, "cannot copy to self"));
+        }
+        for(const std::string configuration: {to, from}) {
+            if(!slim::console::configuration::configurations.contains(configuration)) {
+                isolate->ThrowException(slim::utilities::StringToString(isolate, "level not found: " + configuration));
+            }
+        }
+        std::vector<std::string> to_from_basic {"dir", "log"};
+        auto find_result = std::find(std::begin(to_from_basic), std::end(to_from_basic), from);
+        if(find_result != std::end(to_from_basic)) {
+            auto find_result = std::find(std::begin(to_from_basic), std::end(to_from_basic), to);
+            if(find_result != std::end(to_from_basic)) {
+                auto from_configuration = std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[from]);
+                auto to_configuration = std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[to]);
+                copy_console_configuration(from_configuration, to_configuration);
+            }
+            else {
+                isolate->ThrowException(slim::utilities::StringToString(isolate, "level types must match"));
+            }
+        }
+        else {
+            auto from_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[from]);
+            auto to_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[to]);
+            copy_console_configuration(from_configuration, to_configuration);
+            for(auto sub_level: {"location", "remainder", "message_text", "message_value"}) {
+                copy_console_configuration(from_configuration->sub_configurations[sub_level], to_configuration->sub_configurations[sub_level]);
             }
         }
     }
