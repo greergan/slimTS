@@ -15,9 +15,9 @@ namespace slim {
     void stop(void);
     void start(int argc, char* argv[]) {
         if(argc == 2) {
-            std::string file_name{argv[1]};
-            std::ifstream file(argv[1]);
             std::string file_contents;
+            std::string file_name{argv[1]};
+            std::ifstream file(file_name);
             getline(file, file_contents, '\0');
             file.close();
             if(file_contents.length() > 2) {
