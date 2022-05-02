@@ -9,6 +9,7 @@ namespace slim::utilities {
     v8::Local<v8::Object> GetObject(v8::Isolate* isolate, Thing object);
     v8::Local<v8::Object> GetObject(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     v8::Local<v8::Value> GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
+    int IntValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
     int IntValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     double NumberValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
     int PropertyCount(v8::Isolate* isolate, v8::Local<v8::Object> object);
@@ -41,6 +42,9 @@ namespace slim::utilities {
     }
     v8::Local<v8::Value> GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
         return object->Get(isolate->GetCurrentContext(), StringToName(isolate, string)).ToLocalChecked();
+    }
+    int IntValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+        return value->Int32Value(isolate->GetCurrentContext()).FromJust();
     }
     int IntValuePositive(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
         v8::Local<v8::Value> value = GetValue(isolate, string, object);
