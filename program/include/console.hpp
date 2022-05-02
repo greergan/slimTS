@@ -86,37 +86,37 @@ namespace slim::console {
     }
     void configure_console(v8::Isolate* isolate, const v8::Local<v8::Object> object, slim::console::Configuration* configuration) {
         if(object->IsObject() && slim::utilities::PropertyCount(isolate, object) > 0) {
-            auto text_color = slim::utilities::GetValue(isolate, "text_color", object);
-            if(!text_color->IsNull()) {
-                configuration->text_color = slim::utilities::StringValue(isolate, text_color);
+            auto text_value = slim::utilities::StringValue(isolate, slim::utilities::GetValue(isolate, "text_color", object));
+            if(text_value != "undefined") {
+                configuration->text_color = text_value;
             }
-            auto background_color = slim::utilities::StringValue(isolate, "background_color", object);
-            if(background_color != "undefined") {
-                configuration->background_color = background_color;
+            text_value = slim::utilities::StringValue(isolate, "background_color", object);
+            if(text_value != "undefined") {
+                configuration->background_color = text_value;
             }
             auto precision = slim::utilities::GetValue(isolate, "precision", object);
             if(precision->IsInt32()) {
                 configuration->precision = precision->Int32Value(isolate->GetCurrentContext()).FromJust();
             }
-            auto dim = slim::utilities::GetValue(isolate, "dim", object);
-            if(dim->IsBoolean()) {
-                configuration->dim = dim->BooleanValue(isolate);
+            auto bool_value = slim::utilities::GetValue(isolate, "dim", object);
+            if(bool_value->IsBoolean()) {
+                configuration->dim = bool_value->BooleanValue(isolate);
             }
-            auto bold = slim::utilities::GetValue(isolate, "bold", object);
-            if(bold->IsBoolean()) {
-                configuration->bold = bold->BooleanValue(isolate);
+            bool_value = slim::utilities::GetValue(isolate, "bold", object);
+            if(bool_value->IsBoolean()) {
+                configuration->bold = bool_value->BooleanValue(isolate);
             }
-            auto italic = slim::utilities::GetValue(isolate, "italic", object);
-            if(italic->IsBoolean()) {
-                configuration->italic = italic->BooleanValue(isolate);
+            bool_value = slim::utilities::GetValue(isolate, "italic", object);
+            if(bool_value->IsBoolean()) {
+                configuration->italic = bool_value->BooleanValue(isolate);
             }
-            auto underline = slim::utilities::GetValue(isolate, "underline", object);
-            if(underline->IsBoolean()) {
-                configuration->underline = underline->BooleanValue(isolate);
+            bool_value = slim::utilities::GetValue(isolate, "underline", object);
+            if(bool_value->IsBoolean()) {
+                configuration->underline = bool_value->BooleanValue(isolate);
             }
-            auto expand_object = slim::utilities::GetValue(isolate, "underline", object);
-            if(underline->IsBoolean()) {
-                configuration->expand_object = expand_object->BooleanValue(isolate);
+            bool_value = slim::utilities::GetValue(isolate, "expand_object", object);
+            if(bool_value->IsBoolean()) {
+                configuration->expand_object = bool_value->BooleanValue(isolate);
             }
         }
     }
@@ -126,60 +126,59 @@ namespace slim::console {
         v8::HandleScope scope(isolate);
         auto configurations = slim::utilities::GetObject(isolate, args[0]);
         for(auto level: {"dir", "log"}) {
-            auto configuration = slim::utilities::GetObject(isolate, level, configurations);
-            if(slim::utilities::PropertyCount(isolate, configuration) > 0) {
-                configure_console(isolate, configuration, std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[level]));
+            auto level_configuration = slim::utilities::GetObject(isolate, level, configurations);
+            if(slim::utilities::PropertyCount(isolate, level_configuration) > 0) {
+                configure_console(isolate, level_configuration, std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[level]));
             }
         }
         for(auto level: {"debug", "error", "info", "todo", "trace", "warn"}) {
             auto configuration = slim::utilities::GetObject(isolate, level, configurations);
             if(slim::utilities::PropertyCount(isolate, configuration) > 0) {
-                auto section_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[level]);
-                configure_console(isolate, configuration, section_configuration);
+                auto level_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[level]);
+                configure_console(isolate, configuration, level_configuration);
+                auto propogate = slim::utilities::GetValue(isolate, "propogate", configuration);
+                if(propogate->IsBoolean() && propogate->BooleanValue(isolate)) {
+                    for(auto subsection_name: {"location", "remainder", "message_text", "message_value"}) {
+                        auto section = level_configuration->sub_configurations[subsection_name];
+                        copy_console_configuration(level_configuration, section);
+                    }
+                }
                 for(auto subsection_name: {"location", "remainder"}) {
-                    auto sub_configuration = slim::utilities::GetObject(isolate, subsection_name, configuration);
-                    if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
-                        auto section = &section_configuration->location;
-                        auto inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
+                    auto subsection_configuration = slim::utilities::GetObject(isolate, subsection_name, configuration);
+                    if(slim::utilities::PropertyCount(isolate, subsection_configuration) > 0) {
+                        auto section = level_configuration->sub_configurations[subsection_name];
+                        auto inherit = slim::utilities::GetValue(isolate, "inherit", subsection_configuration);
                         if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
-                            copy_console_configuration(section_configuration, section);
+                            copy_console_configuration(level_configuration, section);
                         }
-                        else {    
-                            configure_console(isolate, sub_configuration, section);
-                        }
+                        configure_console(isolate, subsection_configuration, section);
                     }
                 }
                 auto sub_configuration = slim::utilities::GetObject(isolate, "message", configuration);
                 if(slim::utilities::PropertyCount(isolate, sub_configuration) > 0) {
                     auto inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                     if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
-                        auto section = &section_configuration->message_text;
-                        copy_console_configuration(section_configuration, section);
-                        section = &section_configuration->message_value;
-                        copy_console_configuration(section_configuration, section);
+                        copy_console_configuration(level_configuration, &level_configuration->message_text);
+                        copy_console_configuration(level_configuration, &level_configuration->message_value);
                     }
                     else {
                         auto message_configuration = slim::utilities::GetObject(isolate, "text", configuration);
                         if(slim::utilities::PropertyCount(isolate, message_configuration) > 0) {
-                            auto section = &section_configuration->message_text;
+                            auto section = &level_configuration->message_text;
                             inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                             if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
-                                copy_console_configuration(section_configuration, section);
+                                copy_console_configuration(level_configuration, section);
                             }
-                            else {
-                                configure_console(isolate, message_configuration, section);
-                            }
+                            configure_console(isolate, message_configuration, section);
                         }
                         message_configuration = slim::utilities::GetObject(isolate, "value", configuration);
                         if(slim::utilities::PropertyCount(isolate, message_configuration) > 0) {
-                            auto section = &section_configuration->message_value;
+                            auto section = &level_configuration->message_value;
                             inherit = slim::utilities::GetValue(isolate, "inherit", sub_configuration);
                             if(inherit->IsBoolean() && inherit->BooleanValue(isolate)) {
-                                copy_console_configuration(section_configuration, section);
+                                copy_console_configuration(level_configuration, section);
                             }
-                            else {
-                                configure_console(isolate, message_configuration, section);
-                            }
+                            configure_console(isolate, message_configuration, section);
                         }
                     }
                 }
