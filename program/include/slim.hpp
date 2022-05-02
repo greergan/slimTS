@@ -42,14 +42,14 @@ namespace slim {
         v8::Isolate::Scope isolate_scope(isolate);
         v8::HandleScope handle_scope(isolate);
         slim::veight::CreateGlobal();
-        v8::Local<v8::Context> context = slim::veight::GetNewContext();
+        auto context = slim::veight::GetNewContext();
         if(context.IsEmpty()) {
             throw("Error creating context");
         }
         v8::Context::Scope context_scope(context);
-        expose();
+        slim::expose();
         v8::TryCatch try_catch(isolate);
-        v8::Local<v8::Script> script = slim::veight::CompileScript(file_contents, file_name);
+        auto script = slim::veight::CompileScript(file_contents, file_name);
         if(try_catch.HasCaught()) {
             slim::veight::ReportException(&try_catch);
         }
