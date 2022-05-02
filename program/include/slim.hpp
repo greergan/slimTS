@@ -8,17 +8,26 @@
 #include <modules.hpp>
 #include <console.hpp>
 #include <http_server.hpp>
+#include <fstream>
 namespace slim {
     void expose(void);
+    void run(const std::string file_name, const std::string file_contents);
     void stop(void);
     void start(int argc, char* argv[]) {
         if(argc == 2) {
-            std::cerr << argv[1] << "\n";
-/*             slim::uv::init();
-            slim::log::init(slim::uv::GetLoop());
-            slim::http::init(slim::uv::GetLoop());
-            slim::veight::init(argc, argv); */
-            //run(const std::string source);
+            std::string file_name{argv[1]};
+            std::ifstream file(argv[1]);
+            std::string file_contents;
+            getline(file, file_contents, '\0');
+            file.close();
+            if(file_contents.length() > 2) {
+                slim::uv::init();
+                slim::log::init(slim::uv::GetLoop());
+                slim::http::init(slim::uv::GetLoop());
+                slim::veight::init(argc, argv);
+                run(file_name, file_contents);
+                stop();
+            }
         }
     }
     void stop() {
@@ -28,10 +37,7 @@ namespace slim {
     void expose() {
         slim::modules::expose(slim::veight::GetIsolate());
     }
-    void run(const std::string source) {
-        if(source.length() < 2) {
-            return;
-        }
+    void run(const std::string file_name, const std::string file_contents) {
         auto isolate = slim::veight::GetIsolate();
         v8::Isolate::Scope isolate_scope(isolate);
         v8::HandleScope handle_scope(isolate);
@@ -43,7 +49,7 @@ namespace slim {
         v8::Context::Scope context_scope(context);
         expose();
         v8::TryCatch try_catch(isolate);
-        v8::Local<v8::Script> script = slim::veight::CompileScript(source, "console_testing");
+        v8::Local<v8::Script> script = slim::veight::CompileScript(file_contents, file_name);
         if(try_catch.HasCaught()) {
             slim::veight::ReportException(&try_catch);
         }
