@@ -7,8 +7,11 @@
 namespace slim::module {
     class PropertyPointer {
         std::variant<bool*, std::string*, int*> property;
+        bool is_color = false;
         public:
-            PropertyPointer(auto&& property): property{property} { }
+            PropertyPointer(auto&& property, bool i_is_color = false): property{property} {
+                is_color = i_is_color;
+            }
             ~PropertyPointer() {}
             v8::Local<v8::Value> GetV8Value(v8::Isolate* isolate) {
                 if(std::holds_alternative<std::string*>(property)) {
@@ -23,7 +26,10 @@ namespace slim::module {
                 return slim::utilities::StringToString(isolate, "").As<v8::Value>(); 
             }
             void SetValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
-                if(std::holds_alternative<std::string*>(property)) {
+                if(is_color) {
+                    std::get<std::string*>(property)->assign(slim::utilities::SlimColorValue(isolate, value));
+                }
+                else if(std::holds_alternative<std::string*>(property)) {
                     std::get<std::string*>(property)->assign(slim::utilities::StringValue(isolate, value));
                 }
                 else if(std::holds_alternative<bool*>(property)) {
@@ -61,7 +67,7 @@ namespace slim::module {
             v8::HandleScope scope(isolate);
             module_template->Set(slim::utilities::StringToName(isolate, name), submodule->module_template);
         }
-        void add_property(std::string name, auto&& property) {
+        void add_property(std::string name, auto&& property, bool is_color=false) {
             v8::HandleScope scope(isolate);
             auto getter = [](v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value>& info){
                 v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
@@ -71,7 +77,7 @@ namespace slim::module {
                     v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
                     static_cast<slim::module::PropertyPointer*>(data->Value())->SetValue(info.GetIsolate(), value);
             };
-            PropertyPointer* property_pointer = new PropertyPointer(property);
+            PropertyPointer* property_pointer = new PropertyPointer(property, is_color);
             module_template->SetAccessor(slim::utilities::StringToName(isolate, name), getter, setter, v8::External::New(isolate, (void*)property_pointer));
         }
         void expose_module() {

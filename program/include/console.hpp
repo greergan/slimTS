@@ -6,38 +6,11 @@
 #include <utilities.hpp>
 #include <v8.h>
 #include <v8pp/json.hpp>
+#include <console.h>
 /*
  * Reference https://console.spec.whatwg.org/#printer
  */
 
-namespace slim::console {
-    struct Configuration {
-        int precision = 10;
-        bool dim = false;
-        bool bold = false;
-        bool italic = false;
-        bool underline = false;
-        bool slow_blink = false;
-        bool fast_blink = false;
-        bool expand_object = false;
-        std::string text_color = "default";
-        std::string background_color = "default";
-    };
-    struct ExtendedConfiguration: Configuration {
-        std::string level_string;
-        Configuration location{};
-        Configuration message_text{};
-        Configuration message_value{};
-        Configuration remainder{};
-        std::unordered_map<std::string, slim::console::Configuration*> sub_configurations {
-            {"location", &location}, {"message_text", &message_text},
-            {"message_value", &message_value}, {"remainder", &remainder}
-        };
-        ExtendedConfiguration(const std::string level, const std::string color="default") : level_string{level} {
-            text_color = color;
-        }
-    };
-}
 namespace slim::console::configuration {
     slim::console::Configuration dir{.expand_object=true}, log{};
     slim::console::ExtendedConfiguration debug("DEBUG", "red");
@@ -49,18 +22,6 @@ namespace slim::console::configuration {
     std::unordered_map<std::string, std::any> configurations {
         {"dir", &dir}, {"log", &log}, {"debug", &debug}, {"error", &error},
         {"info", &info}, {"todo", &todo}, {"trace", &trace}, {"warn", &warn}
-    };
-}
-namespace slim::console::colors {
-    std::unordered_map<std::string, int> text {
-        {"default", 39}, {"black", 30}, {"red", 31}, {"green", 32}, {"yellow", 33}, {"blue", 34},
-        {"magenta", 35}, {"cyan", 36}, {"white", 37}, {"bright black", 90}, {"bright red", 91}, {"bright green", 92},
-        {"bright yellow", 93}, {"bright blue", 94}, {"bright magenta", 95}, {"bright cyan", 96}, {"bright white", 97},
-    };
-    std::unordered_map<std::string, int> background {
-        {"default", 49}, {"black", 40}, {"red", 41}, {"green", 42}, {"yellow", 43}, {"blue", 44},
-        {"magenta", 45}, {"cyan", 46}, {"white", 47}, {"bright black", 100}, {"bright red", 101}, {"bright green", 102},
-        {"bright yellow", 103}, {"bright blue", 104}, {"bright magenta", 105}, {"bright cyan", 106}, {"bright white", 107}
     };
 }
 namespace slim::console {
@@ -87,14 +48,8 @@ namespace slim::console {
     }
     void configure_console(v8::Isolate* isolate, const v8::Local<v8::Object> object, slim::console::Configuration* configuration) {
         if(object->IsObject() && slim::utilities::PropertyCount(isolate, object) > 0) {
-            auto text_value = slim::utilities::StringValue(isolate, slim::utilities::GetValue(isolate, "text_color", object));
-            if(text_value != "undefined") {
-                configuration->text_color = text_value;
-            }
-            text_value = slim::utilities::StringValue(isolate, "background_color", object);
-            if(text_value != "undefined") {
-                configuration->background_color = text_value;
-            }
+            configuration->text_color = slim::utilities::SlimColorValue(isolate, slim::utilities::GetValue(isolate, "text_color", object));
+            configuration->text_color = slim::utilities::SlimColorValue(isolate, slim::utilities::GetValue(isolate, "background_color", object));
             auto precision = slim::utilities::GetValue(isolate, "precision", object);
             if(precision->IsInt32()) {
                 configuration->precision = precision->Int32Value(isolate->GetCurrentContext()).FromJust();

@@ -2,7 +2,10 @@
 #define __SLIM__UTILITIES__HPP
 #include <v8.h>
 #include <string>
+#include <sstream>
 #include <string_view>
+#include <regex>
+#include <console.h>
 namespace slim::utilities {
     int ArrayCount(v8::Local<v8::Value> value);
     template <typename Thing>
@@ -17,6 +20,7 @@ namespace slim::utilities {
     int ScriptLineNumber(v8::Local<v8::Message> message);
     std::string ScriptLine(v8::Local<v8::Message> message);
     std::string ScriptStackTrace(v8::TryCatch* try_catch);
+    std::string SlimColorValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Function> function);
     v8::Local<v8::Name> StringToName(v8::Isolate* isolate, std::string string);
     v8::Local<v8::String> StringToString(v8::Isolate* isolate, std::string string);
@@ -71,6 +75,50 @@ namespace slim::utilities {
     std::string ScriptStackTrace(v8::TryCatch* try_catch) {
         auto isolate = try_catch->Message()->GetIsolate();
         return StringValue(isolate, try_catch->StackTrace(isolate->GetCurrentContext()).ToLocalChecked());
+    }
+    std::string SlimColorValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+        std::string return_value;
+        if(value->IsString()) {
+            auto color_string = StringValue(isolate, value);
+            if(std::regex_match(color_string, std::regex(".+;.+;.+"))) {
+                std::smatch matches;
+                std::regex rgb_code("([0-9]{1,3});([0-9]{1,3});([0-9]{1,3})");
+                if(regex_search(color_string, matches, rgb_code)) {
+                    for(int i = 1; i < 4; i++) {
+                        int code = stoi(matches[i]);
+                        if(code < 0 || code > 255) {
+                            isolate->ThrowException(slim::utilities::StringToString(isolate, color_string + " codes must be 0-255"));
+                        }
+                    }
+                    return_value = color_string;
+                }
+                else {
+                    isolate->ThrowException(slim::utilities::StringToString(isolate, color_string + " unsupported rgb format"));
+                }
+            }
+            else {
+                auto find_result = std::find(std::begin(slim::console::colors::colors), std::end(slim::console::colors::colors), color_string);
+                if(find_result != std::end(slim::console::colors::colors)) {
+                    return_value = color_string;
+                }
+                else {
+                    std::stringstream message;
+                    message << color_string << " not in supported ASCII colors\n";
+                    message << "try console.log(console.colors)";
+                    isolate->ThrowException(slim::utilities::StringToString(isolate, message.str()));
+                }
+            }
+        }
+        else if(value->IsInt32()) {
+            auto int_color = slim::utilities::IntValue(isolate, value);
+            if(int_color > 255 || int_color < 0) {
+                isolate->ThrowException(slim::utilities::StringToString(isolate, "extended ASCII codes are 0-255"));
+            }
+            else {
+                return_value = std::to_string(int_color);
+            }
+        }
+        return return_value;
     }
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Value> function) {
         return StringValue(isolate, function->ToString(isolate->GetCurrentContext()).ToLocalChecked());
