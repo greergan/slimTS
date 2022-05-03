@@ -151,56 +151,6 @@ namespace slim::console {
             copy_console_configuration(from_configuration->members[sub_level], to_configuration->members[sub_level]);
         }
     }
-    struct out {
-                        /*
-                        * https://en.wikipedia.org/wiki/ANSI_escape_code
-                        */
-        std::string text_color;
-        std::string background_color;
-        std::string bold;
-        std::string dim;
-        std::string italic;
-        std::string underline;
-        std::string level_string;
-        std::string inverse;
-        template<typename Thing>
-        out(Thing& configuration) {
-            bold = (configuration.bold) ? "\33[1m" : "";
-            dim = (configuration.dim) ? "\33[2m" : "";
-            italic = (configuration.italic) ? "\33[3m" : "";
-            underline = (configuration.underline) ? "\33[4m" : "";
-            inverse = (configuration.inverse) ? "\33[7m" : "";
-            int console_text_color = slim::console::colors::text[configuration.text_color];
-            int console_background_color = slim::console::colors::background[configuration.background_color];
-            if(console_text_color > 29) {
-                text_color = "\33[" + std::to_string(console_text_color) + "m";
-            }
-            else {
-                if(stoi(configuration.text_color) > -1) {
-                    text_color = "\33[38;5;" + configuration.text_color + "m";
-                }
-                else if(std::regex_match(configuration.text_color, std::regex("[0-9]{1,3};[0-9]{1,3};[0-9]{1,3}"))) {
-                    text_color = "\33[38;2;" + configuration.text_color + "m";
-                }
-            }
-            if(console_background_color > 38) {
-                background_color = "\33[" + std::to_string(console_background_color) + "m";
-            }
-            else {
-                if(stoi(configuration.background_color) > -1) {
-                    background_color = "\33[48;5;" + configuration.background_color + "m";
-                }
-                else if(std::regex_match(configuration.text_color, std::regex("[0-9]{1,3};[0-9]{1,3};[0-9]{1,3}"))) {
-                    background_color = "\33[48;2;" + configuration.background_color + "m";
-                }
-            }
-        };
-        template<typename Thing>
-        out &operator<<(const Thing& thingy) {
-            std::cerr << underline << italic << dim << bold << inverse << text_color << background_color << thingy << "\33[0m";
-            return *this;
-        }
-    };
     std::string colorize(auto* configuration, const std::string string_value) {
         std::stringstream return_stream;
         if(configuration->bold) {
@@ -323,31 +273,24 @@ namespace slim::console {
         std::cerr << output.str() << "\n";
     }
     void print_colors(const v8::FunctionCallbackInfo<v8::Value>& args) {
-        int index = 0;
         slim::console::Configuration colors;
-        std::cerr << ".text_color\n";
-        for(auto color: slim::console::colors::colors) {
-            colors.text_color = color;
-            auto output = out(colors);
-            output << color << " ";
-            index++;
-            if(index == 5 || index == 10 || index == 13 || index == 16) {
-                std::cerr << "\n";
+        auto print_color = [&colors](auto property) {
+            int index = 0;
+            for(auto color: slim::console::colors::colors) {
+                *property = color;
+                std::cerr << colorize(&colors, *property) << " ";
+                index++;
+                if(index == 5 || index == 10 || index == 13 || index == 16) {
+                    std::cerr << "\n\t";
+                }
             }
-        }
-        std::cerr << "\n";
-        index = 0;
-        colors.text_color = "default";
-        std::cerr << ".background_color\n";
-        for(auto color: slim::console::colors::colors) {
-            colors.background_color = color;
-            auto output = out(colors);
-            output << color << " ";
-            index++;
-            if(index == 5 || index == 10 || index == 13 || index == 16) {
-                std::cerr << "\n";
-            }
-        }
+            *property = "default";
+        };
+        std::cerr << ".text_color\n\t";
+        print_color(&colors.text_color);
+        std::cerr << "\n\n";
+        std::cerr << ".background_color\n\t";
+        print_color(&colors.background_color);
         std::cerr << "\n";
     }
     void dir(const v8::FunctionCallbackInfo<v8::Value>& args)   { print(args, &slim::console::configuration::dir); }
