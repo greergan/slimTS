@@ -261,19 +261,21 @@ namespace slim::console {
                 auto file_name = slim::utilities::ScriptFileName(message);
                 auto line_number = slim::utilities::ScriptLineNumber(message);
                 file_name = file_name.substr(file_name.find_last_of('/')+1);
-                output << colorize(&configuration->location, file_name + ":" + std::to_string(line_number) + " ");
+                output << colorize(&configuration->location, file_name + ":" + std::to_string(line_number) + "\t");
             }
         }
         std::stringstream value_stream;
-        for(int i = 0; i < args.Length(); i++) {
-            if(args[i]->IsNumber()) { value_stream << slim::utilities::NumberValue(isolate, args[i]); }
-            else if(args[i]->IsBoolean()) { auto bool_value = (args[i]->BooleanValue(isolate)) ? "true" : "false"; value_stream << bool_value; }
-            else if(args[i]->IsString()) { value_stream << slim::utilities::StringValue(isolate, args[i]); }
-            else if(args[i]->IsFunction()) { value_stream << "Function " << slim::utilities::StringFunction(isolate, args[i]); }
-            else if(args[i]->IsArray()) { value_stream << "Array(" << slim::utilities::ArrayCount(args[i]) << ") " << v8pp::json_str(isolate, args[i]); }
-            else if(args[i]->IsObject()) { value_stream << "Object " << v8pp::json_str(isolate, args[i]); }
-            else { value_stream << "Typeof " << slim::utilities::StringValue(isolate, args[i]->TypeOf(isolate)); }
-            if(i != args.Length() - 1) { value_stream << " "; }
+        int index = 0;
+        for(index = 0; index < args.Length(); index++) {
+            auto value = args[index];
+            if(value->IsNumber()) { value_stream << slim::utilities::NumberValue(isolate, value); }
+            else if(value->IsBoolean()) { auto bool_value = (value->BooleanValue(isolate)) ? "true" : "false"; value_stream << bool_value; }
+            else if(value->IsString()) { value_stream << slim::utilities::StringValue(isolate, value); }
+            else if(value->IsFunction()) { value_stream << "Function " << slim::utilities::StringFunction(isolate, value); }
+            else if(value->IsArray()) { value_stream << "Array(" << slim::utilities::ArrayCount(value) << ") " << v8pp::json_str(isolate, value); }
+            else if(value->IsObject()) { value_stream << "Object " << v8pp::json_str(isolate, value); }
+            else { value_stream << "Typeof " << slim::utilities::StringValue(isolate, value->TypeOf(isolate)); }
+            if(index != args.Length() - 1) { value_stream << " "; }
         }
         std::cerr.precision(configuration->precision);
         if(configuration->level_string.length() > 0) {
