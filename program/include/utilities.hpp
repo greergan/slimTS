@@ -88,6 +88,9 @@ namespace slim::utilities {
         std::string return_value;
         if(value->IsString()) {
             auto color_string = StringValue(isolate, value);
+/*             for (auto i = std::sregex_iterator(printf_string.begin(), printf_string.end(), format); i != std::sregex_iterator(); ++i) {
+                std::cout << i->str() << '\n';
+            } */
             if(std::regex_match(color_string, std::regex(".+;.+;.+"))) {
                 std::smatch matches;
                 std::regex rgb_code("([0-9]{1,3});([0-9]{1,3});([0-9]{1,3})");
