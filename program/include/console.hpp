@@ -8,6 +8,7 @@
 #include <v8pp/json.hpp>
 #include <console.h>
 #include <sstream>
+#include <regex>
 /*
  * Reference https://console.spec.whatwg.org/#printer
  */
@@ -249,6 +250,7 @@ namespace slim::console {
         auto isolate = args.GetIsolate();
         v8::HandleScope scope(isolate);
         std::stringstream output;
+        int precision = configuration->precision;
         if(configuration->level_string.length() > 0) {
             output << colorize(configuration, configuration->level_string + ": ");
         }
@@ -266,7 +268,41 @@ namespace slim::console {
         }
         std::stringstream value_stream;
         int index = 0;
-        for(index = 0; index < args.Length(); index++) {
+        if(args[index]->IsString()) {
+            auto printf_string = slim::utilities::StringValue(isolate, args[index]);
+            std::regex format("(%s)|(%d)|(%f)|(%i)|(%o)|(%O)");
+            for(auto i = std::sregex_iterator(printf_string.begin(), printf_string.end(), format); i != std::sregex_iterator(); i++) {
+                std::cerr << "now in position " << i->position() << "\n";
+                index++;
+                if(i->str() == "%s") {
+                    printf_string = std::regex_replace(printf_string, std::regex("(%s)"),
+                        slim::utilities::StringValue(isolate, args[index]), std::regex_constants::format_first_only);
+                }
+                else if(i->str() == "%d" || i->str() == "%i") {
+                    if(args[index]->IsInt32()) {
+                        printf_string = std::regex_replace(printf_string, std::regex("(" + i->str() + ")"),
+                            std::to_string(slim::utilities::IntValue(isolate, args[index])), std::regex_constants::format_first_only);
+                    }
+                    else {
+                        printf_string = std::regex_replace(printf_string, std::regex("(" + i->str() + ")"),
+                            "NaN", std::regex_constants::format_first_only);
+                    }
+                }
+                else if(i->str() == "%f") {
+                    if(args[index]->IsNumber()) {
+                        auto number_string = std::to_string(slim::utilities::NumberValue(isolate, args[index]));
+                        if(number_string.length() > precision) {
+                            precision = number_string.length();
+                        }
+                        printf_string = std::regex_replace(printf_string, std::regex("(%f)"),
+                            number_string, std::regex_constants::format_first_only);
+                    }
+                }
+            }
+            index++;
+            value_stream << printf_string;
+        }
+        for(; index < args.Length(); index++) {
             auto value = args[index];
             if(value->IsNumber()) { value_stream << slim::utilities::NumberValue(isolate, value); }
             else if(value->IsBoolean()) { auto bool_value = (value->BooleanValue(isolate)) ? "true" : "false"; value_stream << bool_value; }
@@ -277,7 +313,7 @@ namespace slim::console {
             else { value_stream << "Typeof " << slim::utilities::StringValue(isolate, value->TypeOf(isolate)); }
             if(index != args.Length() - 1) { value_stream << " "; }
         }
-        std::cerr.precision(configuration->precision);
+        std::cerr.precision(precision);
         if(configuration->level_string.length() > 0) {
             output << colorize(&configuration->remainder, value_stream.str());
         }
