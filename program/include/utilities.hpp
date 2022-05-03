@@ -120,7 +120,7 @@ namespace slim::utilities {
         else if(value->IsInt32()) {
             auto int_color = slim::utilities::IntValue(isolate, value);
             if(int_color > 255 || int_color < 0) {
-                isolate->ThrowException(slim::utilities::StringToString(isolate, "extended ASCII codes are 0-255"));
+                isolate->ThrowException(slim::utilities::StringToString(isolate, "extended ASCII codes range 0-255"));
             }
             else {
                 return_value = std::to_string(int_color);
