@@ -231,7 +231,6 @@ namespace slim::console {
             index++;
             if(index == 5 || index == 10 || index == 13 || index == 16) {
                 std::cerr << "\n";
-                //index = 0;
             }
         }
         std::cerr << "\n";
@@ -245,7 +244,6 @@ namespace slim::console {
             index++;
             if(index == 5 || index == 10 || index == 13 || index == 16) {
                 std::cerr << "\n";
-                //index = 0;
             }
         }
         std::cerr << "\n";
