@@ -176,18 +176,34 @@ namespace slim::console {
         std::string level_string;
         template<typename Thing>
         out(Thing& configuration) {
-            text_color = "\33[" + std::to_string(slim::console::colors::text[configuration.text_color]) + "m";
-            background_color = "\33[" + std::to_string(slim::console::colors::background[configuration.background_color]) + "m";
             bold = (configuration.bold) ? "\33[1m" : "";
             dim = (configuration.dim) ? "\33[2m" : "";
             italic = (configuration.italic) ? "\33[3m" : "";
             underline = (configuration.underline) ? "\33[4m" : "";
-/*             if(configuration.custom_text_color > -1) {
-                text_color = "\33[38;5;" + std::to_string(configuration.custom_text_color) + "m";
+            int console_text_color = slim::console::colors::text[configuration.text_color];
+            int console_background_color = slim::console::colors::background[configuration.background_color];
+            if(console_text_color > 29) {
+                text_color = "\33[" + std::to_string(console_text_color) + "m";
             }
-            if(configuration.custom_background_color > -1) {
-                background_color = "\33[48;5;" + std::to_string(configuration.custom_background_color) + "m";
-            } */
+            else {
+                if(stoi(configuration.text_color) > -1) {
+                    text_color = "\33[38;5;" + configuration.text_color + "m";
+                }
+                else if(std::regex_match(configuration.text_color, std::regex("[0-9]{1,3};[0-9]{1,3};[0-9]{1,3}"))) {
+                    text_color = "\33[38;2;" + configuration.text_color + "m";
+                }
+            }
+            if(console_background_color > 38) {
+                background_color = "\33[" + std::to_string(console_background_color) + "m";
+            }
+            else {
+                if(stoi(configuration.background_color) > -1) {
+                    background_color = "\33[48;5;" + configuration.background_color + "m";
+                }
+                else if(std::regex_match(configuration.text_color, std::regex("[0-9]{1,3};[0-9]{1,3};[0-9]{1,3}"))) {
+                    background_color = "\33[48;2;" + configuration.background_color + "m";
+                }
+            }
         };
         template<typename Thing>
         out &operator<<(const Thing& thingy) {
@@ -213,7 +229,7 @@ namespace slim::console {
             else { output << "Typeof " << slim::utilities::StringValue(isolate, args[i]->TypeOf(isolate)); }
             if(i != args.Length() - 1) { std::cerr << " "; }
         }
-        output << "\n";
+        std::cerr << "\n";
     }
     void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::ExtendedConfiguration& configuration) {
         auto output = out(configuration);
