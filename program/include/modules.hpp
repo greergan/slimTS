@@ -27,6 +27,7 @@ namespace slim::modules {
         section_module.add_property("italic", &configuration->italic);
         section_module.add_property("dim", &configuration->dim);
         section_module.add_property("bold", &configuration->bold);
+        section_module.add_property("show_location", &configuration->show_location);
         section_module.add_property("expand_object", &configuration->expand_object);
         section_module.add_property("background_color", &configuration->background_color);
         section_module.add_property("text_color", &configuration->text_color);
@@ -35,19 +36,14 @@ namespace slim::modules {
     slim::module::module AssembleConsoleConfiguration(v8::Isolate* isolate) {
         slim::module::module configuration_module(isolate, "configuration");
         configuration_module.add_function("copy", &slim::console::copy_configuration);
-        for(auto level: {"log", "dir"}) {
-            auto level_configuration = std::any_cast<slim::console::Configuration*>(slim::console::configuration::configurations[level]);
+        for(auto level: {"log", "dir", "debug", "error", "info", "todo", "trace", "warn"}) {
+            auto level_configuration = slim::console::configuration::configurations[level];
             auto section_module = CreateSectionModule(isolate, level, level_configuration);
-            configuration_module.add_module(level, &section_module);
-        }
-        for(auto level: {"debug", "error", "info", "todo", "trace", "warn"}) {
-            auto level_configuration = std::any_cast<slim::console::ExtendedConfiguration*>(slim::console::configuration::configurations[level]);
-            auto section_module = CreateSectionModule(isolate, level, level_configuration);
-                for(auto sub_level: {"location", "message_text", "message_value", "remainder"}) {
-                    auto sub_level_configuration = std::any_cast<slim::console::Configuration*>(level_configuration->sub_configurations[sub_level]);
-                    auto sub_section_module = CreateSectionModule(isolate, sub_level, sub_level_configuration);
-                    section_module.add_module(sub_level, &(sub_section_module));
-                }
+            for(auto sub_level: {"location", "message_text", "message_value", "remainder"}) {
+                auto sub_level_configuration = level_configuration->members[sub_level];
+                auto sub_section_module = CreateSectionModule(isolate, sub_level, sub_level_configuration);
+                section_module.add_module(sub_level, &sub_section_module);
+            }
             configuration_module.add_module(level, &section_module);
         }
         return configuration_module;

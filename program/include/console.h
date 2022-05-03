@@ -20,30 +20,30 @@ namespace slim::console::colors {
     };
 }
 namespace slim::console {
-    struct Configuration {
+    struct BaseConfiguration {
         int precision = 10;
         bool dim = false;
         bool bold = false;
         bool italic = false;
         bool inverse = false;
         bool underline = false;
+        bool show_location = true;
         bool expand_object = false;
         std::string text_color = "default";
         std::string background_color = "default";
     };
-    struct ExtendedConfiguration: Configuration {
+    struct Configuration: BaseConfiguration {
         std::string level_string;
-        Configuration location{};
-        Configuration message_text{};
-        Configuration message_value{};
-        Configuration remainder{};
-        std::unordered_map<std::string, slim::console::Configuration*> sub_configurations {
+        std::string text_color = "default";
+        bool expand_object = false;
+        BaseConfiguration location{};
+        BaseConfiguration message_text{};
+        BaseConfiguration message_value{};
+        BaseConfiguration remainder{};
+        std::unordered_map<std::string, slim::console::BaseConfiguration*> members {
             {"location", &location}, {"message_text", &message_text},
             {"message_value", &message_value}, {"remainder", &remainder}
         };
-        ExtendedConfiguration(const std::string level, const std::string color="default") : level_string{level} {
-            text_color = color;
-        }
     };
 }
 #endif
