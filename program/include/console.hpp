@@ -27,6 +27,7 @@ namespace slim::console::configuration {
 namespace slim::console {
     void console_assert(const v8::FunctionCallbackInfo<v8::Value>& args);
     void copy_configuration(const v8::FunctionCallbackInfo<v8::Value>& args);
+    void print_colors(const v8::FunctionCallbackInfo<v8::Value>& args);
     void clear(const v8::FunctionCallbackInfo<v8::Value>& args);
     void dir(const v8::FunctionCallbackInfo<v8::Value>& args);
     void debug(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -218,6 +219,36 @@ namespace slim::console {
         auto output = out(configuration);
         output << configuration.level_string << ": ";
         print(args, configuration.remainder);
+    }
+    void print_colors(const v8::FunctionCallbackInfo<v8::Value>& args) {
+        int index = 0;
+        slim::console::Configuration colors;
+        std::cerr << ".text_color\n";
+        for(auto color: slim::console::colors::colors) {
+            colors.text_color = color;
+            auto output = out(colors);
+            output << color << " ";
+            index++;
+            if(index == 5 || index == 10 || index == 13 || index == 16) {
+                std::cerr << "\n";
+                //index = 0;
+            }
+        }
+        std::cerr << "\n";
+        index = 0;
+        colors.text_color = "default";
+        std::cerr << ".background_color\n";
+        for(auto color: slim::console::colors::colors) {
+            colors.background_color = color;
+            auto output = out(colors);
+            output << color << " ";
+            index++;
+            if(index == 5 || index == 10 || index == 13 || index == 16) {
+                std::cerr << "\n";
+                //index = 0;
+            }
+        }
+        std::cerr << "\n";
     }
     void dir(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::dir); }
     void debug(const v8::FunctionCallbackInfo<v8::Value>& args) { print(args, slim::console::configuration::debug); }

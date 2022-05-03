@@ -57,6 +57,7 @@ namespace slim::modules {
         slim::module::module configuration = AssembleConsoleConfiguration(isolate);
         slim::module::module console_module(isolate, "console");
         console_module.add_function("assert", &slim::console::console_assert);
+        console_module.add_function("colors", &slim::console::print_colors);
         console_module.add_function("configure", &slim::console::configure);
         console_module.add_function("clear", &slim::console::clear);
         console_module.add_function("debug", &slim::console::debug);
