@@ -25,9 +25,8 @@ namespace slim::console {
         bool dim = false;
         bool bold = false;
         bool italic = false;
+        bool inverse = false;
         bool underline = false;
-        bool slow_blink = false;
-        bool fast_blink = false;
         bool expand_object = false;
         std::string text_color = "default";
         std::string background_color = "default";

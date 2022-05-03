@@ -42,6 +42,7 @@ namespace slim::console {
         destination->dim = source->dim;
         destination->bold = source->bold;
         destination->italic = source->italic;
+        destination->inverse = source->inverse;
         destination->underline = source->underline;
         destination->precision = source->precision;
         destination->text_color = source->text_color;
@@ -56,6 +57,7 @@ namespace slim::console {
             configuration->dim = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "dim", object));
             configuration->bold = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "bold", object));
             configuration->italic = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "italic", object));
+            configuration->inverse = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "inverse", object));
             configuration->underline = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "underline", object));
             configuration->expand_object = slim::utilities::SlimBoolValue(isolate, slim::utilities::GetValue(isolate, "expand_object", object));
         }
@@ -167,6 +169,9 @@ namespace slim::console {
         }
     }
     struct out {
+                        /*
+                        * https://en.wikipedia.org/wiki/ANSI_escape_code
+                        */
         std::string text_color;
         std::string background_color;
         std::string bold;
@@ -174,12 +179,14 @@ namespace slim::console {
         std::string italic;
         std::string underline;
         std::string level_string;
+        std::string inverse;
         template<typename Thing>
         out(Thing& configuration) {
             bold = (configuration.bold) ? "\33[1m" : "";
             dim = (configuration.dim) ? "\33[2m" : "";
             italic = (configuration.italic) ? "\33[3m" : "";
             underline = (configuration.underline) ? "\33[4m" : "";
+            inverse = (configuration.inverse) ? "\33[7m" : "";
             int console_text_color = slim::console::colors::text[configuration.text_color];
             int console_background_color = slim::console::colors::background[configuration.background_color];
             if(console_text_color > 29) {
@@ -207,7 +214,7 @@ namespace slim::console {
         };
         template<typename Thing>
         out &operator<<(const Thing& thingy) {
-            std::cerr << underline << italic << dim << bold << text_color << background_color << thingy << "\33[0m";
+            std::cerr << underline << italic << dim << bold << inverse << text_color << background_color << thingy << "\33[0m";
             return *this;
         }
     };
@@ -221,7 +228,7 @@ namespace slim::console {
         std::lock_guard<std::mutex> lk(mtx);
         for(int i = 0; i < args.Length(); i++) {
             if(args[i]->IsNumber()) { output << slim::utilities::NumberValue(isolate, args[i]); }
-            else if(args[i]->IsBoolean()) { output << args[i]->BooleanValue(isolate); }
+            else if(args[i]->IsBoolean()) { auto bool_value = (args[i]->BooleanValue(isolate)) ? "true" : "false"; output << bool_value; }
             else if(args[i]->IsString()) { output << slim::utilities::StringValue(isolate, args[i]); }
             else if(args[i]->IsFunction()) { output << "Function " << slim::utilities::StringFunction(isolate, args[i]); }
             else if(args[i]->IsArray()) { output << "Array(" << slim::utilities::ArrayCount(args[i]) << ") " << v8pp::json_str(isolate, args[i]); }

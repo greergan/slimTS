@@ -22,9 +22,8 @@ namespace slim::modules {
     slim::module::module CreateSectionModule(v8::Isolate* isolate, const std::string level, auto configuration) {
         slim::module::module section_module(isolate, level);
         section_module.add_property("precision", &configuration->precision);
-        section_module.add_property("fast_blink", &configuration->fast_blink);
-        section_module.add_property("slow_blink", &configuration->slow_blink);
         section_module.add_property("underline", &configuration->underline);
+        section_module.add_property("inverse", &configuration->inverse);
         section_module.add_property("italic", &configuration->italic);
         section_module.add_property("dim", &configuration->dim);
         section_module.add_property("bold", &configuration->bold);
