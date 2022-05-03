@@ -112,7 +112,7 @@ namespace slim::utilities {
                 else {
                     std::stringstream message;
                     message << color_string << " not in supported ASCII colors\n";
-                    message << "try console.log(console.colors)";
+                    message << "try console.colors()";
                     isolate->ThrowException(slim::utilities::StringToString(isolate, message.str()));
                 }
             }
