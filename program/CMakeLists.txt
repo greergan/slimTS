@@ -13,4 +13,4 @@ link_libraries(
     ${CMAKE_SOURCE_DIR}/lib/libuv.a
     ${CMAKE_SOURCE_DIR}/lib/libv8_monolith.a
 )
-add_executable(slim main.cpp)
+add_executable(slim main.cpp src/slim_uv.cpp)

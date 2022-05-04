@@ -2,7 +2,7 @@
 #define __SLIM__HPP
 #include <v8.h>
 #include <v8pp/module.hpp>
-#include <uv.hpp>
+#include <slim_uv.h>
 #include <log.hpp>
 #include <veight.hpp>
 #include <modules.hpp>
@@ -22,8 +22,8 @@ namespace slim {
             file.close();
             if(file_contents.length() > 2) {
                 slim::uv::init();
-                slim::log::init(slim::uv::GetLoop());
-                slim::http::init(slim::uv::GetLoop());
+                slim::log::init(slim::uv::get_loop());
+                slim::http::init(slim::uv::get_loop());
                 slim::veight::init(argc, argv);
                 run(file_name, file_contents);
                 stop();

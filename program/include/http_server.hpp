@@ -6,6 +6,7 @@
 #include <string_view>
 #include <log.hpp>
 #include <utilities.hpp>
+#include <slim_uv.h>
 namespace slim::http {
     struct Server {
         uv_loop_t* loop;
@@ -25,7 +26,7 @@ namespace slim::http {
     }
     void init(uv_loop_t *loop) {
         server.loop = loop;
-        slim::log::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(server.loop, &server.http_server));
+        slim::uv::handle_libuv_error("TCP initilization failed: ", uv_tcp_init(server.loop, &server.http_server));
     }
     static void on_close(uv_handle_t* peer) {
         free(peer);
@@ -47,9 +48,9 @@ namespace slim::http {
         free(buf->base);
     }
     bool start(const int port, const std::string host) {
-        slim::log::handle_libuv_error("Address error: ", uv_ip4_addr(host.c_str(), port, &server.addr));
-        slim::log::handle_libuv_error("Bind error: ", uv_tcp_bind(&server.http_server, (const struct sockaddr*)&server.addr, 0));
-        slim::log::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server.http_server, 512, on_connection));
+        slim::uv::handle_libuv_error("Address error: ", uv_ip4_addr(host.c_str(), port, &server.addr));
+        slim::uv::handle_libuv_error("Bind error: ", uv_tcp_bind(&server.http_server, (const struct sockaddr*)&server.addr, 0));
+        slim::uv::handle_libuv_error("Listen error: ", uv_listen((uv_stream_t*) &server.http_server, 512, on_connection));
         slim::log::notice("slim::http::server listening on ", host, ":", port);
         return true;
     }
