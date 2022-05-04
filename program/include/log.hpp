@@ -7,7 +7,7 @@
 #include <syslog.h>
 #include <uv.h>
 namespace slim::log {
-    static uv_loop_t *log_loop;
+    uv_loop_t *log_loop;
     void init(uv_loop_t *loop) {
         log_loop = loop;
     }
@@ -82,6 +82,16 @@ namespace slim::log {
         log_info->request.data = (void*) log_info;
         log_info->priority = LOG_WARNING;
         uv_queue_work(log_loop, &log_info->request, write_syslog, done_write_syslog);
+    }
+    void handle_libuv_error(const char* message, int error) {
+        if(error) {
+            critical(message, uv_strerror(error));
+            exit(error);
+        }
+    }
+    void warn(const v8::FunctionCallbackInfo<v8::Value> &args) {
+        std::cerr << "log.warn called \n";
+        //notice(args);
     }
 };
 #endif

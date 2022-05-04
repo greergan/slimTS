@@ -4,11 +4,11 @@
 namespace slim::uv {
     static uv_loop_t* main_loop;
     static uv_signal_t *sigint;
-    extern uv_loop_t* get_loop(void);
-    extern void handle_libuv_error(const char* message, int error);
-    extern void init(void);
-    static void on_sigint_received(uv_signal_t *handle, int signum);
-    extern void start(void);
-    extern void stop(void);
+    extern uv_loop_t* GetLoop(void);
+    extern void HandleLIBUVError(const char* message, int error);
+    extern void Init(void);
+    static void OnSigintReceived(uv_signal_t *handle, int signum);
+    extern void Start(void);
+    extern void Stop(void);
 }
 #endif

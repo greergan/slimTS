@@ -2,6 +2,7 @@
 #define __SLIM__MODULES__HPP
 #include <functional>
 #include <v8.h>
+#include <v8pp/module.hpp>
 #include <veight.hpp>
 #include <log.hpp>
 #include <console.hpp>

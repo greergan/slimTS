@@ -2,6 +2,7 @@
 #define __SLIM__CONSOLE__HPP
 #include <mutex>
 #include <any>
+#include <iostream>
 #include <unordered_map>
 #include <utilities.hpp>
 #include <v8.h>
