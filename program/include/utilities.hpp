@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string_view>
 #include <regex>
-#include <console.h>
+#include <console_temp.h>
 namespace slim::utilities {
     int ArrayCount(v8::Local<v8::Value> value);
     template <typename Thing>

@@ -14,8 +14,8 @@ namespace slim::log {
         int priority;
         int options;
         std::string message;
-        std::string program;
-        int facility;
+        std::string program = "slim";
+        int facility = LOG_LOCAL7;
         template<class... Args>
         LogInformation(const std::string level, Args... args) {
             std::ostringstream messagestream;

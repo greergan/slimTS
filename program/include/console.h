@@ -1,26 +1,47 @@
 #ifndef __SLIM__CONSOLE__H
 #define __SLIM__CONSOLE__H
-#include <unordered_map>
 #include <string>
-#include <vector>
+#include <unordered_map>
+#include <v8.h>
 namespace slim::console {
-    extern std::vector<std::string> colors;
-    static std::unordered_map<std::string, int> text;
-    static std::unordered_map<std::string, int> background;
-
-/*     extern std::vector<std::string> colors {
-        "default", "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "bright black",
-        "bright red", "bright green", "bright yellow", "bright blue", "bright magenta", "bright cyan", "bright white"
+    struct BaseConfiguration {
+        int precision = 4;
+        bool dim = false;
+        bool bold = false;
+        bool italic = false;
+        bool inverse = false;
+        bool underline = false;
+        bool show_location = true;
+        bool expand_object = false;
+        std::string text_color = "default";
+        std::string background_color = "default";
     };
-    std::unordered_map<std::string, int> text {
-        {"default", 39}, {"black", 30}, {"red", 31}, {"green", 32}, {"yellow", 33}, {"blue", 34},
-        {"magenta", 35}, {"cyan", 36}, {"white", 37}, {"bright black", 90}, {"bright red", 91}, {"bright green", 92},
-        {"bright yellow", 93}, {"bright blue", 94}, {"bright magenta", 95}, {"bright cyan", 96}, {"bright white", 97},
+    struct Configuration: BaseConfiguration {
+        std::string level_string;
+        std::string text_color = "default";
+        bool expand_object = false;
+        BaseConfiguration location{};
+        BaseConfiguration message_text{};
+        BaseConfiguration message_value{};
+        BaseConfiguration remainder{};
+        std::unordered_map<std::string, BaseConfiguration*> members {
+            {"location", &location}, {"message_text", &message_text},
+            {"message_value", &message_value}, {"remainder", &remainder}
+        };
     };
-    std::unordered_map<std::string, int> background {
-        {"default", 49}, {"black", 40}, {"red", 41}, {"green", 42}, {"yellow", 43}, {"blue", 44},
-        {"magenta", 45}, {"cyan", 46}, {"white", 47}, {"bright black", 100}, {"bright red", 101}, {"bright green", 102},
-        {"bright yellow", 103}, {"bright blue", 104}, {"bright magenta", 105}, {"bright cyan", 106}, {"bright white", 107}
-    }; */
-};
+    static std::string colorize(auto* configuration, const std::string string_value);
+    static void print(const v8::FunctionCallbackInfo<v8::Value>& args, slim::console::Configuration* configuration);
+    extern void print_colors(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void console_assert(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void print_colors(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void clear(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void dir(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void debug(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void error(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void info(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void log(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void todo(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void trace(const v8::FunctionCallbackInfo<v8::Value>& args);
+    extern void warn(const v8::FunctionCallbackInfo<v8::Value>& args);
+}
 #endif

@@ -25,6 +25,8 @@ add_executable(slim
     src/log.cpp
     src/log_configuration.cpp
     src/console.cpp
+    src/console_colors.cpp
     src/console_configuration.cpp
+    src/console_module.cpp
 )
 #add_executable(slim main.cpp)

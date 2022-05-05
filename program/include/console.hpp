@@ -7,26 +7,13 @@
 #include <utilities.hpp>
 #include <v8.h>
 #include <v8pp/json.hpp>
-#include <console.h>
+#include <console_temp.h>
+#include <console_configuration.h>
 #include <sstream>
 #include <regex>
 /*
  * Reference https://console.spec.whatwg.org/#printer
  */
-
-namespace slim::console::configuration {
-    slim::console::Configuration dir{.expand_object=true}, log{};
-    slim::console::Configuration debug{.level_string="DEBUG", .text_color="red"};
-    slim::console::Configuration error{.level_string="ERROR", .text_color="red"};
-    slim::console::Configuration info{.level_string="INFO", .text_color="default"};
-    slim::console::Configuration todo{.level_string="TODO", .text_color="blue"};
-    slim::console::Configuration trace{.level_string="TRACE", .text_color="blue"};
-    slim::console::Configuration warn{.level_string="WARN", .text_color="yellow"};
-    std::unordered_map<std::string, slim::console::Configuration*> configurations {
-        {"dir", &dir}, {"log", &log}, {"debug", &debug}, {"error", &error},
-        {"info", &info}, {"todo", &todo}, {"trace", &trace}, {"warn", &warn}
-    };
-}
 namespace slim::console {
     void console_assert(const v8::FunctionCallbackInfo<v8::Value>& args);
     void copy_configuration(const v8::FunctionCallbackInfo<v8::Value>& args);

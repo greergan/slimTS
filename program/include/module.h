@@ -16,13 +16,13 @@ namespace slim::module {
 namespace slim::module {
     struct module {
         module(v8::Isolate* isolate, std::string name);
-        template<typename Function, typename Signature = typename std::decay<Function>::type>
-        void add_function(std::string name, Function&& function);
-        void add_module(std::string name, module* submodule);
-        void add_property(std::string name, auto&& property);
-        void expose_module(void);
-        v8::Local<v8::ObjectTemplate> get_module(void);
-        v8::Local<v8::Object> new_instance(void);
+        template<typename Function>
+        void AddFunction(std::string name, Function&& function);
+        void AddModule(std::string name, module* submodule);
+        void AddProperty(std::string name, auto&& property);
+        void ExposeModule(void);
+        v8::Local<v8::ObjectTemplate> GetModule(void);
+        v8::Local<v8::Object> NewInstance(void);
         private:
             v8::Isolate* isolate;
             v8::Local<v8::Name> v8_name;

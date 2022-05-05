@@ -3,7 +3,7 @@
 #include <uv.h>
 #include <stdlib.h>
 #include <regex>
-#include <console.h>
+#include <console_colors.h>
 void slim::utilities::HandleLibUVError(const char* message, int error) {
     if(error) {
         slim::log::critical(message, uv_strerror(error));
@@ -81,8 +81,8 @@ std::string slim::utilities::GetColorValueOrException(v8::Isolate* isolate, v8::
             }
         }
         else {
-            auto find_result = std::find(std::begin(slim::console::colors), std::end(slim::console::colors), color_string);
-            if(find_result != std::end(slim::console::colors)) {
+            auto find_result = std::find(std::begin(slim::console::colors::colors), std::end(slim::console::colors::colors), color_string);
+            if(find_result != std::end(slim::console::colors::colors)) {
                 return_value = color_string;
             }
             else {
