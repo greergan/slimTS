@@ -1,12 +1,12 @@
 #include <slim.h>
 #include <fstream>
 #include <v8.h>
+#include <log.h>
+#include <modules.h>
+#include <server.h>
 #include <slim_v8.h>
 #include <slim_uv.h>
-void slim::expose() {
-    //slim::modules::expose(slim::veight::GetIsolate());
-}
-void slim::run(const std::string file_name, const std::string file_contents) {
+void slim::Run(const std::string file_name, const std::string file_contents) {
     auto isolate = slim::veight::GetIsolate();
     v8::Isolate::Scope isolate_scope(isolate);
     v8::HandleScope handle_scope(isolate);
@@ -16,7 +16,7 @@ void slim::run(const std::string file_name, const std::string file_contents) {
         throw("Error creating context");
     }
     v8::Context::Scope context_scope(context);
-    slim::expose();
+    slim::modules::Expose(slim::veight::GetIsolate());
     v8::TryCatch try_catch(isolate);
     auto script = slim::veight::CompileScript(file_contents, file_name);
     if(try_catch.HasCaught()) {
@@ -32,9 +32,9 @@ void slim::run(const std::string file_name, const std::string file_contents) {
     else {
         return;
     }
-    slim::uv::start();
+    slim::uv::Start();
 }
-void slim::start(int argc, char* argv[]) {
+void slim::Start(int argc, char* argv[]) {
     if(argc == 2) {
         std::string file_contents;
         std::string file_name{argv[1]};
@@ -42,16 +42,16 @@ void slim::start(int argc, char* argv[]) {
         getline(file, file_contents, '\0');
         file.close();
         if(file_contents.length() > 2) {
-            slim::uv::init();
-            //slim::log::init(slim::uv::get_loop());
-            //slim::http::init(slim::uv::get_loop());
-            slim::veight::init(argc, argv);
-            run(file_name, file_contents);
-            stop();
+            slim::uv::Init();
+            slim::log::Init(slim::uv::GetLoop());
+            slim::server::http::Init(slim::uv::GetLoop());
+            slim::veight::Init(argc, argv);
+            Run(file_name, file_contents);
+            Stop();
         }
     }
 }
-void slim::stop() {
-    slim::veight::stop();
-    slim::uv::stop();
+void slim::Stop() {
+    slim::veight::Stop();
+    slim::uv::Stop();
 }

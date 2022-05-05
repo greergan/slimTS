@@ -1,15 +1,8 @@
 #include <slim_uv.h>
-#include <log.h>
-#include <stdlib.h>
+#include <utilities.h>
 uv_loop_t* slim::uv::GetLoop() {
     return main_loop;
 }
-void slim::uv::HandleLIBUVError(const char* message, int error) {
-        if(error) {
-            slim::log::critical(message, uv_strerror(error));
-            exit(error);
-        }
-    }
 void slim::uv::Init() {
     sigint = new uv_signal_t;
     uv_signal_init(uv_default_loop(), sigint);
@@ -22,7 +15,7 @@ void slim::uv::OnSigintReceived(uv_signal_t *handle, int signum) {
     }
 }
 void slim::uv::Start() {
-    HandleLIBUVError("slim::uv::loop error: ", uv_run(main_loop, UV_RUN_DEFAULT));
+    slim::utilities::HandleLibUVError("slim::uv::loop error: ", uv_run(main_loop, UV_RUN_DEFAULT));
 }
 void slim::uv::Stop() {
     uv_loop_close(main_loop);
