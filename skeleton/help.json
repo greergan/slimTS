@@ -1,0 +1,12 @@
+{
+	"primary": [
+		{ "text": "Supply a top level option", 			"newline": {"post": 1, "pre":1}},
+		{ "text": "slim --help [:option]", 				"newline": {"post":2}, "indent": 1 },
+		{ "text": "slim top level options:", 			"newline": {"post":1}},
+		{ "text": "--render: render a file or website", "newline": {"post":2}, "indent": 1 }
+	],
+	"default": [
+		{ "text": "Unknown command line argument", "newline": {"pre": 1, "post": 1}},
+		{ "text": "Try slim --help for options", "newline": {"post": 2}}
+	]
+}
