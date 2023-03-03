@@ -17,9 +17,9 @@ namespace slim::module {
     struct module {
         module(v8::Isolate* isolate, std::string name);
         template<typename Function>
-        void AddFunction(std::string name, Function&& function);
-        void AddModule(std::string name, module* submodule);
-        void AddProperty(std::string name, auto&& property);
+        void AddFunction(const std::string name, Function&& function);
+        void AddModule(const std::string name, module* submodule);
+        void AddProperty(const std::string name, auto&& property);
         void ExposeModule(void);
         v8::Local<v8::ObjectTemplate> GetModule(void);
         v8::Local<v8::Object> NewInstance(void);

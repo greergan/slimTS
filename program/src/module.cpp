@@ -15,7 +15,7 @@ v8::Local<v8::Value> slim::module::PropertyPointer::GetV8Value(v8::Isolate* isol
     }
     return slim::utilities::StringToString(isolate, "").As<v8::Value>(); 
 }
-void slim::module::PropertyPointer::SetValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+void slim::module::PropertyPointer::SetValue(v8::Isolate* isolate, const v8::Local<v8::Value> value) {
     if(std::holds_alternative<std::string*>(property)) {
         std::get<std::string*>(property)->assign(slim::utilities::GetColorValueOrException(isolate, value));
     }
@@ -27,12 +27,12 @@ void slim::module::PropertyPointer::SetValue(v8::Isolate* isolate, v8::Local<v8:
     }
 }
 
-slim::module::module::module(v8::Isolate* isolate, std::string name): isolate{isolate} {
+slim::module::module::module(v8::Isolate* isolate, const std::string name): isolate{isolate} {
     module_template = v8::ObjectTemplate::New(isolate);
     v8_name = slim::utilities::StringToName(isolate, name);
 }
 template<typename Function>
-void slim::module::module::AddFunction(std::string name, Function&& function) {
+void slim::module::module::AddFunction(const std::string name, Function&& function) {
     v8::HandleScope scope(isolate);
     using Signature = std::decay<Function>::type;
     module_template->Set(slim::utilities::StringToName(isolate, name), v8::FunctionTemplate::New(isolate, std::forward<Signature>(function)));
@@ -48,11 +48,11 @@ void slim::module::module::AddFunction(std::string name, Function&& function) {
         * 
         */
 }
-void slim::module::module::AddModule(std::string name, module* submodule) {
+void slim::module::module::AddModule(const std::string name, module* submodule) {
     v8::HandleScope scope(isolate);
     module_template->Set(slim::utilities::StringToName(isolate, name), submodule->module_template);
 }
-void slim::module::module::AddProperty(std::string name, auto&& property) {
+void slim::module::module::AddProperty(const std::string name, auto&& property) {
     v8::HandleScope scope(isolate);
     auto getter = [](v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value>& info){
         v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
