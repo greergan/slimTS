@@ -15,7 +15,7 @@ v8::Local<v8::Value> slim::module::PropertyPointer::GetV8Value(v8::Isolate* isol
     }
     return slim::utilities::StringToString(isolate, "").As<v8::Value>(); 
 }
-void slim::module::PropertyPointer::SetValue(v8::Isolate* isolate, const v8::Local<v8::Value> value) {
+void slim::module::PropertyPointer::SetValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
     if(std::holds_alternative<std::string*>(property)) {
         std::get<std::string*>(property)->assign(slim::utilities::GetColorValueOrException(isolate, value));
     }
@@ -27,7 +27,7 @@ void slim::module::PropertyPointer::SetValue(v8::Isolate* isolate, const v8::Loc
     }
 }
 
-slim::module::module::module(v8::Isolate* isolate, const std::string name): isolate{isolate} {
+slim::module::module::module(v8::Isolate* isolate, std::string name): isolate{isolate} {
     module_template = v8::ObjectTemplate::New(isolate);
     v8_name = slim::utilities::StringToName(isolate, name);
 }

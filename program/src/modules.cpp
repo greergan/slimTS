@@ -1,6 +1,8 @@
 #include <module.h>
 #include <modules.h>
+#include <console_module.h>
 void slim::modules::Expose(v8::Isolate* isolate) {
+    slim::console::module::Expose(isolate);
     //ExposeConsole(isolate);
     //ExposePoint(isolate);
 /*         v8pp::module log_module(isolate);
