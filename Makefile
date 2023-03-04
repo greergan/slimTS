@@ -9,6 +9,12 @@ slim:
 slimdebug:
 	@cd program && if [ !CMakeFiles ] || [ !CMakeCache.txt  ] || [ !CMakeLists.txt ] || [ !Makefile ]; then cmake -DDEBUG=1 .;fi && make
 
+view:
+	@mkdir -p dist
+	@cp dep.ts dist
+	@cp util.ts dist
+	@cp -r slim.view dist
+
 utils:
 	@cd utilities && if [ !CMakeFiles ] || [ !CMakeCache.txt  ] || [ !CMakeLists.txt ] || [ !Makefile ]; then cmake .;fi && make
 
