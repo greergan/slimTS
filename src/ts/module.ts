@@ -1,0 +1,1 @@
+export * from './lib/slim.types.ts';

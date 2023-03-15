@@ -8,6 +8,8 @@
 #include <utilities.h>
 #include <v8pp/json.hpp>
 std::string slim::console::colorize(auto* configuration, const std::string string_value) {
+use the following
+std::string slim::console::colorize(const std::string string_value, auto* configuration) {
     std::stringstream return_stream;
     if(configuration->bold) {
         return_stream << "\33[1m";
