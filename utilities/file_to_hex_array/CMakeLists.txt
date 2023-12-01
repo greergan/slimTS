@@ -1,5 +1,0 @@
-set( CMAKE_VERBOSE_MAKEFILE off )
-cmake_minimum_required(VERSION 3.0.0)
-project(file_to_hex_array VERSION 0.0.1)
-set(EXECUTABLE_OUTPUT_PATH "../bin")
-add_executable(file_to_hex_array main.cpp)

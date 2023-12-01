@@ -1,9 +1,0 @@
-{
-	"name": "template",
-	"switches": [],
-	"format": {"text": "", "newline": {"pre":0, "post": 0}, "indent": 0},
-	"help": {
-		"primary": [],
-		"default": []
-	}
-}
