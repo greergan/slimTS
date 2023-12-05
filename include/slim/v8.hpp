@@ -3,17 +3,16 @@
 #include <sstream>
 #include <v8.h>
 #include <libplatform/libplatform.h>
-#include <console.hpp>
-#include <utilities.hpp>
-namespace slim::veight {
-    struct Veight {
-        bool initilaized = false;
+#include <slim/utilities.hpp>
+namespace slim::v8 {
+    struct V8 {
+        bool initialized = false;
         v8::Isolate* isolate;
         v8::Local<v8::ObjectTemplate> global;
         v8::ExtensionConfiguration* extensions;
         std::unique_ptr<v8::Platform> platform;
         v8::Isolate::CreateParams create_params;
-    } veight;
+    } slim_v8;
     v8::Local<v8::Script> CompileScript(std::string source, std::string name);
     void CreateGlobal(void);
     v8::Isolate* GetIsolate();
@@ -23,33 +22,33 @@ namespace slim::veight {
     void init(int argc, char* argv[]);
     void stop(void);
     void CreateGlobal() {
-        veight.global = v8::ObjectTemplate::New(veight.isolate);
+        slim_v8.global = v8::ObjectTemplate::New(slim_v8.isolate);
     }
     v8::Isolate* GetIsolate() {
-        return veight.isolate;
+        return slim_v8.isolate;
     }
     v8::Local<v8::Script> CompileScript(std::string source, std::string name) {
-        v8::ScriptOrigin origin(veight.isolate, slim::utilities::StringToValue(veight.isolate, name));
-        v8::TryCatch try_catch(veight.isolate);
-        v8::MaybeLocal<v8::Script> script = v8::Script::Compile(veight.isolate->GetCurrentContext(), slim::utilities::StringToString(veight.isolate, source), &origin);
+        v8::ScriptOrigin origin(slim_v8.isolate, slim::utilities::StringToValue(slim_v8.isolate, name));
+        v8::TryCatch try_catch(slim_v8.isolate);
+        v8::MaybeLocal<v8::Script> script = v8::Script::Compile(slim_v8.isolate->GetCurrentContext(), slim::utilities::StringToString(slim_v8.isolate, source), &origin);
         if(try_catch.HasCaught()) {
             ReportException(&try_catch);
         }
         return script.ToLocalChecked();
     }
     v8::Local<v8::Context> GetNewContext() {
-        return v8::Context::New(veight.isolate, NULL, veight.global);
+        return v8::Context::New(slim_v8.isolate, NULL, slim_v8.global);
     }
     void init(int argc, char* argv[]) {
         v8::V8::InitializeICUDefaultLocation(argv[0]);
         v8::V8::InitializeExternalStartupData(argv[0]);
-        veight.platform = v8::platform::NewDefaultPlatform();
-        v8::V8::InitializePlatform(veight.platform.get());
+        slim_v8.platform = v8::platform::NewDefaultPlatform();
+        v8::V8::InitializePlatform(slim_v8.platform.get());
         v8::V8::Initialize();
         v8::V8::SetFlagsFromCommandLine(&argc, argv, true);
-        veight.create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
-        veight.isolate = v8::Isolate::New(veight.create_params);
-        veight.initilaized = true;
+        slim_v8.create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+        slim_v8.isolate = v8::Isolate::New(slim_v8.create_params);
+        slim_v8.initialized = true;
     }
     void ReportException(v8::TryCatch* try_catch) {
         std::stringstream exception_string;
@@ -65,8 +64,8 @@ namespace slim::veight {
     }
     bool RunScript(v8::Local<v8::Script> script) {
         if(!script.IsEmpty()) {
-            v8::TryCatch try_catch(veight.isolate);
-            v8::MaybeLocal<v8::Value> result = script->Run(veight.isolate->GetCurrentContext());
+            v8::TryCatch try_catch(slim_v8.isolate);
+            v8::MaybeLocal<v8::Value> result = script->Run(slim_v8.isolate->GetCurrentContext());
             if(try_catch.HasCaught()) {
                 ReportException(&try_catch);
             }
@@ -74,14 +73,14 @@ namespace slim::veight {
         return true;
     }
     void stop() {
-        if(veight.initilaized) {
-            if(veight.isolate != NULL) {
-                veight.isolate->Dispose();
+        if(slim_v8.initialized) {
+            if(slim_v8.isolate != NULL) {
+                slim_v8.isolate->Dispose();
             }
             v8::V8::Dispose();
             v8::V8::DisposePlatform();
-            delete veight.create_params.array_buffer_allocator;
-            veight.initilaized = false;
+            delete slim_v8.create_params.array_buffer_allocator;
+            slim_v8.initialized = false;
         }
     }
 };
