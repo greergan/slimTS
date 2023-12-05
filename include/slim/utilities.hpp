@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string_view>
 #include <regex>
-#include <console_temp.h>
+// #include <console.hpp>
 namespace slim::utilities {
     int ArrayCount(v8::Local<v8::Value> value);
     template <typename Thing>
@@ -84,13 +84,14 @@ namespace slim::utilities {
         }  
         return value->BooleanValue(isolate);
     }
+/*   
     std::string SlimColorValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
         std::string return_value;
         if(value->IsString()) {
             auto color_string = StringValue(isolate, value);
-/*             for (auto i = std::sregex_iterator(printf_string.begin(), printf_string.end(), format); i != std::sregex_iterator(); ++i) {
-                std::cout << i->str() << '\n';
-            } */
+//             for (auto i = std::sregex_iterator(printf_string.begin(), printf_string.end(), format); i != std::sregex_iterator(); ++i) {
+//                std::cout << i->str() << '\n';
+//            }
             if(std::regex_match(color_string, std::regex(".+;.+;.+"))) {
                 std::smatch matches;
                 std::regex rgb_code("([0-9]{1,3});([0-9]{1,3});([0-9]{1,3})");
@@ -131,6 +132,7 @@ namespace slim::utilities {
         }
         return return_value;
     }
+*/
     int SlimIntValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
         if(!value->IsInt32()) {
             isolate->ThrowException(slim::utilities::StringToString(isolate, "integer value expected"));

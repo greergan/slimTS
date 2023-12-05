@@ -4,7 +4,7 @@
 #include <v8.h>
 #include <libplatform/libplatform.h>
 #include <slim/utilities.hpp>
-namespace slim::v8 {
+namespace slim::gv8 {
     struct V8 {
         bool initialized = false;
         v8::Isolate* isolate;

@@ -1,3 +1,4 @@
+#include "config.h"
 #include <iostream>
 #include <slim.hpp>
 int main(int argc, char *argv[]) {

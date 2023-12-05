@@ -6,9 +6,7 @@
 #include <unordered_map>
 #include <utilities.hpp>
 #include <v8.h>
-#include <v8pp/json.hpp>
-#include <console_temp.h>
-#include <console_configuration.h>
+
 #include <sstream>
 #include <regex>
 /*

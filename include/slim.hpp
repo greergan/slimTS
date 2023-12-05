@@ -15,38 +15,38 @@ namespace slim {
             getline(file, file_contents, '\0');
             file.close();
             if(file_contents.length() > 2) {
-                slim::v8::init(argc, argv);
+                slim::gv8::init(argc, argv);
                 run(file_name, file_contents);
                 stop();
             }
         }
     }
     void stop() {
-        slim::v8::stop();
+        slim::gv8::stop();
     }
     void expose() {
 //        slim::modules::expose(slim::veight::GetIsolate());
     }
     void run(const std::string file_name, const std::string file_contents) {
-        auto isolate = slim::v8::GetIsolate();
+        auto isolate = slim::gv8::GetIsolate();
         v8::Isolate::Scope isolate_scope(isolate);
         v8::HandleScope handle_scope(isolate);
-        slim::v8::CreateGlobal();
-        auto context = slim::v8::GetNewContext();
+        slim::gv8::CreateGlobal();
+        auto context = slim::gv8::GetNewContext();
         if(context.IsEmpty()) {
             throw("Error creating context");
         }
         v8::Context::Scope context_scope(context);
 //slim::expose();
         v8::TryCatch try_catch(isolate);
-        auto script = slim::v8::CompileScript(file_contents, file_name);
+        auto script = slim::gv8::CompileScript(file_contents, file_name);
         if(try_catch.HasCaught()) {
-            slim::v8::ReportException(&try_catch);
+            slim::gv8::ReportException(&try_catch);
         }
         if(!script.IsEmpty()) {
-            bool result = slim::v8::RunScript(script);
+            bool result = slim::gv8::RunScript(script);
             if(try_catch.HasCaught()) {
-                slim::v8::ReportException(&try_catch);
+                slim::gv8::ReportException(&try_catch);
             }
         }
         return;
