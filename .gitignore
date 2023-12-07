@@ -13,5 +13,5 @@ stamp-h1
 install-sh
 missing
 .deps
-slim
+src/slim
 *.o
