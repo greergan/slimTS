@@ -26,7 +26,7 @@ AC_CHECK_FILE([$libv8_libbase], [], [AC_MSG_ERROR(["could not locate Google v8 s
 AC_CHECK_FILE([$libv8_monolith], [], [AC_MSG_ERROR(["could not locate Google v8 static library libv8_monolith.a, has it been compiled?"])])
 AC_CHECK_FILE([$libv8_libplatform], [], [AC_MSG_ERROR(["could not locate Google v8 static library libv8_libplatform.a, has it been compiled?"])])
 AC_CHECK_HEADERS([json/json.h], [],[AC_MSG_ERROR([could not locate jsoncpp main library header file, use --with-jsoncpp-dir=DIR])])
-AC_CHECK_FILE([$jsoncpplibjsoncpp_lib], [], [AC_MSG_ERROR(["could not locate jsoncpp static library libjsoncpp.a, has it been compiled?"])])
+AC_CHECK_FILE([$libjsoncpp], [], [AC_MSG_ERROR(["could not locate jsoncpp static library libjsoncpp.a, has it been compiled?"])])
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 AM_INIT_AUTOMAKE
@@ -36,4 +36,5 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 ])
+LT_INIT
 AC_OUTPUT
