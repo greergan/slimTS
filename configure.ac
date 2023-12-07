@@ -9,20 +9,24 @@ if[ "$with_google_v8_dir" == "" ]; then
 else
 	CPPFLAGS="-I$with_google_v8_dir/include $CPPFLAGS"
 	LDFLAGS="-L$with_google_v8_dir/out.gn/x64.release.sample/obj $LDFLAGS"
-	google_v8_lib="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_monolith.a"
+	libv8_libbase="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_libbase.a"
+	libv8_monolith="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_monolith.a"
+	libv8_libplatform="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_libplatform.a"
 fi
 if[ "$with_jsoncpp_dir" == "" ]; then
 	AC_MSG_ERROR([could not locate jsoncpp main library header file, use --with-jsoncpp-dir=DIR])
 else
 	CPPFLAGS="-I$with_jsoncpp_dir/include $CPPFLAGS"
 	LDFLAGS="-L$with_jsoncpp_dir/build-static $LDFLAGS"
-	jsoncpp_lib="$with_jsoncpp_dir/build-static/libjsoncpp.a"
+	libjsoncpp="$with_jsoncpp_dir/build-static/libjsoncpp.a"
 fi
 AC_CHECK_HEADERS([v8.h], [],[AC_MSG_ERROR([could not locate Google v8 main library header file, use --with-google-v8--dir=DIR])])
 AC_CHECK_HEADERS([libplatform/libplatform.h], [],[AC_MSG_ERROR([could not locate Google v8 main library header file, use --with-google-v8-dir=DIR])])
-AC_CHECK_FILE([$google_v8_lib], [], [AC_MSG_ERROR(["could not locate Google v8 static library libv8_monolith.a, has it been compiled?"])])
+AC_CHECK_FILE([$libv8_libbase], [], [AC_MSG_ERROR(["could not locate Google v8 static library libv8_libbase.a, has it been compiled?"])])
+AC_CHECK_FILE([$libv8_monolith], [], [AC_MSG_ERROR(["could not locate Google v8 static library libv8_monolith.a, has it been compiled?"])])
+AC_CHECK_FILE([$libv8_libplatform], [], [AC_MSG_ERROR(["could not locate Google v8 static library libv8_libplatform.a, has it been compiled?"])])
 AC_CHECK_HEADERS([json/json.h], [],[AC_MSG_ERROR([could not locate jsoncpp main library header file, use --with-jsoncpp-dir=DIR])])
-AC_CHECK_FILE([$jsoncpp_lib], [], [AC_MSG_ERROR(["could not locate jsoncpp static library libjsoncpp.a, has it been compiled?"])])
+AC_CHECK_FILE([$jsoncpplibjsoncpp_lib], [], [AC_MSG_ERROR(["could not locate jsoncpp static library libjsoncpp.a, has it been compiled?"])])
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 AM_INIT_AUTOMAKE
