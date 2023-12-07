@@ -1,10 +1,11 @@
 #ifndef __SLIM__HPP
 #define __SLIM__HPP
+#include <fstream>
 #include <v8.h>
 #include <slim/v8.hpp>
-#include <fstream>
+#include <slim/dummy_console_provider.hpp>
 namespace slim {
-    void expose(void);
+    void load_plugins(v8::Isolate* isolate);
     void run(const std::string file_name, const std::string file_contents);
     void stop(void);
     void start(int argc, char* argv[]) {
@@ -24,8 +25,9 @@ namespace slim {
     void stop() {
         slim::gv8::stop();
     }
-    void expose() {
-//        slim::modules::expose(slim::veight::GetIsolate());
+    void load_plugins(v8::Isolate* isolate) {
+        DummyConsoleProvider dummy_console;
+        dummy_console.expose_plugin(isolate);
     }
     void run(const std::string file_name, const std::string file_contents) {
         auto isolate = slim::gv8::GetIsolate();
@@ -37,7 +39,7 @@ namespace slim {
             throw("Error creating context");
         }
         v8::Context::Scope context_scope(context);
-//slim::expose();
+        slim::load_plugins(isolate);
         v8::TryCatch try_catch(isolate);
         auto script = slim::gv8::CompileScript(file_contents, file_name);
         if(try_catch.HasCaught()) {
