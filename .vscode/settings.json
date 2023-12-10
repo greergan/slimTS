@@ -61,6 +61,18 @@
         "numbers": "cpp",
         "semaphore": "cpp",
         "stop_token": "cpp",
-        "regex": "cpp"
-    }
+        "regex": "cpp",
+        "bitset": "cpp",
+        "cinttypes": "cpp"
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/greergan/product/slim",
+            "binaryPath": "/home/greergan/product/slim/src/slim",
+            "binaryArgs": [" test/console.js"]
+        }
+    ],
+    "cSpell.words": [
+        "dirxml"
+    ]
 }
