@@ -1,8 +1,11 @@
 #include "config.h"
 #include <iostream>
+#include <json/json.h>
 #include <slim.hpp>
+#include <slim/command_line_handler.hpp>
 int main(int argc, char *argv[]) {
     try {
+        //Json::Value = slim::command_line_handler::handle(arc, argv);
         slim::start(argc, argv);
     }
     catch(std::string exception) {
