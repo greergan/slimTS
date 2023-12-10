@@ -3,7 +3,7 @@
 #include <functional>
 #include <variant>
 #include <v8.h>
-#include <slim/utilities.hpp>
+#include <slim/utilities.h>
 namespace slim::plugin {
     class PropertyPointer {
         std::variant<bool*, std::string*, int*> property;
@@ -24,13 +24,13 @@ namespace slim::plugin {
             }
             void SetValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
                 if(std::holds_alternative<std::string*>(property)) {
-                    std::get<std::string*>(property)->assign(slim::utilities::SlimColorValue(isolate, value));
+                    std::get<std::string*>(property)->assign(slim::utilities::StringValue(isolate, value));
                 }
                 else if(std::holds_alternative<bool*>(property)) {
-                    *std::get<bool*>(property) = slim::utilities::SlimBoolValue(isolate, value);
+                    *std::get<bool*>(property) = slim::utilities::BoolValue(isolate, value);
                 }
                 else if(std::holds_alternative<int*>(property)) {
-                    *std::get<int*>(property) = slim::utilities::SlimIntValue(isolate, value);
+                    *std::get<int*>(property) = slim::utilities::IntValue(isolate, value);
                 }
             }
     };

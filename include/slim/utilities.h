@@ -1,0 +1,41 @@
+#ifndef __SLIM__UTILITIES__H
+#define __SLIM__UTILITIES__H
+#include <regex>
+#include <string>
+#include <v8.h>
+namespace slim::utilities {
+    bool BoolValue(v8::Isolate* isolate, v8::Local<v8::Value> value);  
+    int ArrayCount(v8::Local<v8::Value> value);
+    int IntValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
+    int IntValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
+    int IntValuePositive(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
+    int PropertyCount(v8::Isolate* isolate, v8::Local<v8::Object> object);
+    int ScriptLineNumber(v8::Local<v8::Message> message);
+    double NumberValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
+
+    template <typename Thing>
+    v8::Local<v8::Object> GetObject(v8::Isolate* isolate, Thing object);
+    v8::Local<v8::Object> GetObject(v8::Isolate* isolate, v8::Local<v8::Value> object);
+    v8::Local<v8::Object> GetObject(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
+    v8::Local<v8::Value> GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
+
+    std::string ScriptFileName(v8::Local<v8::Message> message); 
+    std::string ScriptLine(v8::Local<v8::Message> message);
+    std::string ScriptStackTrace(v8::TryCatch* try_catch);
+    
+    std::string SlimColorValue(v8::Isolate* isolate, v8::Local<v8::Value> value, std::vector<std::string>& colors);
+    
+    std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Function> function);
+    v8::Local<v8::Name> StringToName(v8::Isolate* isolate, std::string string);
+    v8::Local<v8::String> StringToString(v8::Isolate* isolate, std::string string);
+    v8::Local<v8::Value> StringToValue(v8::Isolate* isolate, std::string string);
+    template <typename Thing>
+    std::string StringValue(v8::Isolate* isolate, Thing thingy);
+    std::string StringValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
+    std::string StringValue(v8::Isolate* isolate, v8::Local<v8::String> string);
+    std::string StringValue(v8::Isolate* isolate, std::string string, v8::Local<v8::String> value);
+    std::string StringValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
+    std::string V8JsonValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value);
+    std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Value> function);
+}
+#endif
