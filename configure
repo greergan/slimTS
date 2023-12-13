@@ -2910,13 +2910,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 libdir='${exec_prefix}/lib/slim'
 moduledir='${exec_prefix}/share/slim'
-SLIM_VERSION=0.1.0
+SLIM_VERSION=_SLIM_VERSION
 
-SLIM_LIB_VERSION=1:0:0
+SLIM_LIB_VERSION=_SLIM_LIB_VERSION
 
-SLIM_CONSOLE_VERSION=1:0:0
+SLIM_CONSOLE_VERSION=_SLIM_CONSOLE_VERSION
 
-#AC_ARG_ENABLE(graphical-console, [--disable-graphical-console build graphical_console plugin])
 
 # Check whether --with-google-v8-dir was given.
 if test ${with_google_v8_dir+y}
@@ -3828,204 +3827,8 @@ printf "%s\n" "no" >&6; }
 		PKG_CONFIG=""
 	fi
 fi
-#gtkmm dependencies
-#sigc++-3.0
-#gtk4
-#glibmm-2.68
-#cairomm-1.16
-#pangomm-2.48
-# dependencies of above dependencies
-#pkg-config
-#glib-2.0
-#pango
-#cairo
-#gdk-pixbuf-2.0
-#graphene-1.0
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking pangomm-2.48" >&5
-printf %s "checking pangomm-2.48... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"pangomm-2.48\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "pangomm-2.48") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking cairomm-1.16" >&5
-printf %s "checking cairomm-1.16... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cairomm-1.16\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "cairomm-1.16") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-#AC_MSG_CHECKING([libgtk-4-1])
-#PKG_CHECK_EXISTS([libgtk-4-1],[AC_MSG_RESULT([yes])],[AC_MSG_ERROR([no])])
-#AC_MSG_CHECKING([ibgtk-4-dev])
-#PKG_CHECK_EXISTS([ibgtk-4-dev],[AC_MSG_RESULT([yes])],[AC_MSG_ERROR([no])])
-#AC_MSG_CHECKING([pangocairo-1.0])
-#PKG_CHECK_EXISTS([pangocairo-1.0],[AC_MSG_RESULT([yes])],[AC_MSG_ERROR([no])])
-#AC_MSG_CHECKING([pango-1.0])
-#PKG_CHECK_EXISTS([pango-1.0],[AC_MSG_RESULT([yes])],[AC_MSG_ERROR([no])])
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking harfbuzz" >&5
-printf %s "checking harfbuzz... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"harfbuzz\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "harfbuzz") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-#AC_MSG_CHECKING([gdk_pixbuf-2.0])
-#PKG_CHECK_EXISTS([gdk_pixbuf-2.0],[AC_MSG_RESULT([yes])],[AC_MSG_ERROR([no])])
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking cairo-gobject" >&5
-printf %s "checking cairo-gobject... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cairo-gobject\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "cairo-gobject") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking cairo" >&5
-printf %s "checking cairo... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"cairo\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "cairo") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking graphene-1.0" >&5
-printf %s "checking graphene-1.0... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"graphene-1.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "graphene-1.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking gio-2.0" >&5
-printf %s "checking gio-2.0... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gio-2.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "gio-2.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking gobject-2.0" >&5
-printf %s "checking gobject-2.0... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gobject-2.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "gobject-2.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking sigc++-3.0" >&5
-printf %s "checking sigc++-3.0... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"sigc++-3.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "sigc++-3.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking glib-2.0" >&5
-printf %s "checking glib-2.0... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"glib-2.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "glib-2.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking glibmm-2.68" >&5
-printf %s "checking glibmm-2.68... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"glibmm-2.68\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "glibmm-2.68") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking giomm-2.68" >&5
-printf %s "checking giomm-2.68... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"giomm-2.68\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "giomm-2.68") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking gtkmm-4.0" >&5
-printf %s "checking gtkmm-4.0... " >&6; }
-if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gtkmm-4.0\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "gtkmm-4.0") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-else
-  as_fn_error $? "no" "$LINENO" 5
-fi
-
 cwd=`pwd`
 CPPFLAGS="-I$cwd/include $CPPFLAGS"
-LDFLAGS="-L$cwd/src/lib/.libs $LDFLAGS"
 
 
 am__api_version='1.16'
@@ -5209,7 +5012,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 ac_config_headers="$ac_config_headers include/config.h"
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/plugins/console/Makefile src/plugins/graphical_console/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile src/plugins/console/Makefile"
 
 case `pwd` in
   *\ * | *\	*)
@@ -18747,7 +18550,6 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/plugins/console/Makefile") CONFIG_FILES="$CONFIG_FILES src/plugins/console/Makefile" ;;
-    "src/plugins/graphical_console/Makefile") CONFIG_FILES="$CONFIG_FILES src/plugins/graphical_console/Makefile" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
