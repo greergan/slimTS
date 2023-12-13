@@ -29,11 +29,14 @@ void DummyConsoleProvider::expose_plugin(v8::Isolate* isolate) {
 	dummy_console_plugin.add_function("dirxml", &this->noContent);
 	dummy_console_plugin.add_function("error", &this->noContent);
 	dummy_console_plugin.add_function("info", &this->noContent);
+	dummy_console_plugin.add_function("listen", &this->noContent);
 	dummy_console_plugin.add_function("log", &this->noContent);
 	dummy_console_plugin.add_function("print", &this->noContent);
 	dummy_console_plugin.add_function("table", &this->noContent);
+	dummy_console_plugin.add_function("todo", &this->noContent);
 	dummy_console_plugin.add_function("trace", &this->noContent);
 	dummy_console_plugin.add_function("warn", &this->noContent);
+	dummy_console_plugin.add_function("write", &this->noContent);
 	dummy_console_plugin.expose_plugin();
 	return;
 }
