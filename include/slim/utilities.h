@@ -37,5 +37,8 @@ namespace slim::utilities {
     std::string StringValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     std::string V8JsonValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value);
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Value> function);
+    /* new function formats */
+    std::string v8StringToString(v8::Isolate* isolate, v8::Local<v8::String> string);
+    std::string v8ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value);
 }
 #endif

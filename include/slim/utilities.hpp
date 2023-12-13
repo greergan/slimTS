@@ -143,4 +143,12 @@ std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string strin
 std::string slim::utilities::V8JsonValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
     return(std::string("slim::utilities::V8JsonValueToString not implemented"));
 }
+std::string slim::utilities::v8StringToString(v8::Isolate* isolate, v8::Local<v8::String> string) {
+	v8::String::Utf8Value string_value(isolate, string);
+	return std::string(*string_value);
+}
+std::string slim::utilities::v8ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+	v8::String::Utf8Value string_value(isolate, value);
+	return std::string(*string_value);
+}
 #endif
