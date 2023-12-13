@@ -32,22 +32,39 @@ namespace slim {
         DummyConsoleProvider dummy_console;
         dummy_console.expose_plugin(isolate);
         auto console_so_path = slim::path::getExecutableDir() + "/../lib/slim/console.so";
-        void* plugin = dlopen(console_so_path.c_str(), RTLD_NOW);
-        if(!plugin) {
+//auto gtk_so_path = slim::path::getExecutableDir() + "/../lib/slim/gtk.so";
+        void* console = dlopen(console_so_path.c_str(), RTLD_NOW);
+        if(!console) {
             throw(std::string(dlerror()));
         }
         else {
             typedef void (*expose_plugin_t)(v8::Isolate* isolate);
             dlerror();
             //create_t* create_plugin = (create_t*) dlsym(plugin, "create");
-            expose_plugin_t expose_plugin = (expose_plugin_t) dlsym(plugin, "expose_plugin");
+            expose_plugin_t expose_plugin = (expose_plugin_t) dlsym(console, "expose_plugin");
             if(!expose_plugin) {
-                dlclose(plugin);
+                dlclose(console);
                 throw(std::string(dlerror()));
             }
             expose_plugin(isolate);
             //dlclose(plugin);
         }
+/*         void* gtk = dlopen(gtk_so_path.c_str(), RTLD_NOW);
+        if(!gtk) {
+            throw(std::string(dlerror()));
+        }
+        else {
+            typedef void (*expose_plugin_t)(v8::Isolate* isolate);
+            dlerror();
+            //create_t* create_plugin = (create_t*) dlsym(plugin, "create");
+            expose_plugin_t expose_plugin = (expose_plugin_t) dlsym(gtk, "expose_plugin");
+            if(!expose_plugin) {
+                dlclose(gtk);
+                throw(std::string(dlerror()));
+            }
+            expose_plugin(isolate);
+            //dlclose(plugin);
+        } */
     }
     void run(const std::string file_name, const std::string file_contents) {
         auto isolate = slim::gv8::GetIsolate();
