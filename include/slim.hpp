@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <v8.h>
+#include "config.h"
 #include <slim/v8.hpp>
 #include <slim/path.hpp>
 #include <slim/dummy_console_provider.hpp>
@@ -11,6 +12,7 @@ namespace slim {
     void load_plugins(v8::Isolate* isolate);
     void run(const std::string file_name, const std::string file_contents);
     void stop(void);
+    void version(void);
     void start(int argc, char* argv[]) {
         if(argc == 2) {
             std::string file_contents;
@@ -90,5 +92,10 @@ namespace slim {
         }
         return;
     }
+}
+void slim::version(void) {
+    std::cout << "slim: " << VERSION << "\n";
+    std::cout << "libv8: " << std::string(v8::V8::GetVersion()) << "\n";
+    return;
 }
 #endif
