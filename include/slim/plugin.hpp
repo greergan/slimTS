@@ -11,16 +11,17 @@ namespace slim::plugin {
             PropertyPointer(auto&& property): property{property} {}
             ~PropertyPointer() {}
             v8::Local<v8::Value> GetV8Value(v8::Isolate* isolate) {
+                v8::Local<v8::Value> value;
                 if(std::holds_alternative<std::string*>(property)) {
-                    return slim::utilities::StringToString(isolate, *std::get<std::string*>(property)).As<v8::Value>();
+                    value = slim::utilities::StringToString(isolate, *std::get<std::string*>(property)).As<v8::Value>();
                 }
                 else if(std::holds_alternative<bool*>(property)) {
-                    return v8::Boolean::New(isolate, *std::get<bool*>(property)).As<v8::Value>();
+                    value = v8::Boolean::New(isolate, *std::get<bool*>(property)).As<v8::Value>();
                 }
                 else if(std::holds_alternative<int*>(property)) {
-                    return v8::Int32::New(isolate, *std::get<int*>(property)).As<v8::Value>();
+                    value = v8::Int32::New(isolate, *std::get<int*>(property)).As<v8::Value>();
                 }
-                return slim::utilities::StringToString(isolate, "").As<v8::Value>(); 
+                return value; 
             }
             void SetValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
                 if(std::holds_alternative<std::string*>(property)) {
@@ -63,13 +64,13 @@ namespace slim::plugin {
         }
         void add_property(std::string name, auto&& property) {
             v8::HandleScope scope(isolate);
-            auto getter = [](v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value>& info){
-                v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
-                info.GetReturnValue().Set(static_cast<slim::plugin::PropertyPointer*>(data->Value())->GetV8Value(info.GetIsolate()));
+            auto getter = [](v8::Local<v8::Name> property, const v8::PropertyCallbackInfo<v8::Value>& args){
+                v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(args.Data());
+                args.GetReturnValue().Set(static_cast<slim::plugin::PropertyPointer*>(data->Value())->GetV8Value(args.GetIsolate()));
             };
-            auto setter = [](v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void>& info) {
-                    v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(info.Data());
-                    static_cast<slim::plugin::PropertyPointer*>(data->Value())->SetValue(info.GetIsolate(), value);
+            auto setter = [](v8::Local<v8::Name> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<void>& args) {
+                    v8::Handle<v8::External> data = v8::Handle<v8::External>::Cast(args.Data());
+                    static_cast<slim::plugin::PropertyPointer*>(data->Value())->SetValue(args.GetIsolate(), value);
             };
             PropertyPointer* property_pointer = new PropertyPointer(property);
             plugin_template->SetAccessor(slim::utilities::StringToName(isolate, name), getter, setter, v8::External::New(isolate, (void*)property_pointer));
