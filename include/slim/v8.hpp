@@ -4,6 +4,19 @@
 #include <v8.h>
 #include <libplatform/libplatform.h>
 #include <slim/utilities.hpp>
+
+/* TO   LEARN    DO    THIS   
+// Create a template for the global object and set the
+// built-in global functions.
+v8::Local<v8::ObjectTemplate> global = v8::ObjectTemplate::New(isolate);
+global->Set(v8::String::NewFromUtf8(isolate, "log"),
+            v8::FunctionTemplate::New(isolate, LogCallback));
+
+// Each processor gets its own context so different processors
+// do not affect each other.
+v8::Persistent<v8::Context> context = v8::Context::New(isolate, nullptr, global);
+*/
+
 namespace slim::gv8 {
     struct V8 {
         bool initialized = false;
@@ -19,7 +32,7 @@ namespace slim::gv8 {
     v8::Local<v8::Context> GetNewContext(void);
     void ReportException(v8::TryCatch* try_catch);
     bool RunScript(v8::Local<v8::Script> script);
-    void init(int argc, char* argv[]);
+    void initialize(int argc, char* argv[]);
     void stop(void);
     void CreateGlobal() {
         slim_v8.global = v8::ObjectTemplate::New(slim_v8.isolate);
@@ -39,7 +52,7 @@ namespace slim::gv8 {
     v8::Local<v8::Context> GetNewContext() {
         return v8::Context::New(slim_v8.isolate, NULL, slim_v8.global);
     }
-    void init(int argc, char* argv[]) {
+    void initialize(int argc, char* argv[]) {
         v8::V8::InitializeICUDefaultLocation(argv[0]);
         v8::V8::InitializeExternalStartupData(argv[0]);
         slim_v8.platform = v8::platform::NewDefaultPlatform();
