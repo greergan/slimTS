@@ -35,6 +35,5 @@ void slim::dummy_console::expose_plugin(v8::Isolate* isolate) {
 	dummy_console_plugin.add_function("warn",           no_content);
 	dummy_console_plugin.add_function("write",          no_content);
 	dummy_console_plugin.expose_plugin();
-	return;
 }
 #endif
