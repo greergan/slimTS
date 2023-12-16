@@ -748,9 +748,8 @@ CPPFLAGS
 LDFLAGS
 CXXFLAGS
 CXX
+SLIM_NETWORK_VERSION
 SLIM_CONSOLE_VERSION
-SLIM_LIB_VERSION
-SLIM_VERSION
 target_alias
 host_alias
 build_alias
@@ -2910,11 +2909,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 libdir='${exec_prefix}/lib/slim'
 moduledir='${exec_prefix}/share/slim'
-SLIM_VERSION=_SLIM_VERSION
 
-SLIM_LIB_VERSION=_SLIM_LIB_VERSION
+printf "%s\n" "#define SLIM_ASIO_VERSION \"1.28.2\"" >>confdefs.h
 
 SLIM_CONSOLE_VERSION=_SLIM_CONSOLE_VERSION
+
+SLIM_NETWORK_VERSION=_SLIM_NETWORK_VERSION
 
 
 # Check whether --with-google-v8-dir was given.
@@ -5012,7 +5012,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 ac_config_headers="$ac_config_headers include/config.h"
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/plugins/console/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile src/plugins/console/Makefile src/plugins/network/Makefile"
 
 case `pwd` in
   *\ * | *\	*)
@@ -18550,6 +18550,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/plugins/console/Makefile") CONFIG_FILES="$CONFIG_FILES src/plugins/console/Makefile" ;;
+    "src/plugins/network/Makefile") CONFIG_FILES="$CONFIG_FILES src/plugins/network/Makefile" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

@@ -2,9 +2,9 @@ AC_COPYRIGHT([[Copyright 2022-2023 Jeff Greer. All rights reserved. Restrictions
 AC_INIT([slim], [0.1.0])
 libdir='${exec_prefix}/lib/slim'
 moduledir='${exec_prefix}/share/slim'
-AC_SUBST([SLIM_VERSION], [_SLIM_VERSION])
-AC_SUBST([SLIM_LIB_VERSION], [_SLIM_LIB_VERSION])
+AC_DEFINE([SLIM_ASIO_VERSION],   ["1.28.2"], [ASIO async library version])
 AC_SUBST([SLIM_CONSOLE_VERSION], [_SLIM_CONSOLE_VERSION])
+AC_SUBST([SLIM_NETWORK_VERSION], [_SLIM_NETWORK_VERSION])
 AC_ARG_WITH(google-v8-dir, [--with-google-v8-dir=DIR   path to installed Google v8 source directory])
 AC_LANG_PUSH([C++])
 if[ "$with_google_v8_dir" == "" ]; then
@@ -33,6 +33,7 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	src/plugins/console/Makefile
+	src/plugins/network/Makefile
 ])
 LT_INIT
 AC_OUTPUT
