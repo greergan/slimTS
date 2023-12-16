@@ -1,15 +1,12 @@
 #ifndef __SLIM__HPP
 #define __SLIM__HPP
-#include <dlfcn.h>
 #include <fstream>
 #include <string>
 #include <v8.h>
 #include "config.h"
+#include <slim/objects.hpp>
 #include <slim/v8.hpp>
-#include <slim/path.hpp>
-#include <slim/dummy_console_provider.hpp>
 namespace slim {
-    void load_plugins(v8::Isolate* isolate);
     void run(const std::string file_name, const std::string file_contents);
     void stop(void);
     void version(void);
@@ -18,10 +15,11 @@ namespace slim {
             std::string file_contents;
             std::string file_name{argv[1]};
             std::ifstream file(file_name);
+            //file.is_open ??
             getline(file, file_contents, '\0');
             file.close();
             if(file_contents.length() > 2) {
-                slim::gv8::init(argc, argv);
+                slim::gv8::initialize(argc, argv);
                 run(file_name, file_contents);
                 stop();
             }
@@ -29,44 +27,6 @@ namespace slim {
     }
     void stop() {
         slim::gv8::stop();
-    }
-    void load_plugins(v8::Isolate* isolate) {
-        DummyConsoleProvider dummy_console;
-        dummy_console.expose_plugin(isolate);
-        auto console_so_path = slim::path::getExecutableDir() + "/../lib/slim/console.so";
-//auto gtk_so_path = slim::path::getExecutableDir() + "/../lib/slim/gtk.so";
-        void* console = dlopen(console_so_path.c_str(), RTLD_NOW);
-        if(!console) {
-            throw(std::string(dlerror()));
-        }
-        else {
-            typedef void (*expose_plugin_t)(v8::Isolate* isolate);
-            dlerror();
-            //create_t* create_plugin = (create_t*) dlsym(plugin, "create");
-            expose_plugin_t expose_plugin = (expose_plugin_t) dlsym(console, "expose_plugin");
-            if(!expose_plugin) {
-                dlclose(console);
-                throw(std::string(dlerror()));
-            }
-            expose_plugin(isolate);
-            //dlclose(plugin);
-        }
-/*         void* gtk = dlopen(gtk_so_path.c_str(), RTLD_NOW);
-        if(!gtk) {
-            throw(std::string(dlerror()));
-        }
-        else {
-            typedef void (*expose_plugin_t)(v8::Isolate* isolate);
-            dlerror();
-            //create_t* create_plugin = (create_t*) dlsym(plugin, "create");
-            expose_plugin_t expose_plugin = (expose_plugin_t) dlsym(gtk, "expose_plugin");
-            if(!expose_plugin) {
-                dlclose(gtk);
-                throw(std::string(dlerror()));
-            }
-            expose_plugin(isolate);
-            //dlclose(plugin);
-        } */
     }
     void run(const std::string file_name, const std::string file_contents) {
         auto isolate = slim::gv8::GetIsolate();
@@ -78,7 +38,7 @@ namespace slim {
             throw("Error creating context");
         }
         v8::Context::Scope context_scope(context);
-        slim::load_plugins(isolate);
+        slim::objects::initialize(isolate);
         v8::TryCatch try_catch(isolate);
         auto script = slim::gv8::CompileScript(file_contents, file_name);
         if(try_catch.HasCaught()) {
