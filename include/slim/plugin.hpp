@@ -1,5 +1,5 @@
-#ifndef __SLIM__plugin__HPP
-#define __SLIM__plugin__HPP
+#ifndef __SLIM__PLUGIN__HPP
+#define __SLIM__PLUGIN__HPP
 #include <functional>
 #include <variant>
 #include <v8.h>
@@ -35,8 +35,6 @@ namespace slim::plugin {
                 }
             }
     };
-};
-namespace slim::plugin {
     struct plugin {
         plugin(v8::Isolate* isolate, std::string name): isolate{isolate} {
             plugin_template = v8::ObjectTemplate::New(isolate);
@@ -46,17 +44,6 @@ namespace slim::plugin {
         void add_function(std::string name, Function&& function) {
             v8::HandleScope scope(isolate);
             plugin_template->Set(slim::utilities::StringToName(isolate, name), v8::FunctionTemplate::New(isolate, std::forward<Signature>(function)));
-            /*
-                * SetCallAsFunctionHandler
-                *
-                * Sort out how to wrap signature-less functions
-                * v8::Local<v8::External>::New(isolate, value->pext);
-                * 
-                * Sort out how to wrap lambda's
-                * log_plugin.set("warn", [&](const v8::FunctionCallbackInfo<v8::Value>& args){slim::log::warn(args);});
-                * slim_plugin.set("http", [&](const v8::FunctionCallbackInfo<v8::Value>& args){slim::http::start(args);});
-                * 
-                */
         }
         void add_plugin(std::string name, plugin* subplugin) {
             v8::HandleScope scope(isolate);
@@ -89,5 +76,5 @@ namespace slim::plugin {
             v8::Local<v8::Name> v8_name;
             v8::Local<v8::ObjectTemplate> plugin_template;
     };
-};
+}
 #endif
