@@ -1,13 +1,9 @@
-#ifndef __SLIM__OBJECTS__HPP
-#define __SLIM__OBJECTS__HPP
 #include <v8.h>
+#include <slim/objects.h>
 #include <slim/dummy_console_provider.h>
 #include <slim/fetch.hpp>
 #include <slim/plugin.hpp>
-#include <slim/plugin/loader.hpp>
-namespace slim::objects {
-	void initialize(v8::Isolate* isolate);
-}
+#include <slim/plugin/loader.h>
 void slim::objects::initialize(v8::Isolate* isolate) {
 	slim::dummy_console::expose_plugin(isolate);
 	slim::network::fetch::expose_plugin(isolate);
@@ -15,4 +11,3 @@ void slim::objects::initialize(v8::Isolate* isolate) {
 	slim_objects.add_function("load", &slim::plugin::loader::load);
 	slim_objects.expose_plugin();
 }
-#endif

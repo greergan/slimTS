@@ -1,15 +1,12 @@
-#ifndef __SLIM__PLUGIN__LOADER__HPP
-#define __SLIM__PLUGIN__LOADER__HPP
 #include <dlfcn.h>
 #include <v8.h>
 #include <unordered_map>
-#include <slim/path.hpp>
+#include <slim/path.h>
 #include <slim/utilities.h>
+#include <slim/plugin/loader.h>
 namespace slim::plugin::loader {
     std::string plugin_library_path = slim::path::getExecutableDir() + "/../lib/slim/";
     std::unordered_map<std::string, void*> loaded_plugins = {};
-    void load(const v8::FunctionCallbackInfo<v8::Value>& args);
-    void load_plugin(v8::Isolate* isolate, const std::string plugin_name, const bool global_scope);
 }
 void slim::plugin::loader::load(const v8::FunctionCallbackInfo<v8::Value>& args) {
     auto isolate = args.GetIsolate();
@@ -50,4 +47,3 @@ void slim::plugin::loader::load_plugin(v8::Isolate* isolate, const std::string p
         }
     }
 }
-#endif
