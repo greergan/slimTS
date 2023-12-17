@@ -1,3 +1,5 @@
-slim.load("console", false);
+slim.load("console");
 console.clear();
-console.info("console has been loaded");
+console.info("console plugin has been loaded");
+slim.load("network");
+console.info("network plugin has been loaded");
