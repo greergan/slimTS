@@ -1,7 +1,7 @@
 #ifndef __SLIM__OBJECTS__HPP
 #define __SLIM__OBJECTS__HPP
 #include <v8.h>
-#include <slim/dummy_console_provider.hpp>
+#include <slim/dummy_console_provider.h>
 #include <slim/fetch.hpp>
 #include <slim/plugin.hpp>
 #include <slim/plugin/loader.hpp>
