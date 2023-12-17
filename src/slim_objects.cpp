@@ -1,7 +1,7 @@
 #include <v8.h>
 #include <slim/objects.h>
 #include <slim/dummy_console_provider.h>
-#include <slim/fetch.hpp>
+#include <slim/fetch.h>
 #include <slim/plugin.hpp>
 #include <slim/plugin/loader.h>
 void slim::objects::initialize(v8::Isolate* isolate) {

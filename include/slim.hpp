@@ -4,7 +4,7 @@
 #include <string>
 #include <v8.h>
 #include "config.h"
-#include <slim/objects.hpp>
+#include <slim/objects.h>
 #include <slim/v8.hpp>
 namespace slim {
     void run(const std::string file_name, const std::string file_contents);
