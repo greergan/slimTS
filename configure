@@ -793,6 +793,7 @@ am__quote'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+with_asio_include_dir
 with_google_v8_dir
 enable_dependency_tracking
 enable_silent_rules
@@ -1463,6 +1464,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+--with-asio-include-dir=DIR   path to installed asio include directory
 --with-google-v8-dir=DIR   path to installed Google v8 source directory
   --with-pic[=PKGS]       try to use only PIC/non-PIC objects [default=use
                           both]
@@ -2917,6 +2919,13 @@ SLIM_CONSOLE_VERSION=_SLIM_CONSOLE_VERSION
 SLIM_NETWORK_VERSION=_SLIM_NETWORK_VERSION
 
 
+# Check whether --with-asio-include-dir was given.
+if test ${with_asio_include_dir+y}
+then :
+  withval=$with_asio_include_dir;
+fi
+
+
 # Check whether --with-google-v8-dir was given.
 if test ${with_google_v8_dir+y}
 then :
@@ -2929,6 +2938,11 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
+if "$with_asio_include_dir" == "" ; then
+	as_fn_error $? "could not locate asio include directory, use --with-asio-include-dir=DIR" "$LINENO" 5
+else
+	CPPFLAGS="-I$with_asio_include_dir $CPPFLAGS"
+fi
 if "$with_google_v8_dir" == "" ; then
 	as_fn_error $? "could not locate Google v8 main library header file, use --with-google-v8-dir=DIR" "$LINENO" 5
 else
@@ -3598,6 +3612,18 @@ then :
 printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
 
 fi
+       for ac_header in asio.hpp
+do :
+  ac_fn_cxx_check_header_compile "$LINENO" "asio.hpp" "ac_cv_header_asio_hpp" "$ac_includes_default"
+if test "x$ac_cv_header_asio_hpp" = xyes
+then :
+  printf "%s\n" "#define HAVE_ASIO_HPP 1" >>confdefs.h
+
+else $as_nop
+  as_fn_error $? "could not locate asio include directory, use --with-asio-include-dir=DIR" "$LINENO" 5
+fi
+
+done
        for ac_header in v8.h
 do :
   ac_fn_cxx_check_header_compile "$LINENO" "v8.h" "ac_cv_header_v8_h" "$ac_includes_default"

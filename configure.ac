@@ -5,8 +5,14 @@ moduledir='${exec_prefix}/share/slim'
 AC_DEFINE([SLIM_ASIO_VERSION],   ["1.28.2"], [ASIO async library version])
 AC_SUBST([SLIM_CONSOLE_VERSION], [_SLIM_CONSOLE_VERSION])
 AC_SUBST([SLIM_NETWORK_VERSION], [_SLIM_NETWORK_VERSION])
-AC_ARG_WITH(google-v8-dir, [--with-google-v8-dir=DIR   path to installed Google v8 source directory])
+AC_ARG_WITH(asio-include-dir,    [--with-asio-include-dir=DIR   path to installed asio include directory])
+AC_ARG_WITH(google-v8-dir,       [--with-google-v8-dir=DIR   path to installed Google v8 source directory])
 AC_LANG_PUSH([C++])
+if[ "$with_asio_include_dir" == "" ]; then
+	AC_MSG_ERROR([could not locate asio include directory, use --with-asio-include-dir=DIR])
+else
+	CPPFLAGS="-I$with_asio_include_dir $CPPFLAGS"
+fi
 if[ "$with_google_v8_dir" == "" ]; then
 	AC_MSG_ERROR([could not locate Google v8 main library header file, use --with-google-v8-dir=DIR])
 else
@@ -16,6 +22,7 @@ else
 	libv8_monolith="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_monolith.a"
 	libv8_libplatform="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_libplatform.a"
 fi
+AC_CHECK_HEADERS([asio.hpp], [],[AC_MSG_ERROR([could not locate asio include directory, use --with-asio-include-dir=DIR])])
 AC_CHECK_HEADERS([v8.h], [],[AC_MSG_ERROR([could not locate Google v8 main library header file, use --with-google-v8--dir=DIR])])
 AC_CHECK_HEADERS([libplatform/libplatform.h], [],[AC_MSG_ERROR([could not locate Google v8 main library header file, use --with-google-v8-dir=DIR])])
 AC_CHECK_FILE([$libv8_libbase], [], [AC_MSG_ERROR(["could not locate Google v8 static library libv8_libbase.a, has it been compiled?"])])
