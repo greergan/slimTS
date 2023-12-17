@@ -10,9 +10,9 @@
 #include <unordered_map>
 #include <vector>
 #include <v8.h>
-#include <slim/utilities.h>
+#include <slim/gv8.h>
 #include <slim/plugin.hpp>
-#include <slim/v8.hpp>
+#include <slim/utilities.h>
 /*
  * Reference https://console.spec.whatwg.org/#printer
  */

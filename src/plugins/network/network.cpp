@@ -2,9 +2,9 @@
 
 #include <v8.h>
 #include <asio.hpp>
-#include <slim/utilities.h>
+#include <slim/gv8.h>
 #include <slim/plugin.hpp>
-#include <slim/v8.hpp>
+#include <slim/utilities.h>
 namespace slim::network {
 	namespace server {
 		namespace ip {

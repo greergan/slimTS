@@ -1,7 +1,6 @@
 #include "config.h"
 #include <iostream>
-#include <slim.hpp>
-#include <slim/command_line_handler.hpp>
+#include <slim.h>
 int main(int argc, char *argv[]) {
     try {
         slim::version();
