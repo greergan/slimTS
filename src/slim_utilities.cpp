@@ -1,5 +1,3 @@
-#ifndef __SLIM__UTILITIES__HPP
-#define __SLIM__UTILITIES__HPP
 #include <regex>
 #include <string>
 #include <v8.h>
@@ -151,4 +149,3 @@ std::string slim::utilities::v8ValueToString(v8::Isolate* isolate, v8::Local<v8:
 	v8::String::Utf8Value string_value(isolate, value);
 	return std::string(*string_value);
 }
-#endif
