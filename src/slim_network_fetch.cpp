@@ -2,6 +2,7 @@
 #include <regex>
 #include <v8.h>
 #include <slim/fetch.h>
+//#include <slim/network/http/request.h>
 #include <slim/plugin.hpp>
 void slim::network::fetch::expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin fetch_plugin(isolate, "fetch", &slim::network::fetch::fetch);
