@@ -793,8 +793,8 @@ am__quote'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-with_asio_include_dir
 with_google_v8_dir
+with_librdkafka
 enable_dependency_tracking
 enable_silent_rules
 enable_shared
@@ -1464,8 +1464,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
---with-asio-include-dir=DIR   path to installed asio include directory
 --with-google-v8-dir=DIR   path to installed Google v8 source directory
+--with-librdkafka=DIR   path to librdkafka installation filesystem i.e. /usr/local
   --with-pic[=PKGS]       try to use only PIC/non-PIC objects [default=use
                           both]
   --with-aix-soname=aix|svr4|both
@@ -2919,17 +2919,17 @@ SLIM_CONSOLE_VERSION=_SLIM_CONSOLE_VERSION
 SLIM_NETWORK_VERSION=_SLIM_NETWORK_VERSION
 
 
-# Check whether --with-asio-include-dir was given.
-if test ${with_asio_include_dir+y}
-then :
-  withval=$with_asio_include_dir;
-fi
-
-
 # Check whether --with-google-v8-dir was given.
 if test ${with_google_v8_dir+y}
 then :
   withval=$with_google_v8_dir;
+fi
+
+
+# Check whether --with-librdkafka was given.
+if test ${with_librdkafka+y}
+then :
+  withval=$with_librdkafka;
 fi
 
 ac_ext=cpp
@@ -2938,11 +2938,6 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-if "$with_asio_include_dir" == "" ; then
-	as_fn_error $? "could not locate asio include directory, use --with-asio-include-dir=DIR" "$LINENO" 5
-else
-	CPPFLAGS="-I$with_asio_include_dir $CPPFLAGS"
-fi
 if "$with_google_v8_dir" == "" ; then
 	as_fn_error $? "could not locate Google v8 main library header file, use --with-google-v8-dir=DIR" "$LINENO" 5
 else
@@ -2951,6 +2946,15 @@ else
 	libv8_libbase="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_libbase.a"
 	libv8_monolith="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_monolith.a"
 	libv8_libplatform="$with_google_v8_dir/out.gn/x64.release.sample/obj/libv8_libplatform.a"
+fi
+if "$with_librdkafka" == "" ; then
+	as_fn_error $? "could not locate librdkafka installation file system, use --with-librdkafka=DIR" "$LINENO" 5
+else
+	CPPFLAGS="-I$with_librdkafka/include $CPPFLAGS"
+	LDFLAGS="-L$with_librdkafka/lib $LDFLAGS"
+	librdkafka="$with_librdkafka/lib/librdkafka.so"
+	librdkafkapp="$with_librdkafka/lib/librdkafka++.so"
+	KAFKALIB_PATH="$with_librdkafka/lib"
 fi
 
 
@@ -3612,18 +3616,6 @@ then :
 printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
 
 fi
-       for ac_header in asio.hpp
-do :
-  ac_fn_cxx_check_header_compile "$LINENO" "asio.hpp" "ac_cv_header_asio_hpp" "$ac_includes_default"
-if test "x$ac_cv_header_asio_hpp" = xyes
-then :
-  printf "%s\n" "#define HAVE_ASIO_HPP 1" >>confdefs.h
-
-else $as_nop
-  as_fn_error $? "could not locate asio include directory, use --with-asio-include-dir=DIR" "$LINENO" 5
-fi
-
-done
        for ac_header in v8.h
 do :
   ac_fn_cxx_check_header_compile "$LINENO" "v8.h" "ac_cv_header_v8_h" "$ac_includes_default"
@@ -3645,6 +3637,18 @@ then :
 
 else $as_nop
   as_fn_error $? "could not locate Google v8 main library header file, use --with-google-v8-dir=DIR" "$LINENO" 5
+fi
+
+done
+       for ac_header in librdkafka/rdkafkacpp.h
+do :
+  ac_fn_cxx_check_header_compile "$LINENO" "librdkafka/rdkafkacpp.h" "ac_cv_header_librdkafka_rdkafkacpp_h" "$ac_includes_default"
+if test "x$ac_cv_header_librdkafka_rdkafkacpp_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBRDKAFKA_RDKAFKACPP_H 1" >>confdefs.h
+
+else $as_nop
+  as_fn_error $? "could not locate librdkafka installation file system, use --with-librdkafka=DIR" "$LINENO" 5
 fi
 
 done
@@ -3721,6 +3725,56 @@ then :
 
 else $as_nop
   as_fn_error $? "\"could not locate Google v8 static library libv8_libplatform.a, has it been compiled?\"" "$LINENO" 5
+fi
+
+as_ac_File=`printf "%s\n" "ac_cv_file_$librdkafka" | $as_tr_sh`
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $librdkafka" >&5
+printf %s "checking for $librdkafka... " >&6; }
+if eval test \${$as_ac_File+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "$librdkafka"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+printf "%s\n" "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"
+then :
+
+else $as_nop
+  as_fn_error $? "could not locate librdkafka installation file system, use --with-librdkafka=DIR" "$LINENO" 5
+fi
+
+as_ac_File=`printf "%s\n" "ac_cv_file_$librdkafkapp" | $as_tr_sh`
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $librdkafkapp" >&5
+printf %s "checking for $librdkafkapp... " >&6; }
+if eval test \${$as_ac_File+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "$librdkafkapp"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+printf "%s\n" "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"
+then :
+
+else $as_nop
+  as_fn_error $? "could not locate librdkafka installation file system, use --with-librdkafka=DIR" "$LINENO" 5
 fi
 
 
@@ -5038,7 +5092,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 ac_config_headers="$ac_config_headers include/config.h"
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/plugins/console/Makefile src/plugins/network/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile src/plugins/console/Makefile src/plugins/kafka/Makefile src/plugins/network/Makefile"
 
 case `pwd` in
   *\ * | *\	*)
@@ -18576,6 +18630,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/plugins/console/Makefile") CONFIG_FILES="$CONFIG_FILES src/plugins/console/Makefile" ;;
+    "src/plugins/kafka/Makefile") CONFIG_FILES="$CONFIG_FILES src/plugins/kafka/Makefile" ;;
     "src/plugins/network/Makefile") CONFIG_FILES="$CONFIG_FILES src/plugins/network/Makefile" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
 
