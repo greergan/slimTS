@@ -41,19 +41,13 @@ namespace slim::plugin {
             v8_name = slim::utilities::StringToName(isolate, name);
         }
         template<typename Function, typename Signature = typename std::decay<Function>::type>
-        plugin(v8::Isolate* isolate, std::string name, Function&& function): isolate{isolate} {
-            plugin_template = v8::ObjectTemplate::New(isolate);
-            v8_name = slim::utilities::StringToName(isolate, name);
-            plugin_template->SetCallAsFunctionHandler(std::forward<Signature>(function));
-        }
-        template<typename Function, typename Signature = typename std::decay<Function>::type>
         void add_function(std::string name, Function&& function) {
             v8::HandleScope scope(isolate);
             plugin_template->Set(slim::utilities::StringToName(isolate, name), v8::FunctionTemplate::New(isolate, std::forward<Signature>(function)));
         }
-        void add_plugin(std::string name, plugin* subplugin) {
+        void add_plugin(std::string name, plugin* child) {
             v8::HandleScope scope(isolate);
-            plugin_template->Set(slim::utilities::StringToName(isolate, name), subplugin->plugin_template);
+            plugin_template->Set(slim::utilities::StringToName(isolate, name), child->plugin_template);
         }
         void add_property(std::string name, auto&& property) {
             v8::HandleScope scope(isolate);
