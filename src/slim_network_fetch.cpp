@@ -5,8 +5,8 @@
 //#include <slim/network/http/request.h>
 #include <slim/plugin.hpp>
 void slim::network::fetch::expose_plugin(v8::Isolate* isolate) {
-	slim::plugin::plugin fetch_plugin(isolate, "fetch", &slim::network::fetch::fetch);
-    fetch_plugin.expose_plugin();
+/* 	slim::plugin::plugin fetch_plugin(isolate, "fetch", &slim::network::fetch::fetch);
+    fetch_plugin.expose_plugin(); */
 }
 void slim::network::fetch::fetch(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();

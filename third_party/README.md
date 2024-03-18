@@ -1,9 +1,5 @@
 # Third party dependencies
 
-## The libuv event loop
-<a href="https://github.com/libuv/libuv">Source code</a>  
-<a href="http://docs.libuv.org/en/v1.x/">Documentation</a>  
-
 ## Google's V8 Javascript Engine
 <a href="https://v8docs.nodesource.com/">Docs hosted by Node</a>  
 <a href="https://github.com/v8/v8/blob/main/LICENSE">The V8 License</a>  
@@ -14,3 +10,6 @@
 ## Microsoft's Typescript Compiler
 <a href="https://github.com/microsoft/TypeScript/blob/main/LICENSE.txt">The Typescript License</a>  
 <a href="https://github.com/microsoft/TypeScript#building">Building Typescript</a>  
+
+## Investigate
+<a href="https://simdjson.org/">The simdjson library</a>  
