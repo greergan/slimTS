@@ -12,7 +12,7 @@ void slim::plugin::loader::load(const v8::FunctionCallbackInfo<v8::Value>& args)
     auto isolate = args.GetIsolate();
     v8::HandleScope scope(isolate);
     if(args.Length() == 0) {
-        isolate->ThrowException(slim::utilities::StringToValue(isolate, "slim.lod(plugin_name, [bool]"));
+        isolate->ThrowException(slim::utilities::StringToValue(isolate, "slim.load(plugin_name, [bool]"));
     }
     if(!args[0]->IsString()) {
         isolate->ThrowException(slim::utilities::StringToValue(isolate, "argument 1 must be a string"));
