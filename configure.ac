@@ -46,8 +46,10 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	src/plugins/console/Makefile
+	src/plugins/fs/Makefile
 	src/plugins/kafka/Makefile
 	src/plugins/network/Makefile
+	src/plugins/process/Makefile
 ])
 LT_INIT
 AC_OUTPUT
