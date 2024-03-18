@@ -138,12 +138,42 @@ std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string strin
 std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
 	return StringValue(isolate, GetValue(isolate, string, object));
 }
+/* New style calls */
+v8::Local<v8::Value> slim::utilities::CharPointerToV8Value(v8::Isolate* isolate, const char* value) {
+	return v8::String::NewFromUtf8(isolate, value).ToLocalChecked().As<v8::Value>();
+}
+v8::Local<v8::Integer> slim::utilities::size_t_ToV8Integer(v8::Isolate* isolate, const size_t value) {
+	v8::Local<v8::Integer> new_value = v8::Int32::New(isolate, value);
+	return new_value;
+}
+v8::Local<v8::String> slim::utilities::StringToV8String(v8::Isolate* isolate, std::string string) {
+	return v8::String::NewFromUtf8(isolate, string.c_str()).ToLocalChecked();
+}
+v8::Local<v8::Value> slim::utilities::StringToV8Value(v8::Isolate* isolate, const std::string value) {
+	return v8::String::NewFromUtf8(isolate, value.c_str()).ToLocalChecked().As<v8::Value>();
+}
+v8::Local<v8::Value> slim::utilities::StringToV8Value(v8::Isolate* isolate, const std::string* value) {
+	return v8::String::NewFromUtf8(isolate, value->c_str()).ToLocalChecked().As<v8::Value>();
+}
+bool slim::utilities::V8BoolToBool(v8::Isolate* isolate, v8::Maybe<bool> value) {
+	return value.FromMaybe(false);
+}
 std::string slim::utilities::V8JsonValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
     return(std::string("slim::utilities::V8JsonValueToString not implemented"));
+}
+std::string slim::utilities::v8NameToString(v8::Isolate* isolate, v8::Local<v8::Name> string) {
+	v8::String::Utf8Value string_value(isolate, string);
+	return std::string(*string_value);
 }
 std::string slim::utilities::v8StringToString(v8::Isolate* isolate, v8::Local<v8::String> string) {
 	v8::String::Utf8Value string_value(isolate, string);
 	return std::string(*string_value);
+}
+bool slim::utilities::V8ValueToBool(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+	if(!value->IsBoolean()) {
+		isolate->ThrowException(slim::utilities::StringToString(isolate, "boolean value expected"));
+	}  
+	return value->BooleanValue(isolate);
 }
 std::string slim::utilities::v8ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value) {
 	v8::String::Utf8Value string_value(isolate, value);
