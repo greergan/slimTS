@@ -50,7 +50,7 @@ AC_CONFIG_FILES([
 	src/plugins/kafka/Makefile
 	src/plugins/network/Makefile
 	src/plugins/process/Makefile
-	src/plugins/rapidcsv/Makefile
+	src/plugins/csv/Makefile
 ])
 LT_INIT
 AC_OUTPUT
