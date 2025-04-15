@@ -14,7 +14,8 @@ void slim::gv8::CreateGlobalTemplate() {
 v8::Local<v8::Module> slim::gv8::CompileAndInstantiateModule(std::string source, std::string name) {
 	auto context = slim_v8.isolate->GetCurrentContext();
 	v8::TryCatch try_catch(slim_v8.isolate);
-	v8::ScriptOrigin origin(slim_v8.isolate, slim::utilities::StringToValue(slim_v8.isolate, name),
+
+	v8::ScriptOrigin origin(slim::utilities::StringToValue(slim_v8.isolate, name),
 						0, 0, false, -1, slim::utilities::StringToValue(slim_v8.isolate, ""), false, false, true);
 	v8::ScriptCompiler::Source v8_source(slim::utilities::StringToString(slim_v8.isolate, source), origin);
 	v8::ScriptCompiler::CompileOptions module_compile_options(v8::ScriptCompiler::kNoCompileOptions);
