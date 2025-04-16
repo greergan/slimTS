@@ -12,7 +12,7 @@
 void slim::run(const std::string file_name, const std::string file_contents) {
 	bool is_module = file_name.ends_with(".mjs") ? true : false;
 	auto isolate = slim::gv8::GetIsolate();
-	//v8::Isolate::Scope isolate_scope(isolate);
+	v8::Isolate::Scope isolate_scope(isolate);
 	v8::HandleScope handle_scope(isolate);
 	slim::gv8::CreateGlobalTemplate();
 	//must load plugins to be used on the global isolate prior to context scoping
