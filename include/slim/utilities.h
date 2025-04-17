@@ -6,7 +6,11 @@
 namespace slim::utilities {
     bool BoolValue(v8::Isolate* isolate, v8::Local<v8::Value> value);  
     int ArrayCount(v8::Local<v8::Value> value);
+    // old
     int IntValue(v8::Isolate* isolate, v8::Local<v8::Value> value);
+    // new
+    int V8ValueToInt(v8::Isolate* isolate, v8::Local<v8::Value> value);
+
     int IntValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     int IntValuePositive(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     int PropertyCount(v8::Isolate* isolate, v8::Local<v8::Object> object);

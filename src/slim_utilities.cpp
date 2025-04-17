@@ -21,7 +21,15 @@ v8::Local<v8::Object> slim::utilities::GetObject(v8::Isolate* isolate, std::stri
 v8::Local<v8::Value> slim::utilities::GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
 	return object->Get(isolate->GetCurrentContext(), StringToName(isolate, string)).ToLocalChecked();
 }
+// old
 int slim::utilities::IntValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+	if(!value->IsInt32()) {
+		isolate->ThrowException(slim::utilities::StringToString(isolate, "integer value expected"));
+	}  
+	return value->Int32Value(isolate->GetCurrentContext()).FromJust();
+}
+// new
+int slim::utilities::V8ValueToInt(v8::Isolate* isolate, v8::Local<v8::Value> value) {
 	if(!value->IsInt32()) {
 		isolate->ThrowException(slim::utilities::StringToString(isolate, "integer value expected"));
 	}  
