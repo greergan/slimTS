@@ -60,6 +60,7 @@ void slim::gv8::initialize(int argc, char* argv[]) {
 	v8::V8::SetFlagsFromCommandLine(&argc, argv, true);
 	slim_v8.create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 	slim_v8.isolate = v8::Isolate::New(slim_v8.create_params);
+	slim_v8.isolate->Enter();
 	slim_v8.initialized = true;
 }
 v8::MaybeLocal<v8::Module> slim::gv8::ModuleCallbackResolver(v8::Local<v8::Context> context, v8::Local<v8::String> specifier, v8::Local<v8::FixedArray> import_assertions, v8::Local<v8::Module> referrer) {
@@ -105,6 +106,7 @@ bool slim::gv8::RunScript(v8::Local<v8::Script> script) {
 void slim::gv8::stop() {
 	if(slim_v8.initialized) {
 		if(slim_v8.isolate != NULL) {
+			slim_v8.isolate->Exit();
 			slim_v8.isolate->Dispose();
 		}
 		v8::V8::Dispose();
