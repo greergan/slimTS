@@ -150,6 +150,9 @@ std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string strin
 v8::Local<v8::Value> slim::utilities::CharPointerToV8Value(v8::Isolate* isolate, const char* value) {
 	return v8::String::NewFromUtf8(isolate, value).ToLocalChecked().As<v8::Value>();
 }
+v8::Local<v8::Integer> slim::utilities::IntToV8Integer(v8::Isolate* isolate, const int value) {
+	return v8::Integer::New(isolate, value);
+}
 v8::Local<v8::Integer> slim::utilities::size_t_ToV8Integer(v8::Isolate* isolate, const size_t value) {
 	v8::Local<v8::Integer> new_value = v8::Int32::New(isolate, value);
 	return new_value;

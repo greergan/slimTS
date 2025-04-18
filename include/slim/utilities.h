@@ -42,6 +42,7 @@ namespace slim::utilities {
     std::string StringFunction(v8::Isolate* isolate, v8::Local<v8::Value> function);
     /* new function formats */
     v8::Local<v8::Value> CharPointerToV8Value(v8::Isolate* isolate, const char* value);
+    v8::Local<v8::Integer> IntToV8Integer(v8::Isolate* isolate, const int value);
     v8::Local<v8::Integer> size_t_ToV8Integer(v8::Isolate* isolate, const size_t value);
     v8::Local<v8::String> StringToV8String(v8::Isolate* isolate, std::string string);
     v8::Local<v8::Value> StringToV8Value(v8::Isolate* isolate, const std::string value);
@@ -51,7 +52,6 @@ namespace slim::utilities {
     std::string v8NameToString(v8::Isolate* isolate, v8::Local<v8::Name> string);
     std::string v8StringToString(v8::Isolate* isolate, v8::Local<v8::String> string);
     bool V8ValueToBool(v8::Isolate* isolate, v8::Local<v8::Value> value);
-    std::string v8ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value);
-    
+    std::string v8ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value); 
 }
 #endif
