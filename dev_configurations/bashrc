@@ -125,5 +125,7 @@ export SLIM_INSTALL="/home/greergan/product/.local"
 export PATH="$SLIM_INSTALL/bin:$PATH"
 export PATH=/home/greergan/product/depot_tools:$PATH
 export PATH=$PRODUCT/go/go/bin:$PATH
-#export PATH=$HOME/product/node/bin:$PATH
+export PATH=$HOME/product/slim/dev_configurations/bin:$PATH
 
+export TENDRIL_NETWORK_LISTENERS=localhost:8500
+export KAFKA_BROKERS=localhost

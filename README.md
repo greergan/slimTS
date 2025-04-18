@@ -11,3 +11,6 @@ $ make
 
 ### build librdkafka
 ./configure --enable-static --prefix=/home/greergan/product/.local
+
+
+./configure --prefix=$HOME/product/.local --with-google-v8-dir=$HOME/product/google/v8 --with-librdkafka=$HOME/product/.local
