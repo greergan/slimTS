@@ -8,9 +8,10 @@
 #include <slim/objects.h>
 #include <slim/gv8.h>
 #include <slim/utilities.h>
-
+#include <slim/common/log.h>
 void slim::run(const std::string file_name, const std::string file_contents) {
-	bool is_module = file_name.ends_with(".mjs") ? true : false;
+	slim::common::log::trace(slim::common::log::Message("slim::run","begins",__FILE__, __LINE__));
+	bool is_script_a_module = file_name.ends_with(".mjs") ? true : false;
 	auto isolate = slim::gv8::GetIsolate();
 	v8::Isolate::Scope isolate_scope(isolate);
 	v8::HandleScope handle_scope(isolate);
@@ -19,44 +20,72 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
 	auto context = slim::gv8::GetNewContext();
 	if(context.IsEmpty()) {
+		slim::common::log::error(slim::common::log::Message("slim::run","Error creating context",__FILE__, __LINE__));
 		throw("Error creating context");
 	}
 	v8::Context::Scope context_scope(context);
 	slim::objects::initialize(isolate);
 	v8::TryCatch try_catch(isolate);
-	if(is_module) {
+	if(is_script_a_module) {
+		slim::common::log::trace(slim::common::log::Message("slim::run","is_script_a_module==true",__FILE__, __LINE__));
+		slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::CompileAndInstantiateModule",__FILE__, __LINE__));
 		auto module = slim::gv8::CompileAndInstantiateModule(file_contents, file_name);
+		slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::CompileAndInstantiateModule",__FILE__, __LINE__));
 		if(try_catch.HasCaught()) {
+			slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 			slim::gv8::ReportException(&try_catch);
 		}
 		if(!module.IsEmpty()) {
-			bool instantiated = slim::utilities::V8BoolToBool(isolate, module->InstantiateModule(context, slim::gv8::ModuleCallbackResolver));
+			slim::common::log::trace(slim::common::log::Message("slim::run","!module.IsEmpty()",__FILE__, __LINE__));
+			slim::common::log::trace(slim::common::log::Message("slim::run","calling module->InstantiateModule()",__FILE__, __LINE__));
+			bool module_instantiated = slim::utilities::V8BoolToBool(isolate, module->InstantiateModule(context, slim::gv8::ModuleCallbackResolver));
+			slim::common::log::trace(slim::common::log::Message("slim::run","called module->InstantiateModule()",__FILE__, __LINE__));
 			if(try_catch.HasCaught()) {
+				slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 				slim::gv8::ReportException(&try_catch);
 			}
-			if(instantiated) {
+			if(module_instantiated) {
+				slim::common::log::trace(slim::common::log::Message("slim::run","module_instantiated",__FILE__, __LINE__));
+				slim::common::log::trace(slim::common::log::Message("slim::run","calling module->Evaluate()",__FILE__, __LINE__));
 				auto result = module->Evaluate(context);
+				slim::common::log::trace(slim::common::log::Message("slim::run","called module->Evaluate()",__FILE__, __LINE__));
+				slim::common::log::trace(slim::common::log::Message("slim::run",(std::string("module->GetStatus() => ") + std::to_string(module->GetStatus())).c_str(),__FILE__, __LINE__));
+				if(module->GetStatus() == 5) {
+					slim::common::log::error(slim::common::log::Message("slim::run",slim::utilities::v8ValueToString(isolate, module->GetException()).c_str(),__FILE__, __LINE__));
+					slim::common::log::error(slim::common::log::Message("slim::run","calling isolate->ThrowException(module->GetException())",__FILE__, __LINE__));
+					isolate->ThrowException(module->GetException());
+				}
 				if(try_catch.HasCaught()) {
+					slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 					slim::gv8::ReportException(&try_catch);
 				}
 			}
 			else {
-				std::cout << "Initial module instantiation failed\n";
+				slim::common::log::trace(slim::common::log::Message("slim::run","!module_instantiated",__FILE__, __LINE__));
+				throw("Initial module instantiation failed");
 			}
 		}
 	}
 	else {
+		slim::common::log::trace(slim::common::log::Message("slim::run","is a script",__FILE__, __LINE__));
+		slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::CompileScript()",__FILE__, __LINE__));
 		auto script = slim::gv8::CompileScript(file_contents, file_name);
+		slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::CompileScript()",__FILE__, __LINE__));
 		if(try_catch.HasCaught()) {
+			slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 			slim::gv8::ReportException(&try_catch);
 		}
 		if(!script.IsEmpty()) {
+			slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::RunScript()",__FILE__, __LINE__));
 			bool result = slim::gv8::RunScript(script);
+			slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::RunScript()",__FILE__, __LINE__));
 			if(try_catch.HasCaught()) {
+				slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 				slim::gv8::ReportException(&try_catch);
 			}
 		}
 	}
+	slim::common::log::trace(slim::common::log::Message("slim::run","ends",__FILE__, __LINE__));
 	return;
 }
 void slim::start(int argc, char* argv[]) {

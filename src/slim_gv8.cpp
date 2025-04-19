@@ -5,6 +5,7 @@
 #include <slim/gv8.h>
 #include <libplatform/libplatform.h>
 #include <slim/utilities.h>
+#include <slim/common/log.h>
 namespace slim::gv8 {
 	Gv8Config slim_v8;
 }
@@ -12,35 +13,49 @@ void slim::gv8::CreateGlobalTemplate() {
 	slim_v8.globalObjectTemplate = v8::ObjectTemplate::New(slim_v8.isolate);
 }
 v8::Local<v8::Module> slim::gv8::CompileAndInstantiateModule(std::string source, std::string name) {
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","begins",__FILE__, __LINE__));
 	auto context = slim_v8.isolate->GetCurrentContext();
 	v8::TryCatch try_catch(slim_v8.isolate);
-
 	v8::ScriptOrigin origin(slim::utilities::StringToValue(slim_v8.isolate, name),
 						0, 0, false, -1, slim::utilities::StringToValue(slim_v8.isolate, ""), false, false, true);
 	v8::ScriptCompiler::Source v8_source(slim::utilities::StringToString(slim_v8.isolate, source), origin);
 	v8::ScriptCompiler::CompileOptions module_compile_options(v8::ScriptCompiler::kNoCompileOptions);
 	v8::ScriptCompiler::NoCacheReason module_no_cache_reason(v8::ScriptCompiler::kNoCacheNoReason);
-	auto module = v8::ScriptCompiler::CompileModule(slim_v8.isolate, &v8_source, module_compile_options, module_no_cache_reason).ToLocalChecked();
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","calling v8::ScriptCompiler::CompileModule()",__FILE__, __LINE__));
+	v8::MaybeLocal<v8::Module> module = v8::ScriptCompiler::CompileModule(slim_v8.isolate, &v8_source, module_compile_options, module_no_cache_reason);
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","called v8::ScriptCompiler::CompileModule()",__FILE__, __LINE__));
 	if(try_catch.HasCaught()) {
+		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","try_catch.HasCaught()",__FILE__, __LINE__));
 		ReportException(&try_catch);
 	}
 	if(!module.IsEmpty()) {
-		bool instantiated = slim::utilities::V8BoolToBool(slim_v8.isolate, module->InstantiateModule(slim_v8.isolate->GetCurrentContext(), ModuleCallbackResolver));
+		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","!module.IsEmpty()",__FILE__, __LINE__));
+		bool instantiated = slim::utilities::V8BoolToBool(slim_v8.isolate, module.ToLocalChecked()->InstantiateModule(slim_v8.isolate->GetCurrentContext(), ModuleCallbackResolver));
+		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","called module.ToLocalChecked()->InstantiateModule()",__FILE__, __LINE__));
 		if(try_catch.HasCaught()) {
+			slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","try_catch.HasCaught()",__FILE__, __LINE__));
 			slim::gv8::ReportException(&try_catch);
 		}
 		if(!instantiated) {
+			slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","!instantiated",__FILE__, __LINE__));
 			slim_v8.isolate->ThrowException(slim::utilities::StringToV8String(slim_v8.isolate, "Initial module instantiation failed: " +  name));
 		}
 	}
-	return module;
+	else {
+		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","module.IsEmpty()",__FILE__, __LINE__));
+	}
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","ends",__FILE__, __LINE__));
+	return module.ToLocalChecked();
 }
 v8::Local<v8::Script> slim::gv8::CompileScript(std::string source, std::string name) {
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileScript()","begins",__FILE__, __LINE__));
 	v8::TryCatch try_catch(slim_v8.isolate);
 	v8::MaybeLocal<v8::Script> script = v8::Script::Compile(slim_v8.isolate->GetCurrentContext(), slim::utilities::StringToString(slim_v8.isolate, source));
 	if(try_catch.HasCaught()) {
+		slim::common::log::error(slim::common::log::Message("slim::gv8::CompileScript()","try_catch.HasCaught()",__FILE__, __LINE__));
 		ReportException(&try_catch);
 	}
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileScript()","ends",__FILE__, __LINE__));
 	return script.ToLocalChecked();
 }
 v8::Local<v8::ObjectTemplate>& slim::gv8::GetGlobalObjectTemplate() {
@@ -82,15 +97,26 @@ v8::MaybeLocal<v8::Module> slim::gv8::ModuleCallbackResolver(v8::Local<v8::Conte
 	return CompileAndInstantiateModule(file_contents, file_name);
 }
 void slim::gv8::ReportException(v8::TryCatch* try_catch) {
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::ReportException","begins",__FILE__, __LINE__));
+	v8::Isolate* isolate = try_catch->Message()->GetIsolate();
+	v8::Local<v8::Context> context = isolate->GetCurrentContext();
+	v8::ScriptOrigin script_origin = try_catch->Message()->GetScriptOrigin();
 	std::stringstream exception_string;
-	auto isolate = try_catch->Message()->GetIsolate();
-	auto context = isolate->GetCurrentContext();
-	exception_string << slim::utilities::StringValue(isolate, try_catch->Exception()) << "\n";
-	exception_string << slim::utilities::StringValue(isolate, try_catch->Message()->GetSourceLine(context).ToLocalChecked()) << "\n";
-	for(int i = 0; i < try_catch->Message()->GetStartColumn(); i++) {
+	if(!script_origin.ResourceName()->IsUndefined()) {
+		exception_string << std::endl << slim::utilities::v8ValueToString(isolate, script_origin.ResourceName());
+	}
+	exception_string << std::endl << slim::utilities::StringValue(isolate, try_catch->Exception()) << std::endl;
+	exception_string << slim::utilities::StringValue(isolate, try_catch->Message()->GetSourceLine(context).ToLocalChecked()) << std::endl;
+
+	for(int column = 0; column < try_catch->Message()->GetStartColumn(); column++) {
 		exception_string << " ";
 	}
-	exception_string << "^" << "\n";
+	exception_string << "^" << std::endl;
+	v8::Local<v8::Value> stack_trace = try_catch->StackTrace(context).ToLocalChecked();
+	if(!stack_trace.IsEmpty()) {
+		exception_string << std::endl << slim::utilities::v8ValueToString(isolate, stack_trace);
+	}
+	slim::common::log::trace(slim::common::log::Message("slim::gv8::ReportException","calling throw(exception_string)",__FILE__, __LINE__));
 	throw(exception_string.str());
 }
 bool slim::gv8::RunScript(v8::Local<v8::Script> script) {
