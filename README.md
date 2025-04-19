@@ -13,4 +13,6 @@ $ make
 ./configure --enable-static --prefix=/home/greergan/product/.local
 
 
-./configure --prefix=$HOME/product/.local --with-google-v8-dir=$HOME/product/google/v8 --with-librdkafka=$HOME/product/.local
+./configure --prefix=/home/greergan/product/.local --with-google-v8-dir=/home/greergan/product/google/v8 --with-librdkafka=/home/greergan/product/.local
+
+./configure --prefix=$PRODUCT/local --with-google-v8-dir=$PRODUCT/google/v8 --with-librdkafka=$PRODUCT/local
