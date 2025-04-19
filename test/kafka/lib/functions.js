@@ -4,7 +4,7 @@ class Message {
 		this.key = key
 	}
 }
-
+let number_of_messages_sent = 0;
 const consumer_configuration = {
 	"bootstrap.servers": "localhost:9092",
 	"group.id": "development"
@@ -62,7 +62,6 @@ export function get_message() {
 	try {
 		message = kafka.consumer.consume(1000, 5)
 		console.debug("message received")
-		console.info(message)
 	}
 	catch(error) {
 		message = JSON.parse(error)
@@ -83,7 +82,7 @@ export function list_subscriptions() {
 }
 export function put_message(topic_name) {
 	console.debug("producing a message topic =>", topic_name)
-	const new_message = new Message("payload string", Math.random())
+	const new_message = new Message("payload string", ++number_of_messages_sent)
 	console.debug(new_message)
 	const result = kafka.producer.produce(topic_name, new_message)
 	console.debug("message produced=>", result)

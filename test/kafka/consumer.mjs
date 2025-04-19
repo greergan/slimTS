@@ -4,15 +4,10 @@ let consumer_name
 let producer_name
 
 slim.load("console")
-try {
-	console.debug("loading kafka")
-	slim.load("kafka")
-	console.debug("loaded kafka")
-}
-catch(error) {
-	console.debug("kafka not loaded:", error)
-	exit()
-}
+console.debug("loading kafka")
+slim.load("kafka")
+console.debug("loaded kafka")
+
 
 configure(Roles.CONSUMER)
 const subscribed_topic = subscribe("raw_tcp_messages")
@@ -20,11 +15,8 @@ list_subscriptions()
 //const request_topic_name = create_topic("raw_tcp_messages", Roles.CONSUMER)
 
 try {
-	kafka.trace(true)
-	while(request_message = get_message(subscribed_topic)) {
-		console.info(request_message)
-		//handle_message(request_message)
-	}
+	//kafka.trace(true)
+	while(handle_message(get_message(subscribed_topic))) {}
 }
 catch(error) {
 	console.error(error)

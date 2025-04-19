@@ -17,7 +17,8 @@ configure(Roles.PRODUCER)
 try {
 	console.debug("calling put_message()")
 	let created = 0
-	for(let i = 0; i < 100; i++) {
+	//for(let i = 0; i < 1; i++) {
+	while(true) {
 		const result = put_message("raw_tcp_messages")
 		//console.log(result)
 		created++
