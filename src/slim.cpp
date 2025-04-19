@@ -89,7 +89,9 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	return;
 }
 void slim::start(int argc, char* argv[]) {
-	if(argc == 2) {
+	slim::common::log::trace(slim::common::log::Message("slim::start","begins",__FILE__, __LINE__));
+	slim::common::log::trace(slim::common::log::Message("slim::start",std::string("command line arguments => " + std::to_string(argc)).c_str(),__FILE__, __LINE__));
+	if(argc > 1) {
 		std::string file_contents;
 		std::string file_name{argv[1]};
 		std::ifstream file(file_name);
@@ -102,6 +104,7 @@ void slim::start(int argc, char* argv[]) {
 			stop();
 		}
 	}
+	slim::common::log::trace(slim::common::log::Message("slim::start","ends",__FILE__, __LINE__));
 }
 void slim::stop() {
 	slim::gv8::stop();
