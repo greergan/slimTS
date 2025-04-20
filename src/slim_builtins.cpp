@@ -2,15 +2,22 @@
 
 #include <v8.h>
 #include <slim/builtins.h>
-#include <slim/plugin.hpp>
+#include <slim/builtins/dummy_console_provider.h>
+#include <slim/common/log.h>
 #include <slim/gv8.h>
-
+#include <slim/plugin.hpp>
+#include <slim/plugin/loader.h>
 /* look at source file product/google/v8/src/init/bootstrapper.cc */
-
 
 //void slim::builtins::initialize(v8::Isolate* isolate) {
 void slim::builtins::initialize(v8::Isolate* isolate, v8::Local<v8::ObjectTemplate>& globalObjectTemplate) {
+	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","begins",__FILE__, __LINE__));
 	v8::HandleScope scope(isolate);
+	slim::dummy_console::expose_plugin(isolate);
+	slim::plugin::plugin slim_objects(isolate, "slim");
+	slim_objects.add_function("load", slim::plugin::loader::load);
+	slim_objects.expose_plugin();
+
 	globalObjectTemplate->Set(isolate, "Headers2", v8::FunctionTemplate::New(isolate, new_headers));
 
 /* 	slim::plugin::plugin module(isolate, "module");
@@ -77,6 +84,7 @@ void slim::builtins::initialize(v8::Isolate* isolate, v8::Local<v8::ObjectTempla
 		isolate->GetCurrentContext(),
 		object_name,
 		headers_object_template->NewInstance(isolate->GetCurrentContext()).ToLocalChecked()).ToChecked(); */
+	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","begins",__FILE__, __LINE__));
 }
 
 
