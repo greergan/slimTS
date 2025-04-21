@@ -1,13 +1,14 @@
 #include <iostream>
-#include <fstream>
 #include <string>
+#include <sstream>
 #include <v8.h>
 #include "config.h"
 #include <slim.h>
 #include <slim/builtins.h>
-#include <slim/objects.h>
 #include <slim/gv8.h>
 #include <slim/utilities.h>
+#include <slim/common/exception.h>
+#include <slim/common/fetch.h>
 #include <slim/common/log.h>
 void slim::run(const std::string file_name, const std::string file_contents) {
 	slim::common::log::trace(slim::common::log::Message("slim::run","begins",__FILE__, __LINE__));
@@ -15,16 +16,20 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	auto isolate = slim::gv8::GetIsolate();
 	v8::Isolate::Scope isolate_scope(isolate);
 	v8::HandleScope handle_scope(isolate);
+	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
 	slim::gv8::CreateGlobalTemplate();
-	//must load plugins to be used on the global isolate prior to context scoping
-	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
+	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
+	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::GetNewContext()",__FILE__, __LINE__));
 	auto context = slim::gv8::GetNewContext();
+	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::GetNewContext()",__FILE__, __LINE__));
 	if(context.IsEmpty()) {
 		slim::common::log::error(slim::common::log::Message("slim::run","Error creating context",__FILE__, __LINE__));
 		throw("Error creating context");
 	}
 	v8::Context::Scope context_scope(context);
-	slim::objects::initialize(isolate);
+	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
+	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
+	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
 	v8::TryCatch try_catch(isolate);
 	if(is_script_a_module) {
 		slim::common::log::trace(slim::common::log::Message("slim::run","is_script_a_module==true",__FILE__, __LINE__));
@@ -92,22 +97,27 @@ void slim::start(int argc, char* argv[]) {
 	slim::common::log::trace(slim::common::log::Message("slim::start","begins",__FILE__, __LINE__));
 	slim::common::log::trace(slim::common::log::Message("slim::start",std::string("command line arguments => " + std::to_string(argc)).c_str(),__FILE__, __LINE__));
 	if(argc > 1) {
-		std::string file_contents;
-		std::string file_name{argv[1]};
-		std::ifstream file(file_name);
-		//file.is_open ??
-		getline(file, file_contents, '\0');
-		file.close();
-		if(file_contents.length() > 2) {
+		char* file_name = argv[1];
+		std::stringstream script_source_file_contents_stream;
+		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::common::fetch::fetch()",__FILE__, __LINE__));
+		script_source_file_contents_stream = slim::common::fetch::fetch(file_name);
+		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::common::fetch::fetch()",__FILE__, __LINE__));
+		if(script_source_file_contents_stream.str().length() >= 0) {
+			slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::gv8::initialize()",__FILE__, __LINE__));
 			slim::gv8::initialize(argc, argv);
-			run(file_name, file_contents);
-			stop();
+			slim::common::log::trace(slim::common::log::Message("slim::start","called slim::gv8::initialize()",__FILE__, __LINE__));
+			slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::run()",__FILE__, __LINE__));
+			slim::run(file_name, script_source_file_contents_stream.str());
+			slim::common::log::trace(slim::common::log::Message("slim::start","called slim::run()",__FILE__, __LINE__));
+			slim::stop();
 		}
 	}
 	slim::common::log::trace(slim::common::log::Message("slim::start","ends",__FILE__, __LINE__));
 }
 void slim::stop() {
+	slim::common::log::trace(slim::common::log::Message("slim::stop","begins",__FILE__, __LINE__));
 	slim::gv8::stop();
+	slim::common::log::trace(slim::common::log::Message("slim::stop","ends",__FILE__, __LINE__));
 }
 void slim::version(void) {
     std::cout << "slim:  " << VERSION << "\n";
