@@ -5,11 +5,12 @@
 #include "config.h"
 #include <slim.h>
 #include <slim/builtins.h>
-#include <slim/gv8.h>
-#include <slim/utilities.h>
 #include <slim/common/exception.h>
 #include <slim/common/fetch.h>
 #include <slim/common/log.h>
+#include <slim/gv8.h>
+#include <slim/macros.h>
+#include <slim/utilities.h>
 void slim::run(const std::string file_name, const std::string file_contents) {
 	slim::common::log::trace(slim::common::log::Message("slim::run","begins",__FILE__, __LINE__));
 	bool is_script_a_module = file_name.ends_with(".mjs") ? true : false;
@@ -102,6 +103,9 @@ void slim::start(int argc, char* argv[]) {
 		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::common::fetch::fetch()",__FILE__, __LINE__));
 		script_source_file_contents_stream = slim::common::fetch::fetch(file_name);
 		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::common::fetch::fetch()",__FILE__, __LINE__));
+		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::macros::apply()",__FILE__, __LINE__));
+		script_source_file_contents_stream = slim::macros::apply(script_source_file_contents_stream, file_name);
+		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::macros::apply()",__FILE__, __LINE__));
 		if(script_source_file_contents_stream.str().length() >= 0) {
 			slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::gv8::initialize()",__FILE__, __LINE__));
 			slim::gv8::initialize(argc, argv);
