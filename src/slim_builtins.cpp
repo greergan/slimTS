@@ -84,7 +84,7 @@ void slim::builtins::initialize(v8::Isolate* isolate, v8::Local<v8::ObjectTempla
 		isolate->GetCurrentContext(),
 		object_name,
 		headers_object_template->NewInstance(isolate->GetCurrentContext()).ToLocalChecked()).ToChecked(); */
-	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","begins",__FILE__, __LINE__));
+	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","ends",__FILE__, __LINE__));
 }
 
 
