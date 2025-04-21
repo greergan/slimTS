@@ -6,6 +6,7 @@ slim_SOURCES  = main.cpp \
 				slim_builtins.cpp \
 				slim_builtins_dummy_console_provider.cpp \
 				slim_common_fetch.cpp \
+				slim_common_fetch_and_apply_macros.cpp \
 				slim_common_log.cpp \
 				slim_gv8.cpp \
 				slim_macros.cpp \
