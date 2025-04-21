@@ -3,16 +3,15 @@
 bin_PROGRAMS  = slim
 slim_SOURCES  = main.cpp \
 				slim.cpp \
-				dummy_console_provider.cpp \
 				slim_builtins.cpp \
-				slim_gv8.cpp \
+				slim_builtins_dummy_console_provider.cpp \
+				slim_common_fetch.cpp \
 				slim_common_log.cpp \
-				slim_network_fetch.cpp \
+				slim_gv8.cpp \
 				slim_network_http_headers.cpp \
 				slim_network_http_response.cpp\
 				slim_network_http_request.cpp \
 				slim_network_http_url.cpp \
-				slim_objects.cpp \
 				slim_path.cpp \
 				slim_plugin_loader.cpp\
 				slim_utilities.cpp
