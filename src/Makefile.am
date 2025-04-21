@@ -8,6 +8,7 @@ slim_SOURCES  = main.cpp \
 				slim_common_fetch.cpp \
 				slim_common_log.cpp \
 				slim_gv8.cpp \
+				slim_macros.cpp \
 				slim_network_http_headers.cpp \
 				slim_network_http_response.cpp\
 				slim_network_http_request.cpp \
