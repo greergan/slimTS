@@ -27,7 +27,6 @@ void slim::common::log::debug(bool value) {
 	slim::common::log::allow_debug = value;
 }
 void slim::common::log::debug(const slim::common::log::Message message) {
-	std::cerr << cyan("DEBUG => ") << std::to_string(message.line_number) << ":" << message.file << ":" << message.text << std::endl;
 	if(slim::common::log::allow_debug)
 		slim::common::log::print(cyan("DEBUG => "), message);
 }
