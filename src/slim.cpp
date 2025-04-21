@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -101,10 +102,11 @@ void slim::start(int argc, char* argv[]) {
 		char* file_name = argv[1];
 		std::stringstream script_source_file_contents_stream;
 		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::common::fetch::fetch()",__FILE__, __LINE__));
-		script_source_file_contents_stream = slim::common::fetch::fetch(file_name);
+		std::filesystem::path absolute_path_to_file = std::filesystem::absolute(file_name);
+		script_source_file_contents_stream = slim::common::fetch::fetch(absolute_path_to_file.string().c_str());
 		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::common::fetch::fetch()",__FILE__, __LINE__));
 		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::macros::apply()",__FILE__, __LINE__));
-		script_source_file_contents_stream = slim::macros::apply(script_source_file_contents_stream, file_name);
+		script_source_file_contents_stream = slim::macros::apply(script_source_file_contents_stream, absolute_path_to_file);
 		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::macros::apply()",__FILE__, __LINE__));
 		if(script_source_file_contents_stream.str().length() >= 0) {
 			slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::gv8::initialize()",__FILE__, __LINE__));
