@@ -1,16 +1,12 @@
-#include <filesystem>
-#include <iostream>
 #include <string>
-#include <sstream>
 #include <v8.h>
 #include "config.h"
 #include <slim.h>
 #include <slim/builtins.h>
 #include <slim/common/exception.h>
-#include <slim/common/fetch.h>
+#include <slim/common/fetch_and_apply_macros.h>
 #include <slim/common/log.h>
 #include <slim/gv8.h>
-#include <slim/macros.h>
 #include <slim/utilities.h>
 void slim::run(const std::string file_name, const std::string file_contents) {
 	slim::common::log::trace(slim::common::log::Message("slim::run","begins",__FILE__, __LINE__));
@@ -101,19 +97,15 @@ void slim::start(int argc, char* argv[]) {
 	if(argc > 1) {
 		char* file_name = argv[1];
 		std::stringstream script_source_file_contents_stream;
-		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::common::fetch::fetch()",__FILE__, __LINE__));
-		std::filesystem::path absolute_path_to_file = std::filesystem::absolute(file_name);
-		script_source_file_contents_stream = slim::common::fetch::fetch(absolute_path_to_file.string().c_str());
-		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::common::fetch::fetch()",__FILE__, __LINE__));
-		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::macros::apply()",__FILE__, __LINE__));
-		script_source_file_contents_stream = slim::macros::apply(script_source_file_contents_stream, absolute_path_to_file);
-		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::macros::apply()",__FILE__, __LINE__));
-		if(script_source_file_contents_stream.str().length() >= 0) {
+		slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::common::fetch_and_apply_macros()",__FILE__, __LINE__));
+		std::string script_source = slim::common::fetch_and_apply_macros(file_name);
+		slim::common::log::trace(slim::common::log::Message("slim::start","called slim::common::fetch_and_apply_macros()",__FILE__, __LINE__));
+		if(script_source.length() >= 0) {
 			slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::gv8::initialize()",__FILE__, __LINE__));
 			slim::gv8::initialize(argc, argv);
 			slim::common::log::trace(slim::common::log::Message("slim::start","called slim::gv8::initialize()",__FILE__, __LINE__));
 			slim::common::log::trace(slim::common::log::Message("slim::start","calling slim::run()",__FILE__, __LINE__));
-			slim::run(file_name, script_source_file_contents_stream.str());
+			slim::run(file_name, script_source);
 			slim::common::log::trace(slim::common::log::Message("slim::start","called slim::run()",__FILE__, __LINE__));
 			slim::stop();
 		}
@@ -126,7 +118,8 @@ void slim::stop() {
 	slim::common::log::trace(slim::common::log::Message("slim::stop","ends",__FILE__, __LINE__));
 }
 void slim::version(void) {
+/* 	slim::common::log::trace(slim::common::log::Message("slim::version","begins",__FILE__, __LINE__));
     std::cout << "slim:  " << VERSION << "\n";
-    std::cout << "libv8: " << std::string(v8::V8::GetVersion()) << "\n";
+    std::cout << "libv8: " << std::string(v8::V8::GetVersion()) << "\n"; */
     return;
 }
