@@ -53,7 +53,7 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 				auto result = module->Evaluate(context);
 				slim::common::log::trace(slim::common::log::Message("slim::run","called module->Evaluate()",__FILE__, __LINE__));
 				slim::common::log::trace(slim::common::log::Message("slim::run",(std::string("module->GetStatus() => ") + std::to_string(module->GetStatus())).c_str(),__FILE__, __LINE__));
-				if(module->GetStatus() == 5) {
+				if(module->GetStatus() == v8::Module::Status::kErrored) {
 					slim::common::log::error(slim::common::log::Message("slim::run",slim::utilities::v8ValueToString(isolate, module->GetException()).c_str(),__FILE__, __LINE__));
 					slim::common::log::error(slim::common::log::Message("slim::run","calling isolate->ThrowException(module->GetException())",__FILE__, __LINE__));
 					isolate->ThrowException(module->GetException());
