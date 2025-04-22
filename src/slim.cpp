@@ -53,9 +53,13 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 				auto result = module->Evaluate(context);
 				slim::common::log::trace(slim::common::log::Message("slim::run","called module->Evaluate()",__FILE__, __LINE__));
 				slim::common::log::trace(slim::common::log::Message("slim::run",(std::string("module->GetStatus() => ") + std::to_string(module->GetStatus())).c_str(),__FILE__, __LINE__));
+				if(try_catch.HasCaught()) {
+					slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
+					slim::gv8::ReportException(&try_catch);
+				}
 				if(module->GetStatus() == v8::Module::Status::kErrored) {
-					slim::common::log::error(slim::common::log::Message("slim::run",slim::utilities::v8ValueToString(isolate, module->GetException()).c_str(),__FILE__, __LINE__));
-					slim::common::log::error(slim::common::log::Message("slim::run","calling isolate->ThrowException(module->GetException())",__FILE__, __LINE__));
+					std::string error = slim::utilities::v8ValueToString(isolate, module->GetException());
+					slim::common::log::error(slim::common::log::Message("slim::run",error.c_str(),__FILE__, __LINE__));
 					isolate->ThrowException(module->GetException());
 				}
 				if(try_catch.HasCaught()) {
