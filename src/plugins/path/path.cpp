@@ -5,13 +5,12 @@
 namespace slim::plugin::path {
 	//void platform(const v8::FunctionCallbackInfo<v8::Value>& args);
 }
-/* void slim::plugin::os::platform(const v8::FunctionCallbackInfo<v8::Value>& args) {
+/* void slim::plugin::path::realpathSync::native(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	v8::Isolate* isolate = args.GetIsolate();
 	args.GetReturnValue().Set(slim::utilities::StringToV8String(isolate, "linux"));
 } */
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin path_plugin(isolate, "path");
-	//path_plugin.add_function("platform", slim::plugin::path::platform);
 	path_plugin.expose_plugin();
 	return;
 }
