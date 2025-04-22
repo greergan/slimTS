@@ -1,5 +1,5 @@
-import { Hello } from "file:///home/greergan/product/slim/test/import/lib/hello.mjs";
-import { World } from "file:///home/greergan/product/slim/test/import/lib/world.mjs";
+import { Hello } from "lib/hello.mjs";
+import { World } from "lib/world.mjs";
 export function HelloWorld() {
-	console.log(Hello() + " " + World() + "!");
+	console.log(Hello() + " " + World() + " while using imports!");
 }
