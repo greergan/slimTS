@@ -147,6 +147,9 @@ std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string strin
 	return StringValue(isolate, GetValue(isolate, string, object));
 }
 /* New style calls */
+v8::Local<v8::Boolean> slim::utilities::BoolToV8Boolean(v8::Isolate* isolate, bool value) {
+	return v8::Boolean::New(isolate, value);
+}
 v8::Local<v8::Value> slim::utilities::CharPointerToV8Value(v8::Isolate* isolate, const char* value) {
 	return v8::String::NewFromUtf8(isolate, value).ToLocalChecked().As<v8::Value>();
 }
