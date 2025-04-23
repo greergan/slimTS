@@ -15,7 +15,7 @@ static void replace_token(const char* token, std::string& line_of_text, const st
 			line_of_text.replace(file_name_token_position, strlen(token), replace_with_string);
 		}
 		file_name_token_position += replace_with_string.length() + quotes_space;
-		slim::common::log::debug(slim::common::log::Message("replace_token()", line_of_text.c_str(),__FILE__, __LINE__));
+		//slim::common::log::debug(slim::common::log::Message("replace_token()", line_of_text.c_str(),__FILE__, __LINE__));
 	}
 }
 std::string slim::macros::apply(std::stringstream& input_string_stream, const std::string& absolute_path_to_file) {
@@ -27,7 +27,7 @@ std::string slim::macros::apply(std::stringstream& input_string_stream, const st
 	std::string line_of_text;
 	int line_number = 0;
 	while(std::getline(input_string_stream, line_of_text)) {
-		slim::common::log::debug(slim::common::log::Message("slim::macros::apply()", line_of_text.c_str(),__FILE__, __LINE__));
+		//slim::common::log::debug(slim::common::log::Message("slim::macros::apply()", line_of_text.c_str(),__FILE__, __LINE__));
 		line_number++;
 		replace_token("__dirname", line_of_text, directory_name_string, true);
 		replace_token("__filename", line_of_text, file_name_string, true);
