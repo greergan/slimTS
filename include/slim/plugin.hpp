@@ -62,10 +62,13 @@ namespace slim::plugin {
             PropertyPointer* property_pointer = new PropertyPointer(property);
             plugin_template->SetNativeDataProperty(slim::utilities::StringToName(isolate, name), getter, setter, v8::External::New(isolate, (void*)property_pointer));
         }
-        void expose_plugin() {
-            isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8_name, new_instance()).ToChecked();
+        void expose_plugin(v8::Local<v8::Object> new_v8_object) {
+            isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8_name, new_v8_object).ToChecked();
         }
-        v8::Local<v8::ObjectTemplate> get_plugin() {
+        void expose_plugin() {
+            expose_plugin(new_instance());
+        }
+        v8::Local<v8::ObjectTemplate>& get_plugin() {
             return plugin_template;
         }
         v8::Local<v8::Object> new_instance() {
