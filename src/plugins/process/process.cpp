@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <v8.h>
@@ -16,6 +17,8 @@ namespace slim::plugin::process {
 	void exit_wrapper(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void nextTick(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void platform(const v8::FunctionCallbackInfo<v8::Value>& args);
+	void stderr_write(const v8::FunctionCallbackInfo<v8::Value>& args);
+	void stdout_write(const v8::FunctionCallbackInfo<v8::Value>& args);
 }
 void slim::plugin::process::cwd(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	v8::Isolate* isolate = args.GetIsolate();
@@ -34,16 +37,32 @@ void slim::plugin::process::platform(const v8::FunctionCallbackInfo<v8::Value>& 
 	v8::Isolate* isolate = args.GetIsolate();
 	args.GetReturnValue().Set(slim::utilities::StringToV8String(isolate, "linux"));
 }
+void slim::plugin::process::stderr_write(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	v8::Isolate* isolate = args.GetIsolate();
+	std::string value = slim::utilities::v8ValueToString(isolate, args[0]);
+	std::cerr << value << std::endl;
+}
+void slim::plugin::process::stdout_write(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	v8::Isolate* isolate = args.GetIsolate();
+	std::string value = slim::utilities::v8ValueToString(isolate, args[0]);
+	std::cout << value << std::endl;
+}
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin process_plugin(isolate, "process");
 	slim::plugin::plugin process_env_plugin(isolate, "env");
+	slim::plugin::plugin process_stderr_plugin(isolate, "stderr");
+	slim::plugin::plugin process_stdout_plugin(isolate, "stdout");
 	process_env_plugin.add_property("TSC_WATCHFILE", &slim::plugin::process::TSC_WATCHFILE);
 	process_plugin.add_property("browser", &slim::plugin::process::browser);
 	process_plugin.add_function("cwd", 	slim::plugin::process::cwd);
 	process_plugin.add_function("exit", slim::plugin::process::exit_wrapper);
 	process_plugin.add_function("nextTick", slim::plugin::process::nextTick);
 	process_plugin.add_function("platform", slim::plugin::process::platform);
+	process_stderr_plugin.add_function("write", slim::plugin::process::stderr_write);
+	process_stdout_plugin.add_function("write", slim::plugin::process::stdout_write);
 	process_plugin.add_plugin("env", &process_env_plugin);
+	process_plugin.add_plugin("stderr", &process_stderr_plugin);
+	process_plugin.add_plugin("stdout", &process_stdout_plugin);
 	v8::Local<v8::Context> context = isolate->GetCurrentContext();
 	v8::Local<v8::Object> full_process_plugin_object = process_plugin.new_instance();
 	v8::Local<v8::Array> argv_array = v8::Array::New(isolate);
