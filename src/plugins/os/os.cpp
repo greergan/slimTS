@@ -1,4 +1,5 @@
 #include <v8.h>
+#include <slim/common/platform.h>
 #include <slim/gv8.h>
 #include <slim/plugin.hpp>
 #include <slim/utilities.h>
@@ -11,7 +12,8 @@ void slim::plugin::os::platform(const v8::FunctionCallbackInfo<v8::Value>& args)
 }
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin os_plugin(isolate, "os");
-	os_plugin.add_function("platform", slim::plugin::os::platform);
+	os_plugin.add_property_immutable("EOL", OS_EOL);
+	os_plugin.add_property_immutable("platform", OS_NAME);
 	os_plugin.expose_plugin();
 	return;
 }
