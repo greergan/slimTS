@@ -34,6 +34,9 @@ int main(int argc, char *argv[]) {
         slim::common::log::trace(slim::common::log::Message("exiting",__FILE__, __LINE__));
         exit(1);
     }
+    catch (const std::invalid_argument& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
     catch (const std::runtime_error& e) {
         std::cerr << "Runtime error: " << e.what() << std::endl;
         slim::stop();
