@@ -69,7 +69,7 @@ extern "C" void expose_plugin(v8::Isolate* isolate) {
 	std::vector<std::string> argv_vector = slim::command_line::get_argv();
 	uint32_t argv_index = 0;
 	for(auto& command_line_argument: argv_vector) {
-		argv_array->Set(context, argv_index, slim::utilities::StringToV8Value(isolate, command_line_argument));
+		auto result = argv_array->Set(context, argv_index, slim::utilities::StringToV8Value(isolate, command_line_argument));
 		argv_index++;
 	}
 	v8::Maybe<bool> set_results = full_process_plugin_object->Set(context, slim::utilities::StringToV8String(isolate, "argv"), argv_array);
