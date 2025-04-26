@@ -4,6 +4,16 @@
 #include <variant>
 #include <v8.h>
 #include <slim/utilities.h>
+
+#define BOOL 1
+#define CHAR 2
+#define DOUBLE 3
+#define FLOAT 4
+#define INTEGER 5
+#define NUMBER 6
+#define STRING 7
+#include <iostream>
+
 namespace slim::plugin {
     class PropertyPointer {
         std::variant<bool*, std::string*, int*> property;
@@ -62,6 +72,65 @@ namespace slim::plugin {
             PropertyPointer* property_pointer = new PropertyPointer(property);
             plugin_template->SetNativeDataProperty(slim::utilities::StringToName(isolate, name), getter, setter, v8::External::New(isolate, (void*)property_pointer));
         }
+        void add_property_immutable(const char* property_name, const char* property_value) {
+            plugin_template->Set(slim::utilities::StringToV8String(isolate, property_name), slim::utilities::StringToV8String(isolate, property_value), v8::ReadOnly);
+        }
+/*      
+Figure out how to make a template work so we can remove the overload method calls
+
+        template<typename T, typename U>
+        void add_property_immutable(T property_name, U property_value) {
+            v8::HandleScope scope(isolate);
+            std::string property_name_string;
+            v8::Local<v8::Value> v8_property_value;
+            auto get_v8_data_type = [&]<typename X>(X&& property_name_or_value_trait) -> int {
+                using removed_reference = std::remove_reference<X>::type;
+                using removed_pointer = std::remove_pointer<removed_reference>::type;
+                using removed_const = std::remove_const<removed_pointer>::type;
+                if(std::is_same_v<bool, removed_const>) {
+                    return BOOL;
+                }
+                else if(std::is_same_v<int, removed_const>) {
+                    return INTEGER;
+                }
+                else if(std::is_same_v<char, removed_const>) {
+                    return CHAR;
+                }
+                else if(std::is_same_v<double, removed_const> || std::is_same_v<float, removed_const>) {
+                    return NUMBER;
+                }
+                else if(std::is_same_v<std::string, removed_const>) {
+                    return STRING;
+                }
+                return -1;
+            };
+            int property_name_data_type = get_v8_data_type(std::type_identity_t<U>);
+            if (property_name_data_type == CHAR) {
+                property_name_string = std::string(property_name);
+            }
+            else if(property_name_data_type == STRING) {
+                property_name_string = property_name;
+            }
+            else {
+                throw std::invalid_argument("slim::plugin::plugin::add_property_immutable requires a string or char type for the property name");
+            }
+            int property_value_data_type = get_v8_data_type(std::type_identity_t<T>);
+            if (property_value_data_type == BOOL) {
+                plugin_template->Set(slim::utilities::StringToV8String(isolate, property_name_string), v8::Boolean::New(isolate, property_value), v8::ReadOnly);
+            }
+            else if(property_value_data_type == CHAR || property_value_data_type == STRING) {
+                plugin_template->Set(slim::utilities::StringToV8String(isolate, property_name_string), slim::utilities::StringToV8String(isolate, property_value), v8::ReadOnly);
+            }
+            else if(property_value_data_type == INTEGER) {
+                plugin_template->Set(slim::utilities::StringToV8String(isolate, property_name_string), v8::Integer::New(isolate, property_value), v8::ReadOnly);
+            }
+            else if(property_value_data_type == NUMBER) {
+                plugin_template->Set(slim::utilities::StringToV8String(isolate, property_name_string), v8::Number::New(isolate, property_value), v8::ReadOnly);
+            }
+            else {
+                throw std::invalid_argument("slim::plugin::plugin::add_property_immutable requires a primitive type for the property value");
+            }
+        } */
         void expose_plugin(v8::Local<v8::Object> new_v8_object) {
             isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), v8_name, new_v8_object).ToChecked();
         }
