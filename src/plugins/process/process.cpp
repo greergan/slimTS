@@ -40,12 +40,12 @@ void slim::plugin::process::platform(const v8::FunctionCallbackInfo<v8::Value>& 
 void slim::plugin::process::stderr_write(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	v8::Isolate* isolate = args.GetIsolate();
 	std::string value = slim::utilities::v8ValueToString(isolate, args[0]);
-	std::cerr << value << std::endl;
+	std::cerr << value;
 }
 void slim::plugin::process::stdout_write(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	v8::Isolate* isolate = args.GetIsolate();
 	std::string value = slim::utilities::v8ValueToString(isolate, args[0]);
-	std::cout << value << std::endl;
+	std::cout << value;
 }
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin process_plugin(isolate, "process");
