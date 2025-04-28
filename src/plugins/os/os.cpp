@@ -8,12 +8,12 @@ namespace slim::plugin::os {
 }
 void slim::plugin::os::platform(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	v8::Isolate* isolate = args.GetIsolate();
-	args.GetReturnValue().Set(slim::utilities::StringToV8String(isolate, "linux"));
+	args.GetReturnValue().Set(slim::utilities::StringToV8String(isolate, OS_NAME));
 }
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin os_plugin(isolate, "os");
 	os_plugin.add_property_immutable("EOL", OS_EOL);
-	os_plugin.add_property_immutable("platform", OS_NAME);
+	os_plugin.add_function("platform", slim::plugin::os::platform);
 	os_plugin.expose_plugin();
 	return;
 }
