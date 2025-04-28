@@ -1,1 +1,3 @@
-console.log("here")
+"use strict";
+require("console")
+console.log("here");
