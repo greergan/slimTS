@@ -44,7 +44,7 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	auto no_content = [](const v8::FunctionCallbackInfo<v8::Value>& args){};
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "setTimeout", v8::FunctionTemplate::New(isolate, no_content));
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "clearTimeout", v8::FunctionTemplate::New(isolate, no_content));
-
+	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "require", v8::FunctionTemplate::New(isolate, slim::builtins::require));
 
 	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
 	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::GetNewContext()",__FILE__, __LINE__));

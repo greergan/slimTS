@@ -12,7 +12,7 @@
 //void slim::builtins::initialize(v8::Isolate* isolate) {
 void slim::builtins::initialize(v8::Isolate* isolate, v8::Local<v8::ObjectTemplate>& globalObjectTemplate) {
 	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","begins",__FILE__, __LINE__));
-	v8::HandleScope scope(isolate);
+	//v8::HandleScope scope(isolate);
 	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","after handle scope",__FILE__, __LINE__));
 	slim::dummy_console::expose_plugin(isolate);
 	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","after expose_plugin",__FILE__, __LINE__));
@@ -21,93 +21,24 @@ void slim::builtins::initialize(v8::Isolate* isolate, v8::Local<v8::ObjectTempla
 	slim_objects.add_function("load", slim::plugin::loader::load);
 	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","after load",__FILE__, __LINE__));
 	slim_objects.expose_plugin();
-	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","after explose",__FILE__, __LINE__));
-
-//	globalObjectTemplate->Set(isolate, "Headers2", v8::FunctionTemplate::New(isolate, new_headers));
-
-/* 	slim::plugin::plugin module(isolate, "module");
-	module.expose_plugin();
-	slim::plugin::plugin require(isolate, "require");
-	require.expose_plugin(); */
-	//slim::plugin::plugin headers_builtin(isolate, "Headers", &new_headers);
-	//headers_builtin.add_function("append", &append_headers);
-	//headers_builtin.expose_plugin();
-
-
-/* 	slim::plugin::plugin headers(isolate, "Headers");
-	headers.add_function("append", append_headers);
-	headers.expose_plugin(); */
-/* 	slim::plugin::plugin headers(isolate, "Headers", new_headers);
-	slim::plugin::plugin append(isolate, "append", append_headers);
-	headers.add_plugin("append", &append);
-	headers.expose_plugin(); */
-
-/* 	auto object_name = slim::utilities::StringToName(isolate, "Headers");
-	auto object_template = v8::ObjectTemplate::New(isolate);
-	object_template->SetCallAsFunctionHandler(new_headers);
-	auto append = v8::FunctionTemplate::New(isolate, append_headers);
-	auto append_name = slim::utilities::StringToName(isolate, "append");
-	object_template->Set(append_name, append);
-	isolate->GetCurrentContext()->Global()->Set(isolate->GetCurrentContext(), object_name, object_template->NewInstance(isolate->GetCurrentContext()).ToLocalChecked()).ToChecked(); */
-
-/* 	auto headers_name = slim::utilities::StringToName(isolate, "Headers");
-	auto append_name = slim::utilities::StringToName(isolate, "append");
-	auto headers_object_template = v8::ObjectTemplate::New(isolate);
-	headers_object_template->SetCallAsFunctionHandler(new_headers);
-
-	v8::Local<v8::Function> append = v8::FunctionTemplate::New(isolate, append_headers);
-	headers_object_template->Set(isolate, "append", append_headers);
-	//headers_object_template->Set(isolate, "append", append); */
-
-	/* auto headers_object = headers_object_template->NewInstance(isolate->GetCurrentContext()).ToLocalChecked();
-	isolate->GetCurrentContext()->Global()->Set(
-		isolate->GetCurrentContext(),
-		headers_name,
-		headers_object).ToChecked(); */
-////////////////////
-/* 	auto headers_name = slim::utilities::StringToName(isolate, "Headers");
-	v8::Local<v8::FunctionTemplate> headers = v8::FunctionTemplate::New(isolate, new_headers);
-	v8::Local<v8::Template> headers_template = headers->PrototypeTemplate();
-	v8::Local<v8::FunctionTemplate> append = v8::FunctionTemplate::New(isolate, append_headers);
-	headers_template->Set(isolate, "append", append);
-
-	auto headers_object_template = v8::ObjectTemplate::New(isolate);
-	headers_object_template->SetCallAsFunctionHandler(new_headers);
-	headers_object_template->Set(headers_template); */
-
-/* 
-	auto object_name = slim::utilities::StringToName(isolate, "Headers");
-	auto new_headers_function_template = v8::FunctionTemplate::New(isolate, new_headers);
-	auto headers_object_template = v8::ObjectTemplate::New(isolate, new_headers_function_template);
-	/#/object_template->SetCallAsFunctionHandler(new_headers);
-
-	auto append_name = slim::utilities::StringToName(isolate, "append");
-	auto headers_append_function_template = v8::FunctionTemplate::New(isolate, append_headers);
-	headers_object_template->Set(append_name, headers_append_function_template);
-
-	isolate->GetCurrentContext()->Global()->Set(
-		isolate->GetCurrentContext(),
-		object_name,
-		headers_object_template->NewInstance(isolate->GetCurrentContext()).ToLocalChecked()).ToChecked(); */
+	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","after expose slim_objects",__FILE__, __LINE__));
 	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","ends",__FILE__, __LINE__));
 }
 
-
-void slim::builtins::append_headers(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	std::cout << "slim::builtins::append_headers\n";
-}
-void slim::builtins::new_headers(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	std::cout << "slim::builtins::new_headers\n";
-	auto isolate = args.GetIsolate();
-	auto context = isolate->GetCurrentContext();
-	//slim::network::http::Headers new_header;
-	if(args.Length() == 0) {
-		
+void slim::builtins::require(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	slim::common::log::trace(slim::common::log::Message("slim::builtins::require","begins",__FILE__, __LINE__));
+	v8::Isolate* isolate = args.GetIsolate();
+	v8::Local<v8::Context> context = isolate->GetCurrentContext();
+	v8::Local<v8::String> v8_plugin_name_string  = args[0]->ToString(context).ToLocalChecked();
+	std::string plugin_name_string = slim::utilities::v8StringToString(isolate, v8_plugin_name_string);
+	slim::common::log::trace(slim::common::log::Message(
+		"slim::builtins::require",std::string("plugin name => " +  plugin_name_string).c_str() ,__FILE__, __LINE__));
+	slim::plugin::loader::load_plugin(isolate, plugin_name_string, true);
+	v8::Local<v8::Value> v8_property_value = context->Global()->Get(context, v8_plugin_name_string).ToLocalChecked();
+	if(!v8_property_value.IsEmpty() && v8_property_value->IsObject()) {
+		v8::Local<v8::Object> target_object = v8::Local<v8::Object>::Cast(v8_property_value);
+		args.GetReturnValue().Set(v8::Local<v8::Object>::Cast(v8_property_value));
+		slim::common::log::trace(slim::common::log::Message("slim::builtins::require","found object",__FILE__, __LINE__));
 	}
-	auto object = v8::Object::New(isolate);
-	auto headers = slim::utilities::StringToString(isolate, "headers");
-	auto key = v8::Private::New(isolate, headers);
-	auto map = v8::Map::New(isolate);
-	auto result = object->SetPrivate(context, key, map);
-	args.GetReturnValue().Set(object);
+	slim::common::log::trace(slim::common::log::Message("slim::builtins::require","ends",__FILE__, __LINE__));
 }
