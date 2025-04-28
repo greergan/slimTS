@@ -4,6 +4,7 @@
 #include <string>
 #include <v8.h>
 namespace slim::utilities {
+    void print_object_keys(v8::Isolate* isolate, const v8::Local<v8::Object>& object_value);
     bool BoolValue(v8::Isolate* isolate, v8::Local<v8::Value> value);  
     int ArrayCount(v8::Local<v8::Value> value);
     // old

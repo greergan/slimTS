@@ -1,7 +1,17 @@
 #include <regex>
 #include <string>
 #include <v8.h>
+#include <slim/common/log.h>
 #include <slim/utilities.h>
+void slim::utilities::print_object_keys(v8::Isolate* isolate, const v8::Local<v8::Object>& object_value) {
+	auto context = isolate->GetCurrentContext();
+	auto property_names_array = object_value->GetOwnPropertyNames(context).ToLocalChecked();
+	for(int array_index = 0; array_index < property_names_array->Length(); array_index++) {
+		auto v8_property_name = property_names_array->Get(context, array_index).ToLocalChecked();
+		std::string property_name_string = slim::utilities::v8ValueToString(isolate, v8_property_name);
+		slim::common::log::debug(slim::common::log::Message("print_object_keys => ", property_name_string.c_str(), "", 0));
+	}
+}
 int slim::utilities::ArrayCount(v8::Local<v8::Value> value) {
 	if(value->IsArray()) {
 		return v8::Handle<v8::Array>::Cast(value)->Length();
