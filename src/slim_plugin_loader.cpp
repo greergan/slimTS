@@ -1,6 +1,7 @@
 #include <dlfcn.h>
 #include <v8.h>
 #include <unordered_map>
+#include <slim/common/log.h>
 #include <slim/path.h>
 #include <slim/utilities.h>
 #include <slim/plugin/loader.h>
@@ -25,25 +26,33 @@ void slim::plugin::loader::load(const v8::FunctionCallbackInfo<v8::Value>& args)
     load_plugin(isolate, plugin_name, global_scope);
     return;
 };
-void slim::plugin::loader::load_plugin(v8::Isolate* isolate, const std::string plugin_name, const bool global_scope) {
-    bool loaded = false;
+void slim::plugin::loader::load_plugin(v8::Isolate* isolate, const std::string plugin_name_string, const bool global_scope) {
+    slim::common::log::trace(slim::common::log::Message("slim::plugin::loader", "begins", __FILE__, __LINE__));
     auto open_bits = global_scope ? RTLD_NOW | RTLD_GLOBAL : RTLD_NOW;
-    std::string plugin_so_path = plugin_library_path + plugin_name + ".so";
-    loaded_plugins[plugin_name] = dlopen(plugin_so_path.c_str(), open_bits);
-    if(!loaded_plugins[plugin_name]) {
-        isolate->ThrowException(slim::utilities::StringToValue(isolate, "error loading plugin: " + std::string(dlerror())));
-    }
-    else {
-        typedef void (*expose_plugin_t)(v8::Isolate* isolate);
-        expose_plugin_t expose_plugin = (expose_plugin_t) dlsym(loaded_plugins[plugin_name], "expose_plugin");
-        dlerror();
-        if(!expose_plugin) {
-            isolate->ThrowException(slim::utilities::StringToValue(isolate, "error loading plugin symbols: " + std::string(dlerror())));
-            dlclose(loaded_plugins[plugin_name]);
+    std::string plugin_so_path = plugin_library_path + plugin_name_string + ".so";
+    if(!loaded_plugins[plugin_name_string]) {
+        slim::common::log::debug(slim::common::log::Message("slim::plugin::loader", std::string("loading plugin => " + plugin_name_string).c_str(), __FILE__, __LINE__));
+        loaded_plugins[plugin_name_string] = dlopen(plugin_so_path.c_str(), open_bits);
+        if(!loaded_plugins[plugin_name_string]) {
+            isolate->ThrowException(slim::utilities::StringToValue(isolate, "error loading plugin: " + std::string(dlerror())));
         }
         else {
-            expose_plugin(isolate);
-            expose_plugin = nullptr;
+            typedef void (*expose_plugin_t)(v8::Isolate* isolate);
+            expose_plugin_t expose_plugin = (expose_plugin_t) dlsym(loaded_plugins[plugin_name_string], "expose_plugin");
+            dlerror();
+            if(!expose_plugin) {
+                isolate->ThrowException(slim::utilities::StringToValue(isolate, "error loading plugin symbols: " + std::string(dlerror())));
+                dlclose(loaded_plugins[plugin_name_string]);
+            }
+            else {
+                slim::common::log::debug(slim::common::log::Message("slim::plugin::loader", std::string("exposing plugin => " + plugin_name_string).c_str(), __FILE__, __LINE__));
+                expose_plugin(isolate);
+                expose_plugin = nullptr;
+            }
         }
     }
+    else {
+        slim::common::log::debug(slim::common::log::Message("slim::plugin::loader", "plugin already loaded", __FILE__, __LINE__));
+    }
+    slim::common::log::trace(slim::common::log::Message("slim::plugin::loader", "ends", __FILE__, __LINE__));
 }
