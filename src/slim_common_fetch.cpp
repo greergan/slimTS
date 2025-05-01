@@ -32,8 +32,8 @@ std::stringstream slim::common::fetch::fetch(const char* file_name) {
     slim::common::log::trace(slim::common::log::Message("slim::common::fetch::fetch()","ends",__FILE__, __LINE__));
     return file_contents_stringstream;
 }
-std::stringstream slim::common::fetch::fetch(const std::string* file_name) {
-    return slim::common::fetch::fetch(file_name->c_str());
+std::stringstream slim::common::fetch::fetch(const std::string file_name) {
+    return slim::common::fetch::fetch(file_name.c_str());
 }
 /* void slim::common::fetch::fetch(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();
