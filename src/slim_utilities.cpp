@@ -1,13 +1,55 @@
+#include <cstring>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <v8.h>
 #include <slim/common/log.h>
 #include <slim/utilities.h>
-void slim::utilities::print_object_keys(v8::Isolate* isolate, const v8::Local<v8::Object>& object_value) {
-	auto context = isolate->GetCurrentContext();
-	auto property_names_array = object_value->GetOwnPropertyNames(context).ToLocalChecked();
+
+#include <iostream>
+/* 
+template <encoding encoding>
+uint32_t WriteOneByteString(const char* src,
+                            uint32_t src_len,
+                            char* dst,
+                            uint32_t dst_len) {
+  if (dst_len == 0) {
+    return 0;
+  }
+
+  if (encoding == UTF8) {
+    return simdutf::convert_latin1_to_utf8_safe(src, src_len, dst, dst_len);
+  } else if (encoding == LATIN1 || encoding == ASCII) {
+    const auto size = std::min(src_len, dst_len);
+    memcpy(dst, src, size);
+    return size;
+  } else {
+    // TODO(ronag): Add support for more encoding.
+    UNREACHABLE();
+  }
+}
+*/
+
+
+void slim::utilities::print_v8_array_buffer(v8::Isolate* isolate, const v8::Local<v8::ArrayBuffer>& array_buffer) {
+	slim::common::log::debug(slim::common::log::Message("print_v8_array_buffer size => ", std::to_string(array_buffer->ByteLength()).c_str(), "", 0));
+	auto backing_store = array_buffer->GetBackingStore();
+	unsigned char* array_buffer_data_pointer = static_cast<unsigned char*>(backing_store->Data());
+	for(long count = 0; count < array_buffer->ByteLength(); count++) {
+/*  		v8::MaybeLocal<v8::Value> value = array_buffer->Get(isolate->GetCurrentContext(), count);
+		std::cout << value.ToLocalChecked()->IsString() << std::endl;
+		std::string value_string = slim::utilities::v8ValueToString(isolate, value.ToLocalChecked()); */
+		std::cout << array_buffer_data_pointer[count];
+		//std::cout << value_string << std::endl;
+		//char ch = (char)array_buffer_data_pointer[count];
+		//slim::common::log::debug(slim::common::log::Message("print_v8_array_buffer => ", &ch, "", 0));
+	}
+	std::cout << std::endl;
+}
+void slim::utilities::print_v8_object_keys(v8::Isolate* isolate, const v8::Local<v8::Object>& object_value) {
+	auto property_names_array = object_value->GetOwnPropertyNames(isolate->GetCurrentContext()).ToLocalChecked();
 	for(int array_index = 0; array_index < property_names_array->Length(); array_index++) {
-		auto v8_property_name = property_names_array->Get(context, array_index).ToLocalChecked();
+		auto v8_property_name = property_names_array->Get(isolate->GetCurrentContext(), array_index).ToLocalChecked();
 		std::string property_name_string = slim::utilities::v8ValueToString(isolate, v8_property_name);
 		slim::common::log::debug(slim::common::log::Message("print_object_keys => ", property_name_string.c_str(), "", 0));
 	}
