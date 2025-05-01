@@ -1,4 +1,4 @@
 "use strict"
-slim.load("console")
-const o = require("os")
-console.info(o)
+require("console")
+const {platform} = require("os")
+console.info(platform())
