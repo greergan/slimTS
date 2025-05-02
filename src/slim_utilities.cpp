@@ -202,6 +202,9 @@ std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string strin
 v8::Local<v8::Boolean> slim::utilities::BoolToV8Boolean(v8::Isolate* isolate, bool value) {
 	return v8::Boolean::New(isolate, value);
 }
+v8::Local<v8::Name> slim::utilities::StringToV8Name(v8::Isolate* isolate, const std::string value) {
+	return StringToV8String(isolate, value).As<v8::Name>();
+}
 v8::Local<v8::Value> slim::utilities::CharPointerToV8Value(v8::Isolate* isolate, const char* value) {
 	return v8::String::NewFromUtf8(isolate, value).ToLocalChecked().As<v8::Value>();
 }

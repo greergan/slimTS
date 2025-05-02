@@ -49,6 +49,7 @@ namespace slim::utilities {
     v8::Local<v8::Integer> IntToV8Integer(v8::Isolate* isolate, const int value);
     v8::Local<v8::Integer> size_t_ToV8Integer(v8::Isolate* isolate, const size_t value);
     v8::Local<v8::String> StringToV8String(v8::Isolate* isolate, std::string string);
+    v8::Local<v8::Name> StringToV8Name(v8::Isolate* isolate, const std::string value);
     v8::Local<v8::Value> StringToV8Value(v8::Isolate* isolate, const std::string value);
     v8::Local<v8::Value> StringToV8Value(v8::Isolate* isolate, const std::string* value);
     bool V8BoolToBool(v8::Isolate* isolate, v8::Maybe<bool> value);
