@@ -46,6 +46,7 @@ namespace slim::utilities {
     /* new function formats */
     v8::Local<v8::Boolean> BoolToV8Boolean(v8::Isolate* isolate, bool value);
     v8::Local<v8::Value> CharPointerToV8Value(v8::Isolate* isolate, const char* value);
+    v8::Local<v8::Number> DoubleToV8Number(v8::Isolate* isolate, const double value);
     v8::Local<v8::Integer> IntToV8Integer(v8::Isolate* isolate, const int value);
     v8::Local<v8::Integer> size_t_ToV8Integer(v8::Isolate* isolate, const size_t value);
     v8::Local<v8::String> StringToV8String(v8::Isolate* isolate, std::string string);
@@ -57,6 +58,8 @@ namespace slim::utilities {
     std::string v8NameToString(v8::Isolate* isolate, v8::Local<v8::Name> string);
     std::string v8StringToString(v8::Isolate* isolate, v8::Local<v8::String> string);
     bool V8ValueToBool(v8::Isolate* isolate, v8::Local<v8::Value> value);
-    std::string v8ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value); 
+    std::string v8ValueToString(v8::Isolate* isolate, v8::Local<v8::Value> value);
+    double time_spec_to_double(const struct timespec& time_spec_struct);
+    std::string time_spec_to_time_string_gmt(const timespec& time_spec_struct);
 }
 #endif

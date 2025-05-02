@@ -1,4 +1,6 @@
 #include <cstring>
+#include <ctime>
+#include <iomanip>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -202,11 +204,11 @@ std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string strin
 v8::Local<v8::Boolean> slim::utilities::BoolToV8Boolean(v8::Isolate* isolate, bool value) {
 	return v8::Boolean::New(isolate, value);
 }
-v8::Local<v8::Name> slim::utilities::StringToV8Name(v8::Isolate* isolate, const std::string value) {
-	return StringToV8String(isolate, value).As<v8::Name>();
-}
 v8::Local<v8::Value> slim::utilities::CharPointerToV8Value(v8::Isolate* isolate, const char* value) {
 	return v8::String::NewFromUtf8(isolate, value).ToLocalChecked().As<v8::Value>();
+}
+v8::Local<v8::Number> slim::utilities::DoubleToV8Number(v8::Isolate* isolate, const double value) {
+	return v8::Number::New(isolate, value);
 }
 v8::Local<v8::Integer> slim::utilities::IntToV8Integer(v8::Isolate* isolate, const int value) {
 	return v8::Integer::New(isolate, value);
@@ -214,6 +216,9 @@ v8::Local<v8::Integer> slim::utilities::IntToV8Integer(v8::Isolate* isolate, con
 v8::Local<v8::Integer> slim::utilities::size_t_ToV8Integer(v8::Isolate* isolate, const size_t value) {
 	v8::Local<v8::Integer> new_value = v8::Int32::New(isolate, value);
 	return new_value;
+}
+v8::Local<v8::Name> slim::utilities::StringToV8Name(v8::Isolate* isolate, const std::string value) {
+	return StringToV8String(isolate, value).As<v8::Name>();
 }
 v8::Local<v8::String> slim::utilities::StringToV8String(v8::Isolate* isolate, std::string string) {
 	return v8::String::NewFromUtf8(isolate, string.c_str()).ToLocalChecked();
@@ -248,3 +253,20 @@ std::string slim::utilities::v8ValueToString(v8::Isolate* isolate, v8::Local<v8:
 	v8::String::Utf8Value string_value(isolate, value);
 	return std::string(*string_value);
 }
+double slim::utilities::time_spec_to_double(const struct timespec& time_spec_struct) {
+	return (double)time_spec_struct.tv_sec + (double)time_spec_struct.tv_nsec / 1000000000.0;
+}
+std::string slim::utilities::time_spec_to_time_string_gmt(const timespec& time_spec_struct) {
+	std::time_t time = time_spec_struct.tv_sec;
+	std::tm gmt_tm;
+  
+  #ifdef _WIN32
+	gmtime_s(&gmt_tm, &time); // Windows
+  #else
+	gmtime_r(&time, &gmt_tm); // POSIX
+  #endif
+  
+	std::stringstream ss;
+	ss << std::put_time(&gmt_tm, "%a, %d %b %Y %H:%M:%S GMT");
+	return ss.str();
+  }
