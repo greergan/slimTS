@@ -65,8 +65,6 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	std::string primordials_file_name_string("/home/greergan/product/slim/src/plugins/nodejs/lib/internal/per_context/primordials.min.js");
 	slim::gv8::FetchCompileAndRunJSFunction(context, primordials_file_name_string);
 	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
-	slim::utilities::print_v8_object_keys(isolate, slim::utilities::GetObject(isolate, "primordials", context->Global()));
-
 	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
 	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
 	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
