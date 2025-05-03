@@ -1,10 +1,12 @@
 #include <string>
+#include <sstream>
 #include <v8.h>
 #include "config.h"
 #include <slim.h>
 #include <slim/builtins.h>
 #include <slim/command_line_handler.h>
 #include <slim/common/exception.h>
+#include <slim/common/fetch.h>
 #include <slim/common/fetch_and_apply_macros.h>
 #include <slim/common/log.h>
 #include <slim/gv8.h>
@@ -39,14 +41,15 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	v8::HandleScope handle_scope(isolate);
 	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
 	slim::gv8::CreateGlobalTemplate();
+	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
 // sort this better please
 // not sure why this has to be done before creating a new context
+	slim::common::log::trace(slim::common::log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
 	auto no_content = [](const v8::FunctionCallbackInfo<v8::Value>& args){};
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "setTimeout", v8::FunctionTemplate::New(isolate, no_content));
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "clearTimeout", v8::FunctionTemplate::New(isolate, no_content));
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "require", v8::FunctionTemplate::New(isolate, slim::builtins::require));
-
-	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
+	slim::common::log::trace(slim::common::log::Message("slim::run","created builtin stubs",__FILE__, __LINE__));
 	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::GetNewContext()",__FILE__, __LINE__));
 	auto context = slim::gv8::GetNewContext();
 	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::GetNewContext()",__FILE__, __LINE__));
@@ -55,6 +58,14 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 		throw("Error creating context");
 	}
 	v8::Context::Scope context_scope(context);
+	slim::common::log::trace(slim::common::log::Message("slim::run","creating primordials object",__FILE__, __LINE__));
+	context->Global()->Set(context, slim::utilities::StringToV8Name(isolate, "primordials"), v8::Object::New(isolate));
+	slim::common::log::trace(slim::common::log::Message("slim::run","created primordials object",__FILE__, __LINE__));
+	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
+	std::string primordials_file_name_string("/home/greergan/product/slim/src/plugins/nodejs/lib/internal/per_context/primordials.min.js");
+	slim::gv8::FetchCompileAndRunJSFunction(context, primordials_file_name_string);
+	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
+	slim::utilities::print_v8_object_keys(isolate, slim::utilities::GetObject(isolate, "primordials", context->Global()));
 
 	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
 	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
