@@ -24,21 +24,3 @@ void slim::builtins::initialize(v8::Isolate* isolate, v8::Local<v8::ObjectTempla
 	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","after expose slim_objects",__FILE__, __LINE__));
 	slim::common::log::trace(slim::common::log::Message("slim::builtins::initialize()","ends",__FILE__, __LINE__));
 }
-
-void slim::builtins::require(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	slim::common::log::trace(slim::common::log::Message("slim::builtins::require","begins",__FILE__, __LINE__));
-	v8::Isolate* isolate = args.GetIsolate();
-	v8::Local<v8::Context> context = isolate->GetCurrentContext();
-	v8::Local<v8::String> v8_plugin_name_string  = args[0]->ToString(context).ToLocalChecked();
-	std::string plugin_name_string = slim::utilities::v8StringToString(isolate, v8_plugin_name_string);
-	slim::common::log::trace(slim::common::log::Message(
-		"slim::builtins::require",std::string("plugin name => " +  plugin_name_string).c_str() ,__FILE__, __LINE__));
-	slim::plugin::loader::load_plugin(isolate, plugin_name_string, true);
-	v8::Local<v8::Value> v8_property_value = context->Global()->Get(context, v8_plugin_name_string).ToLocalChecked();
-	if(!v8_property_value.IsEmpty() && v8_property_value->IsObject()) {
-		v8::Local<v8::Object> target_object = v8::Local<v8::Object>::Cast(v8_property_value);
-		args.GetReturnValue().Set(v8::Local<v8::Object>::Cast(v8_property_value));
-		slim::common::log::trace(slim::common::log::Message("slim::builtins::require","found object",__FILE__, __LINE__));
-	}
-	slim::common::log::trace(slim::common::log::Message("slim::builtins::require","ends",__FILE__, __LINE__));
-}
