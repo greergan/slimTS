@@ -4,6 +4,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <v8.h>
 #include <slim/common/log.h>
 #include <slim/utilities.h>
@@ -31,8 +32,22 @@ uint32_t WriteOneByteString(const char* src,
   }
 }
 */
-
-
+std::string slim::utilities::print_property_type(v8::Isolate* isolate, v8::Local<v8::Value> property_name, v8::Local<v8::Value> property_value) {
+	auto local_string = "property name => " + v8ValueToString(isolate, property_name) + " typeof => ";
+	if(property_value->IsString()) {
+		local_string += "string";
+	}
+	else if(property_value->IsFunction()) {
+		local_string += "function";
+	}
+	else if(property_value->IsFunctionTemplate()) {
+		local_string += "function template";
+	}
+	else {
+		local_string += "unknown";
+	}
+	return local_string;
+}
 void slim::utilities::print_v8_array_buffer(v8::Isolate* isolate, const v8::Local<v8::ArrayBuffer>& array_buffer) {
 	slim::common::log::debug(slim::common::log::Message("print_v8_array_buffer size => ", std::to_string(array_buffer->ByteLength()).c_str(), "", 0));
 	auto backing_store = array_buffer->GetBackingStore();
@@ -74,6 +89,15 @@ v8::Local<v8::Object> slim::utilities::GetObject(v8::Isolate* isolate, std::stri
 }
 v8::Local<v8::Value> slim::utilities::GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
 	return object->Get(isolate->GetCurrentContext(), StringToName(isolate, string)).ToLocalChecked();
+}
+void slim::utilities::V8KeysToVector(v8::Isolate* isolate, std::vector<v8::Local<v8::String>>& vector_to_fill, v8::Local<v8::Object> object) {
+	auto property_names_array = object->GetOwnPropertyNames(isolate->GetCurrentContext()).ToLocalChecked();
+	for(int array_index = 0; array_index < property_names_array->Length(); array_index++) {
+		auto v8_property_name = property_names_array->Get(isolate->GetCurrentContext(), array_index).ToLocalChecked();
+		if(!v8_property_name.IsEmpty() && v8_property_name->IsString()) {
+			vector_to_fill.push_back(v8_property_name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+		}
+	}
 }
 // old
 int slim::utilities::IntValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {

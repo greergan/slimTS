@@ -3,8 +3,10 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <v8.h>
 namespace slim::utilities {
+    std::string print_property_type(v8::Isolate* isolate, v8::Local<v8::Value> property_name, v8::Local<v8::Value> property_value);
     void print_v8_array_buffer(v8::Isolate* isolate, const v8::Local<v8::ArrayBuffer>& array_buffer);
     void print_v8_object_keys(v8::Isolate* isolate, const v8::Local<v8::Object>& object_value);
     bool BoolValue(v8::Isolate* isolate, v8::Local<v8::Value> value);  
@@ -25,6 +27,7 @@ namespace slim::utilities {
     v8::Local<v8::Object> GetObject(v8::Isolate* isolate, v8::Local<v8::Value> object);
     v8::Local<v8::Object> GetObject(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
     v8::Local<v8::Value> GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object);
+    void V8KeysToVector(v8::Isolate* isolate, std::vector<v8::Local<v8::String>>& vector_to_fill, v8::Local<v8::Object> object);
 
     std::string ScriptFileName(v8::Local<v8::Message> message); 
     std::string ScriptLine(v8::Local<v8::Message> message);
