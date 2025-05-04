@@ -48,7 +48,6 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	auto no_content = [](const v8::FunctionCallbackInfo<v8::Value>& args){};
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "setTimeout", v8::FunctionTemplate::New(isolate, no_content));
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "clearTimeout", v8::FunctionTemplate::New(isolate, no_content));
-	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "require", v8::FunctionTemplate::New(isolate, slim::builtins::require));
 	slim::common::log::trace(slim::common::log::Message("slim::run","created builtin stubs",__FILE__, __LINE__));
 	slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::GetNewContext()",__FILE__, __LINE__));
 	auto context = slim::gv8::GetNewContext();
@@ -70,12 +69,12 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 	slim::common::log::trace(slim::common::log::Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
 
 	v8::TryCatch try_catch(isolate);
-	if(is_script_a_module) {
+	if(true) {
 		slim::common::log::trace(slim::common::log::Message("slim::run","is_script_a_module==true",__FILE__, __LINE__));
 		slim::common::log::trace(slim::common::log::Message("slim::run","calling slim::gv8::CompileAndInstantiateModule",__FILE__, __LINE__));
 		auto module = slim::gv8::CompileAndInstantiateModule(file_contents, file_name);
 		std::string status_string = get_object_status(module);
-		slim::common::log::trace(slim::common::log::Message("slim::run",(std::string("module->GetStatus() => ") + status_string).c_str(),__FILE__, __LINE__));
+		slim::common::log::debug(slim::common::log::Message("slim::run",(std::string("module->GetStatus() => ") + status_string).c_str(),__FILE__, __LINE__));
 		slim::common::log::trace(slim::common::log::Message("slim::run","called slim::gv8::CompileAndInstantiateModule",__FILE__, __LINE__));
 		if(try_catch.HasCaught()) {
 			slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
@@ -86,10 +85,10 @@ void slim::run(const std::string file_name, const std::string file_contents) {
 			slim::common::log::trace(slim::common::log::Message("slim::run","calling module->InstantiateModule()",__FILE__, __LINE__));
 			bool module_instantiated = slim::utilities::V8BoolToBool(isolate, module->InstantiateModule(context, slim::gv8::ModuleCallbackResolver));
 			std::string status_string = get_object_status(module);
-			slim::common::log::trace(slim::common::log::Message("slim::run",(std::string("module->GetStatus() => ") + status_string).c_str(),__FILE__, __LINE__));
+			slim::common::log::debug(slim::common::log::Message("slim::run",(std::string("module->GetStatus() => ") + status_string).c_str(),__FILE__, __LINE__));
 			slim::common::log::trace(slim::common::log::Message("slim::run","called module->InstantiateModule()",__FILE__, __LINE__));
 			if(try_catch.HasCaught()) {
-				slim::common::log::trace(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
+				slim::common::log::debug(slim::common::log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 				slim::gv8::ReportException(&try_catch);
 			}
 			if(module_instantiated) {
