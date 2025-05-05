@@ -1,6 +1,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <set>
 #include <v8.h>
 #include <slim/gv8.h>
 #include <libplatform/libplatform.h>
@@ -12,6 +13,7 @@
 #include <slim/plugin/loader.h>
 namespace slim::gv8 {
 	Gv8Config slim_v8;
+	std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "platform"};
 }
 void slim::gv8::CreateGlobalTemplate() {
 	slim_v8.globalObjectTemplate = v8::ObjectTemplate::New(slim_v8.isolate);
@@ -199,12 +201,12 @@ v8::MaybeLocal<v8::Module> slim::gv8::ModuleCallbackResolver(v8::Local<v8::Conte
 	using namespace slim::common::log;
 	using namespace slim::utilities;
 	trace(Message("slim::gv8::ModuleCallbackResolver()","begins",__FILE__, __LINE__));
-	auto isolate = context->GetIsolate();
+	auto* isolate = context->GetIsolate();
 	auto file_or_plugin_name_string = v8StringToString(isolate, v8_input_file_name);
 	std::string source_file_contents;
 	debug(Message("slim::gv8::ModuleCallbackResolver()",std::string("loading => " + file_or_plugin_name_string).c_str(),__FILE__, __LINE__));
 	try {
-		if(file_or_plugin_name_string.compare("console") == 0) {
+		if(plugins_set.contains(file_or_plugin_name_string)) {
 			debug(slim::common::log::Message("slim::gv8::ModuleCallbackResolver()",std::string("loading plugin => " + file_or_plugin_name_string).c_str(),__FILE__, __LINE__));
 			auto create_SyntheticModuleEvaluationSteps = [](v8::Local<v8::Context> context, v8::Local<v8::Module> module) -> v8::MaybeLocal<v8::Value> {
 				auto isolate = context->GetIsolate();
