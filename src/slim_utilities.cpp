@@ -1,7 +1,76 @@
+#include <cstring>
+#include <ctime>
+#include <iomanip>
 #include <regex>
+#include <sstream>
 #include <string>
+#include <vector>
 #include <v8.h>
+#include <slim/common/log.h>
 #include <slim/utilities.h>
+
+#include <iostream>
+/* 
+template <encoding encoding>
+uint32_t WriteOneByteString(const char* src,
+                            uint32_t src_len,
+                            char* dst,
+                            uint32_t dst_len) {
+  if (dst_len == 0) {
+    return 0;
+  }
+
+  if (encoding == UTF8) {
+    return simdutf::convert_latin1_to_utf8_safe(src, src_len, dst, dst_len);
+  } else if (encoding == LATIN1 || encoding == ASCII) {
+    const auto size = std::min(src_len, dst_len);
+    memcpy(dst, src, size);
+    return size;
+  } else {
+    // TODO(ronag): Add support for more encoding.
+    UNREACHABLE();
+  }
+}
+*/
+std::string slim::utilities::print_property_type(v8::Isolate* isolate, v8::Local<v8::Value> property_name, v8::Local<v8::Value> property_value) {
+	auto local_string = "property name => " + v8ValueToString(isolate, property_name) + " typeof => ";
+	if(property_value->IsString()) {
+		local_string += "string";
+	}
+	else if(property_value->IsFunction()) {
+		local_string += "function";
+	}
+	else if(property_value->IsFunctionTemplate()) {
+		local_string += "function template";
+	}
+	else {
+		local_string += "unknown";
+	}
+	return local_string;
+}
+void slim::utilities::print_v8_array_buffer(v8::Isolate* isolate, const v8::Local<v8::ArrayBuffer>& array_buffer) {
+	slim::common::log::debug(slim::common::log::Message("print_v8_array_buffer size => ", std::to_string(array_buffer->ByteLength()).c_str(), "", 0));
+	auto backing_store = array_buffer->GetBackingStore();
+	unsigned char* array_buffer_data_pointer = static_cast<unsigned char*>(backing_store->Data());
+	for(long count = 0; count < array_buffer->ByteLength(); count++) {
+/*  		v8::MaybeLocal<v8::Value> value = array_buffer->Get(isolate->GetCurrentContext(), count);
+		std::cout << value.ToLocalChecked()->IsString() << std::endl;
+		std::string value_string = slim::utilities::v8ValueToString(isolate, value.ToLocalChecked()); */
+		std::cout << array_buffer_data_pointer[count];
+		//std::cout << value_string << std::endl;
+		//char ch = (char)array_buffer_data_pointer[count];
+		//slim::common::log::debug(slim::common::log::Message("print_v8_array_buffer => ", &ch, "", 0));
+	}
+	std::cout << std::endl;
+}
+void slim::utilities::print_v8_object_keys(v8::Isolate* isolate, const v8::Local<v8::Object>& object_value) {
+	auto property_names_array = object_value->GetOwnPropertyNames(isolate->GetCurrentContext()).ToLocalChecked();
+	for(int array_index = 0; array_index < property_names_array->Length(); array_index++) {
+		auto v8_property_name = property_names_array->Get(isolate->GetCurrentContext(), array_index).ToLocalChecked();
+		std::string property_name_string = slim::utilities::v8ValueToString(isolate, v8_property_name);
+		slim::common::log::debug(slim::common::log::Message("print_object_keys => ", property_name_string.c_str(), "", 0));
+	}
+}
 int slim::utilities::ArrayCount(v8::Local<v8::Value> value) {
 	if(value->IsArray()) {
 		return v8::Handle<v8::Array>::Cast(value)->Length();
@@ -21,7 +90,24 @@ v8::Local<v8::Object> slim::utilities::GetObject(v8::Isolate* isolate, std::stri
 v8::Local<v8::Value> slim::utilities::GetValue(v8::Isolate* isolate, std::string string, v8::Local<v8::Object> object) {
 	return object->Get(isolate->GetCurrentContext(), StringToName(isolate, string)).ToLocalChecked();
 }
+void slim::utilities::V8KeysToVector(v8::Isolate* isolate, std::vector<v8::Local<v8::String>>& vector_to_fill, v8::Local<v8::Object> object) {
+	auto property_names_array = object->GetOwnPropertyNames(isolate->GetCurrentContext()).ToLocalChecked();
+	for(int array_index = 0; array_index < property_names_array->Length(); array_index++) {
+		auto v8_property_name = property_names_array->Get(isolate->GetCurrentContext(), array_index).ToLocalChecked();
+		if(!v8_property_name.IsEmpty() && v8_property_name->IsString()) {
+			vector_to_fill.push_back(v8_property_name->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+		}
+	}
+}
+// old
 int slim::utilities::IntValue(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+	if(!value->IsInt32()) {
+		isolate->ThrowException(slim::utilities::StringToString(isolate, "integer value expected"));
+	}  
+	return value->Int32Value(isolate->GetCurrentContext()).FromJust();
+}
+// new
+int slim::utilities::V8ValueToInt(v8::Isolate* isolate, v8::Local<v8::Value> value) {
 	if(!value->IsInt32()) {
 		isolate->ThrowException(slim::utilities::StringToString(isolate, "integer value expected"));
 	}  
@@ -139,12 +225,24 @@ std::string slim::utilities::StringValue(v8::Isolate* isolate, std::string strin
 	return StringValue(isolate, GetValue(isolate, string, object));
 }
 /* New style calls */
+v8::Local<v8::Boolean> slim::utilities::BoolToV8Boolean(v8::Isolate* isolate, bool value) {
+	return v8::Boolean::New(isolate, value);
+}
 v8::Local<v8::Value> slim::utilities::CharPointerToV8Value(v8::Isolate* isolate, const char* value) {
 	return v8::String::NewFromUtf8(isolate, value).ToLocalChecked().As<v8::Value>();
+}
+v8::Local<v8::Number> slim::utilities::DoubleToV8Number(v8::Isolate* isolate, const double value) {
+	return v8::Number::New(isolate, value);
+}
+v8::Local<v8::Integer> slim::utilities::IntToV8Integer(v8::Isolate* isolate, const int value) {
+	return v8::Integer::New(isolate, value);
 }
 v8::Local<v8::Integer> slim::utilities::size_t_ToV8Integer(v8::Isolate* isolate, const size_t value) {
 	v8::Local<v8::Integer> new_value = v8::Int32::New(isolate, value);
 	return new_value;
+}
+v8::Local<v8::Name> slim::utilities::StringToV8Name(v8::Isolate* isolate, const std::string value) {
+	return StringToV8String(isolate, value).As<v8::Name>();
 }
 v8::Local<v8::String> slim::utilities::StringToV8String(v8::Isolate* isolate, std::string string) {
 	return v8::String::NewFromUtf8(isolate, string.c_str()).ToLocalChecked();
@@ -179,3 +277,20 @@ std::string slim::utilities::v8ValueToString(v8::Isolate* isolate, v8::Local<v8:
 	v8::String::Utf8Value string_value(isolate, value);
 	return std::string(*string_value);
 }
+double slim::utilities::time_spec_to_double(const struct timespec& time_spec_struct) {
+	return (double)time_spec_struct.tv_sec + (double)time_spec_struct.tv_nsec / 1000000000.0;
+}
+std::string slim::utilities::time_spec_to_time_string_gmt(const timespec& time_spec_struct) {
+	std::time_t time = time_spec_struct.tv_sec;
+	std::tm gmt_tm;
+  
+  #ifdef _WIN32
+	gmtime_s(&gmt_tm, &time); // Windows
+  #else
+	gmtime_r(&time, &gmt_tm); // POSIX
+  #endif
+  
+	std::stringstream ss;
+	ss << std::put_time(&gmt_tm, "%a, %d %b %Y %H:%M:%S GMT");
+	return ss.str();
+  }

@@ -1,3 +1,4 @@
+require("console")
 console.clear();
 console.configuration.info.time_stamp.text_color = "yellow";
 console.info("beginning time_stamp test");
