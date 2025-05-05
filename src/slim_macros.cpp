@@ -1,4 +1,5 @@
 #include <cstring>
+#include <regex>
 #include <string>
 #include <sstream>
 #include <slim/common/log.h>
@@ -34,6 +35,9 @@ std::string slim::macros::apply(std::stringstream& input_string_stream, const st
 		replace_token("__line_number", line_of_text, std::to_string(line_number), false);
 		output_string_stream << line_of_text << std::endl;
 	}
+	std::regex require_pattern("\\s*(const|let)\\s+(\\w*)\\s*=\\s+require\\(\\s*(\"|\')(\\w+)(\"|\')\\s*\\)");
+	std::string import_statement = "\nimport $2 from '$4'";
+	std::string return_string = std::regex_replace(output_string_stream.str(), require_pattern, import_statement);
 	slim::common::log::trace(slim::common::log::Message("slim::macros::apply()","ends",__FILE__, __LINE__));
-	return output_string_stream.str();
+	return return_string;
 }
