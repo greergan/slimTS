@@ -250,7 +250,7 @@ v8::MaybeLocal<v8::Module> slim::gv8::ModuleCallbackResolver(v8::Local<v8::Conte
 		}
 		else {
 			debug(Message("slim::gv8::ModuleCallbackResolver()", std::string("loading file => " + file_or_plugin_name_string).c_str(),__FILE__, __LINE__));
-			source_file_contents = slim::common::fetch_and_apply_macros(file_or_plugin_name_string.c_str());
+			source_file_contents = slim::common::fetch_and_apply_macros(file_or_plugin_name_string);
 		}
 	}
     catch(const slim::common::SlimFileException& _error) {

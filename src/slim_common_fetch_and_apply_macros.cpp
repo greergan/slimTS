@@ -5,7 +5,7 @@
 #include <slim/common/fetch_and_apply_macros.h>
 #include <slim/common/log.h>
 #include <slim/macros.h>
-std::string slim::common::fetch_and_apply_macros(const char* file_name) {
+std::string slim::common::fetch_and_apply_macros(std::string& file_name) {
 	slim::common::log::trace(slim::common::log::Message("slim::common::fetch_and_apply_macros()","begins",__FILE__, __LINE__));
 	std::filesystem::path absolute_path_to_file = std::filesystem::absolute(file_name);
 	std::stringstream script_source_file_contents_stream = slim::common::fetch::fetch(absolute_path_to_file.string().c_str());
