@@ -11,12 +11,14 @@ namespace slim::common::fetch {
     const std::regex url_pattern("((http|https)://)[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)");
 }
 std::stringstream slim::common::fetch::fetch(const char* file_name) {
-    slim::common::log::trace(slim::common::log::Message("slim::common::fetch::fetch()","begins",__FILE__, __LINE__));
+    using namespace slim::common::log;
+    using namespace slim::utilities;
+    trace(Message("slim::common::fetch::fetch()","begins",__FILE__, __LINE__));
     std::string input_file_name(file_name);
     if(input_file_name.starts_with("file:///") || input_file_name.starts_with("file://")) {
 		input_file_name = input_file_name.substr(7);
 	}
-    slim::common::log::trace(slim::common::log::Message("slim::common::fetch::fetch()",std::string("file_name => " + input_file_name).c_str(),__FILE__, __LINE__));
+    debug(Message("slim::common::fetch::fetch()",std::string("file_name => " + input_file_name).c_str(),__FILE__, __LINE__));
     std::ifstream input_file_stream(input_file_name, std::ios::in);
     std::stringstream file_contents_stringstream;
     if(input_file_stream.is_open()) {
@@ -24,16 +26,16 @@ std::stringstream slim::common::fetch::fetch(const char* file_name) {
         input_file_stream.close();
     }
     else {
-        slim::common::log::trace(slim::common::log::Message("slim::common::fetch::fetch()",(std::string("file access errno => ") + std::string(strerror(errno))).c_str(),__FILE__, __LINE__));
+        error(Message("slim::common::fetch::fetch()",(std::string("file access errno => ") + std::string(strerror(errno))).c_str(),__FILE__, __LINE__));
         std::string error_message(strerror(errno));
         error_message += " opening file";
         throw slim::common::SlimFileException("slim::common::fetch::fetch()", error_message.c_str(), file_name, errno);
     }
-    slim::common::log::trace(slim::common::log::Message("slim::common::fetch::fetch()","ends",__FILE__, __LINE__));
+    trace(Message("slim::common::fetch::fetch()","ends",__FILE__, __LINE__));
     return file_contents_stringstream;
 }
 std::stringstream slim::common::fetch::fetch(const std::string file_name) {
-    return slim::common::fetch::fetch(file_name.c_str());
+    return fetch(file_name.c_str());
 }
 /* void slim::common::fetch::fetch(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();
