@@ -1,5 +1,6 @@
-import { Hello } from "lib/hello.mjs";
-import { World } from "lib/world.mjs";
+import { Hello } from "./hello.mjs";
+import { World } from "./world.mjs";
 export function HelloWorld() {
-	console.log(Hello() + " " + World() + " while using imports!");
+	return Hello() + " " + World()
 }
+export default HelloWorld
