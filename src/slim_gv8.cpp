@@ -9,7 +9,6 @@
 #include <slim/common/fetch.h>
 #include <slim/common/fetch_and_apply_macros.h>
 #include <slim/common/log.h>
-#include <slim/common/exception.h>
 #include <slim/plugin/loader.h>
 namespace slim::gv8 {
 	Gv8Config slim_v8;
@@ -17,41 +16,6 @@ namespace slim::gv8 {
 }
 void slim::gv8::CreateGlobalTemplate() {
 	slim_v8.globalObjectTemplate = v8::ObjectTemplate::New(slim_v8.isolate);
-}
-v8::Local<v8::Module> slim::gv8::CompileAndInstantiateModule(std::string module_source_string, std::string module_name) {
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","begins",__FILE__, __LINE__));
-	auto context = slim_v8.isolate->GetCurrentContext();
-	v8::TryCatch try_catch(slim_v8.isolate);
-	v8::ScriptOrigin origin(slim::utilities::StringToValue(slim_v8.isolate, module_name),
-						0, 0, false, -1, slim::utilities::StringToValue(slim_v8.isolate, ""), false, false, true);
-	v8::ScriptCompiler::Source v8_module_source(slim::utilities::StringToString(slim_v8.isolate, module_source_string), origin);
-	v8::ScriptCompiler::CompileOptions module_compile_options(v8::ScriptCompiler::kNoCompileOptions);
-	v8::ScriptCompiler::NoCacheReason module_no_cache_reason(v8::ScriptCompiler::kNoCacheNoReason);
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","calling v8::ScriptCompiler::CompileModule()",__FILE__, __LINE__));
-	v8::MaybeLocal<v8::Module> module = v8::ScriptCompiler::CompileModule(slim_v8.isolate, &v8_module_source, module_compile_options, module_no_cache_reason);
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","called v8::ScriptCompiler::CompileModule()",__FILE__, __LINE__));
-	if(try_catch.HasCaught()) {
-		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","try_catch.HasCaught()",__FILE__, __LINE__));
-		ReportException(&try_catch);
-	}
-	if(!module.IsEmpty()) {
-		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","!module.IsEmpty()",__FILE__, __LINE__));
-		bool instantiated = slim::utilities::V8BoolToBool(slim_v8.isolate, module.ToLocalChecked()->InstantiateModule(slim_v8.isolate->GetCurrentContext(), ModuleCallbackResolver));
-		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","called module.ToLocalChecked()->InstantiateModule()",__FILE__, __LINE__));
-		if(try_catch.HasCaught()) {
-			slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","try_catch.HasCaught()",__FILE__, __LINE__));
-			slim::gv8::ReportException(&try_catch);
-		}
-		if(!instantiated) {
-			slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","!instantiated",__FILE__, __LINE__));
-			slim_v8.isolate->ThrowException(slim::utilities::StringToV8String(slim_v8.isolate, "Initial module instantiation failed: " +  module_name));
-		}
-	}
-	else {
-		slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","module.IsEmpty()",__FILE__, __LINE__));
-	}
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileAndInstantiateModule()","ends",__FILE__, __LINE__));
-	return module.ToLocalChecked();
 }
 void slim::gv8::FetchCompileAndRunJSFunction(v8::Local<v8::Context> context, std::string file_name_string) {
 	using namespace slim::common;
@@ -194,72 +158,6 @@ void slim::gv8::initialize(int argc, char* argv[]) {
 	slim_v8.isolate = v8::Isolate::New(slim_v8.create_params);
 	slim_v8.isolate->Enter();
 	slim_v8.initialized = true;
-}
-//MaybeLocal<Module> (*)( Local<Context> context, Local<String> specifier, Local<FixedArray> import_assertions, Local<Module> referrer)
-v8::MaybeLocal<v8::Module> slim::gv8::ModuleCallbackResolver(v8::Local<v8::Context> context,
-						v8::Local<v8::String> v8_input_file_name, v8::Local<v8::FixedArray> import_assertions, v8::Local<v8::Module> referrer) {
-	using namespace slim::common::log;
-	using namespace slim::utilities;
-	trace(Message("slim::gv8::ModuleCallbackResolver()","begins",__FILE__, __LINE__));
-	auto* isolate = context->GetIsolate();
-	auto file_or_plugin_name_string = v8StringToString(isolate, v8_input_file_name);
-	std::string source_file_contents;
-	debug(Message("slim::gv8::ModuleCallbackResolver()",std::string("loading => " + file_or_plugin_name_string).c_str(),__FILE__, __LINE__));
-	try {
-		if(plugins_set.contains(file_or_plugin_name_string)) {
-			debug(slim::common::log::Message("slim::gv8::ModuleCallbackResolver()",std::string("loading plugin => " + file_or_plugin_name_string).c_str(),__FILE__, __LINE__));
-			auto create_SyntheticModuleEvaluationSteps = [](v8::Local<v8::Context> context, v8::Local<v8::Module> module) -> v8::MaybeLocal<v8::Value> {
-				auto isolate = context->GetIsolate();
-				auto plugin_name_string = v8ValueToString(isolate, context->GetEmbedderData(0));
-				auto plugin_v8_object = GetObject(isolate, plugin_name_string, context->Global());
-				module->SetSyntheticModuleExport(isolate, StringToV8String(isolate, "default"), plugin_v8_object);
-				auto property_names_array = plugin_v8_object->GetOwnPropertyNames(context);
-				if(!property_names_array.IsEmpty()) {
-					auto property_names_array_local = property_names_array.ToLocalChecked();
-					for(int array_index = 0; array_index < property_names_array_local->Length(); array_index++) {
-						auto v8_property_name_string = property_names_array_local->Get(context, array_index).ToLocalChecked()->ToString(context);
-						if(!v8_property_name_string.IsEmpty()) {
-							auto v8_property_value = plugin_v8_object->Get(context, v8_property_name_string.ToLocalChecked());
-							if(!v8_property_value.IsEmpty()) {
-								module->SetSyntheticModuleExport(isolate, v8_property_name_string.ToLocalChecked(), v8_property_value.ToLocalChecked());
-							}
-						}
-					}
-				}
-				return v8::MaybeLocal<v8::Value>(True(isolate));
-			};
-			slim::plugin::loader::load_plugin(isolate, file_or_plugin_name_string, true);
-			const v8::Local<v8::String> v8_default_string = StringToV8String(isolate, "default");
-			std::vector<v8::Local<v8::String>> v8_string_exports_vector;
-			v8_string_exports_vector.push_back(v8_default_string);
-			V8KeysToVector(isolate, v8_string_exports_vector, GetObject(isolate, file_or_plugin_name_string, context->Global()));
-			context->SetEmbedderData(0, v8_input_file_name);
-			const v8::MemorySpan<const v8::Local<v8::String>> memory_span(v8_string_exports_vector.data(), v8_string_exports_vector.size());
-			auto synthetic_module = v8::Module::CreateSyntheticModule(isolate,
-					StringToV8String(isolate, file_or_plugin_name_string), memory_span, create_SyntheticModuleEvaluationSteps);
-			trace(Message("slim::gv8::ModuleCallbackResolver()","synthetic_module->InstantiateModule()",__FILE__, __LINE__));
-			std::string instantiate_module = (V8BoolToBool(isolate, synthetic_module->InstantiateModule(context, ModuleCallbackResolver)) ? "true" : "false");
-			debug(Message("slim::gv8::ModuleCallbackResolver()",
-					std::string("synthetic_module->InstantiateModule() returned => " + instantiate_module).c_str(),__FILE__, __LINE__));
-			auto evaluated_module = v8ValueToString(isolate, synthetic_module->Evaluate(context).FromMaybe(v8::Local<v8::Value>()));
-			debug(Message("slim::gv8::ModuleCallbackResolver()",
-					std::string("synthetic_module->Evaluate() returned => " + evaluated_module).c_str(),__FILE__, __LINE__));
-			trace(Message("slim::gv8::ModuleCallbackResolver()","ends with SyntheticModule",__FILE__, __LINE__));
-			return synthetic_module;
-			trace(Message("slim::gv8::ModuleCallbackResolver()","ends with UNREACHABLE",__FILE__, __LINE__));
-		}
-		else {
-			debug(Message("slim::gv8::ModuleCallbackResolver()", std::string("loading file => " + file_or_plugin_name_string).c_str(),__FILE__, __LINE__));
-			source_file_contents = slim::common::fetch_and_apply_macros(file_or_plugin_name_string);
-		}
-	}
-    catch(const slim::common::SlimFileException& _error) {
-        std::string error_message = _error.message + ", path => " + _error.path;
-        error(Message(_error.call.c_str(), error_message.c_str(),__FILE__, __LINE__));
-		isolate->ThrowError(StringToV8String(isolate, "Module not found: " + file_or_plugin_name_string));
-    }
-	trace(Message("slim::gv8::ModuleCallbackResolver()","ends",__FILE__, __LINE__));
-	return CompileAndInstantiateModule(source_file_contents, file_or_plugin_name_string);
 }
 void slim::gv8::ReportException(v8::TryCatch* try_catch) {
 	slim::common::log::trace(slim::common::log::Message("slim::gv8::ReportException","begins",__FILE__, __LINE__));
