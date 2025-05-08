@@ -19,7 +19,7 @@ namespace {
 }
 void slim::run(std::string file_name_string_in) {
 	trace(Message("slim::run()","begins",__FILE__, __LINE__));
-	bool is_script_a_module = true; //file_name.ends_with(".mjs") ? true : false;
+	bool is_script_a_module = file_name_string_in.ends_with(".mjs") ? true : false;
 	auto isolate = slim::gv8::GetIsolate();
 	v8::Isolate::Scope isolate_scope(isolate);
 	v8::HandleScope handle_scope(isolate);
@@ -32,6 +32,7 @@ debug(Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
 	auto no_content = [](const v8::FunctionCallbackInfo<v8::Value>& args){};
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "setTimeout", v8::FunctionTemplate::New(isolate, no_content));
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "clearTimeout", v8::FunctionTemplate::New(isolate, no_content));
+	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "require", v8::FunctionTemplate::New(isolate, slim::builtins::require));
 	debug(Message("slim::run","created builtin stubs",__FILE__, __LINE__));
 	debug(Message("slim::run","calling slim::gv8::GetNewContext()",__FILE__, __LINE__));
 	auto context = slim::gv8::GetNewContext();
@@ -51,7 +52,7 @@ debug(Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
 	debug(Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
 	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
 	debug(Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
-	{
+	if(is_script_a_module) {
 		v8::TryCatch try_catch(isolate);
 		debug(Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
 		bool is_entry_point = true;
@@ -80,10 +81,12 @@ debug(Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
 			slim::gv8::ReportException(&try_catch);
 		}
 	}
-/* 	else {
+	else {
 		trace(Message("slim::run","is a script",__FILE__, __LINE__));
 		trace(Message("slim::run","calling slim::gv8::CompileScript()",__FILE__, __LINE__));
-		auto script = slim::gv8::CompileScript(file_contents, file_name);
+		v8::TryCatch try_catch(isolate);
+		//auto script = slim::gv8::CompileScript(slim::common::fetch::fetch(file_name_string_in), file_name_string_in);
+		auto script = slim::gv8::CompileScript(slim::common::fetch_and_apply_macros(file_name_string_in), file_name_string_in);
 		trace(Message("slim::run","called slim::gv8::CompileScript()",__FILE__, __LINE__));
 		if(try_catch.HasCaught()) {
 			trace(Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
@@ -98,7 +101,7 @@ debug(Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
 				slim::gv8::ReportException(&try_catch);
 			}
 		}
-	} */
+	}
 	trace(Message("slim::run()","ends",__FILE__, __LINE__));
 	return;
 }
