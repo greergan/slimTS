@@ -87,9 +87,12 @@ void slim::module::resolver::import_specifier::fetch_source() {
 	trace(Message("slim::module::resolver::import_specifier::fetch_source()", "ends" ,__FILE__, __LINE__));
 }
 void slim::module::resolver::import_specifier::instantiate_module() {
-	trace(Message("slim::module::resolver::import_specifier::instantiate_module()",std::string("begins =>" + specifier_string).c_str(),__FILE__, __LINE__));
+	trace(Message("slim::module::resolver::import_specifier::instantiate_module()",std::string("begins => " + specifier_string).c_str(),__FILE__, __LINE__));
 	v8::TryCatch try_catch(isolate);
 	auto result = v8_module->InstantiateModule(context, module_call_back_resolver);
+	if(result.IsNothing()) {
+		error(Message("slim::module::resolver::import_specifier::instantiate_module()", "v8_module->InstantiateModule() produced nothing", __FILE__, __LINE__));
+	}
 	debug(Message("slim::module::resolver::import_specifier::instantiate_module()",
 		std::string("v8_module->InstantiateModule() status => " + get_module_status_string()).c_str(),__FILE__, __LINE__));
 	if(try_catch.HasCaught()) {
@@ -102,8 +105,10 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 		v8::Local<v8::Context> context, v8::Local<v8::String> v8_specifier_name, v8::Local<v8::FixedArray> import_assertions, v8::Local<v8::Module> referrer) {
 	trace(Message("slim::module::resolver::module_call_back_resolver()","begins", __FILE__, __LINE__));
 	auto isolate = context->GetIsolate();
+	v8::TryCatch try_catch(isolate);
 	std::string specifier_name_string = v8StringToString(isolate, v8_specifier_name);
 	if(module_specifier_cache[specifier_name_string].has_module()) {
+		debug(Message("slim::module::resolver::module_call_back_resolver()",std::string("returning cached plugin => " + specifier_name_string).c_str(),__FILE__, __LINE__));
 		return module_specifier_cache[specifier_name_string].get_module();
 	}
 	std::string source_file_contents;
@@ -112,6 +117,7 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 		if(plugins_set.contains(specifier_name_string)) {
 			auto create_SyntheticModuleEvaluationSteps = [](v8::Local<v8::Context> context, v8::Local<v8::Module> module) -> v8::MaybeLocal<v8::Value> {
 				auto isolate = context->GetIsolate();
+				v8::TryCatch try_catch(isolate);
 				auto plugin_name_string = v8ValueToString(isolate, context->GetEmbedderData(0));
 				auto plugin_v8_object = GetObject(isolate, plugin_name_string, context->Global());
 				module->SetSyntheticModuleExport(isolate, StringToV8String(isolate, "default"), plugin_v8_object);
@@ -128,22 +134,56 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 						}
 					}
 				}
+				if(try_catch.HasCaught()) {
+					error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+					slim::gv8::ReportException(&try_catch);
+				}
 				return v8::MaybeLocal<v8::Value>(True(isolate));
 			};
+			if(try_catch.HasCaught()) {
+				error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+				slim::gv8::ReportException(&try_catch);
+			}
 			debug(Message("slim::module::resolver::module_call_back_resolver()",std::string("loading plugin => " + specifier_name_string).c_str(),__FILE__, __LINE__));
 			slim::plugin::loader::load_plugin(isolate, specifier_name_string, true);
 			debug(Message("slim::module::resolver::module_call_back_resolver()",std::string("loaded plugin => " + specifier_name_string).c_str(),__FILE__, __LINE__));
+			if(try_catch.HasCaught()) {
+				auto message = slim::utilities::v8StringToString(isolate, try_catch.Message()->Get());
+				error(Message("slim::module::resolver::module_call_back_resolver()", std::string("try_catch.HasCaught() => " + message).c_str(),__FILE__, __LINE__));
+				isolate->ThrowError(try_catch.Message()->Get());
+				//slim::gv8::ReportException(&try_catch);
+			}
 			const v8::Local<v8::String> v8_default_string = StringToV8String(isolate, "default");
+			if(try_catch.HasCaught()) {
+				error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+				slim::gv8::ReportException(&try_catch);
+			}
 			std::vector<v8::Local<v8::String>> v8_string_exports_vector;
 			v8_string_exports_vector.push_back(v8_default_string);
+			if(try_catch.HasCaught()) {
+				error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+				slim::gv8::ReportException(&try_catch);
+			}
 			V8KeysToVector(isolate, v8_string_exports_vector, GetObject(isolate, specifier_name_string, context->Global()));
 			context->SetEmbedderData(0, v8_specifier_name);
+			if(try_catch.HasCaught()) {
+				error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+				slim::gv8::ReportException(&try_catch);
+			}
 			const v8::MemorySpan<const v8::Local<v8::String>> memory_span(v8_string_exports_vector.data(), v8_string_exports_vector.size());
 			debug(Message("slim::module::resolver::module_call_back_resolver()", "setting synthetic plugin", __FILE__, __LINE__));
 			import_specifier entry_script_specifier(specifier_name_string, context, v8::Module::CreateSyntheticModule(isolate,
-				StringToV8String(isolate, specifier_name_string), memory_span, create_SyntheticModuleEvaluationSteps));
+								StringToV8String(isolate, specifier_name_string), memory_span, create_SyntheticModuleEvaluationSteps));
+			if(try_catch.HasCaught()) {
+				error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+				slim::gv8::ReportException(&try_catch);
+			}
 			module_specifier_cache[specifier_name_string] = entry_script_specifier;
 			debug(Message("slim::module::resolver::module_call_back_resolver()", "done setting synthetic plugin", __FILE__, __LINE__));
+			if(try_catch.HasCaught()) {
+				error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+				slim::gv8::ReportException(&try_catch);
+			}
 		}
 		else {
 			debug(Message("slim::module::resolver::module_call_back_resolver()", std::string("loading file => " + specifier_name_string).c_str(),__FILE__, __LINE__));
@@ -157,7 +197,11 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
         error(Message(_error.call.c_str(), error_message.c_str(),__FILE__, __LINE__));
 		isolate->ThrowError(StringToV8String(isolate, "Module not found: " + specifier_name_string));
     }
-	trace(Message("slim::module::resolver::module_call_back_resolver()",std::string("ends =>" + specifier_name_string).c_str(), __FILE__, __LINE__));
+	if(try_catch.HasCaught()) {
+		error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+		slim::gv8::ReportException(&try_catch);
+	}
+	trace(Message("slim::module::resolver::module_call_back_resolver()",std::string("ends => " + specifier_name_string).c_str(), __FILE__, __LINE__));
 	return module_specifier_cache[specifier_name_string].get_module();
 }
 slim::module::resolver::specifier_cache& slim::module::resolver::resolve_imports(
