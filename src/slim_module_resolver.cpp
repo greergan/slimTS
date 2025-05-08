@@ -12,7 +12,7 @@
 namespace slim::module::resolver {
 	using namespace slim::utilities;
 	using namespace slim::common::log;
-	static std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "path", "process"};
+	static std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "path", "process", "node"};
 	specifier_cache module_specifier_cache;
 }
 slim::module::resolver::import_specifier::import_specifier() {}
