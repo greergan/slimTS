@@ -83,7 +83,7 @@ void slim::module::resolver::import_specifier::fetch_source() {
 	specifier_source_code = std::regex_replace(specifier_source_code, from_pattern, expanded_path_statement);
 	debug(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("specifier_string => " + specifier_string).c_str(), __FILE__, __LINE__));
 	debug(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("specifier_path_string => " + specifier_path_string).c_str(), __FILE__, __LINE__));
-	debug(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("source_string => " + specifier_source_code).c_str(), __FILE__, __LINE__));
+	//debug(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("source_string => " + specifier_source_code).c_str(), __FILE__, __LINE__));
 	trace(Message("slim::module::resolver::import_specifier::fetch_source()", "ends" ,__FILE__, __LINE__));
 }
 void slim::module::resolver::import_specifier::instantiate_module() {
