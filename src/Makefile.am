@@ -18,7 +18,8 @@ slim_SOURCES  = main.cpp \
 				slim_network_http_url.cpp \
 				slim_path.cpp \
 				slim_plugin_loader.cpp\
-				slim_utilities.cpp
+				slim_utilities.cpp \
+				simdutf.cpp 
 				
 slim_CPPFLAGS = -DV8_COMPRESS_POINTERS -DV8_ENABLE_SANDBOX -std=c++20 -fno-rtti
 slim_LDFLAGS  = -static-libgcc -static-libstdc++ -pthread -rdynamic
