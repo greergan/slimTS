@@ -225,8 +225,6 @@ namespace slim::plugin::node {
 	};
 };
 namespace slim::plugin::node::Buffer {
-	static const size_t kMaxLength = v8::Uint8Array::kMaxLength;
-	//kStringMaxLength,
 	bool HasInstance(v8::Local<v8::Value> val);
 	size_t Length(v8::Local<v8::Value> val);
 	static void Atob(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -294,6 +292,8 @@ namespace slim::plugin::node::StringBytes {
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin node_plugin(isolate, "node");
 	slim::plugin::plugin node_buffer_plugin(isolate, "buffer");
+	node_buffer_plugin.add_property_immutable("kMaxLength", v8::Uint8Array::kMaxLength);
+	node_buffer_plugin.add_property_immutable("kStringMaxLength", v8::String::kMaxLength);
 	node_buffer_plugin.add_function("atob", slim::plugin::node::Buffer::Atob);
 	node_buffer_plugin.add_function("btoa", slim::plugin::node::Buffer::Btoa);
 	node_buffer_plugin.add_function("byteLengthUtf8", slim::plugin::node::Buffer::SlowByteLengthUtf8);
