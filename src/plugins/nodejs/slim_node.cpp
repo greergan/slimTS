@@ -245,6 +245,10 @@ namespace slim::plugin::node::Buffer {
 	int32_t IndexOfNumber(const uint8_t* buffer_data, size_t buffer_length, uint32_t needle, int64_t offset_i64, bool is_forward);
 	static int normalizeCompareVal(int val, size_t a_length, size_t b_length);
 };
+namespace slim::plugin::node::util {
+	static void GetOwnNonIndexProperties(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void IsInsideNodeModules(const v8::FunctionCallbackInfo<v8::Value>& args);
+}
 namespace slim::plugin::node::StringBytes {
 	v8::Maybe<size_t> Size(v8::Isolate* isolate, v8::Local<v8::Value> val, enum encoding encoding);
 	class StringBytes {
@@ -290,8 +294,18 @@ namespace slim::plugin::node::StringBytes {
 	};
 };
 extern "C" void expose_plugin(v8::Isolate* isolate) {
+	int ALL_PROPERTIES = v8::PropertyFilter::ALL_PROPERTIES;
+	int ONLY_ENUMERABLE = v8::PropertyFilter::ONLY_ENUMERABLE;
+	//getOwnNonIndexProperties,
+	//isInsideNodeModules,
 	slim::plugin::plugin node_plugin(isolate, "node");
 	slim::plugin::plugin node_buffer_plugin(isolate, "buffer");
+	slim::plugin::plugin node_util_plugin(isolate, "util");
+	slim::plugin::plugin node_util_constants_plugin(isolate, "constants");
+	node_util_plugin.add_function("getOwnNonIndexProperties", slim::plugin::node::util::GetOwnNonIndexProperties);
+	node_util_plugin.add_function("isInsideNodeModules", slim::plugin::node::util::IsInsideNodeModules);
+	node_util_constants_plugin.add_property_immutable("ALL_PROPERTIES", ALL_PROPERTIES);
+	node_util_constants_plugin.add_property_immutable("ONLY_ENUMERABLE", ONLY_ENUMERABLE);
 	node_buffer_plugin.add_property_immutable("kMaxLength", v8::Uint8Array::kMaxLength);
 	node_buffer_plugin.add_property_immutable("kStringMaxLength", v8::String::kMaxLength);
 	node_buffer_plugin.add_function("atob", slim::plugin::node::Buffer::Atob);
@@ -306,7 +320,9 @@ extern "C" void expose_plugin(v8::Isolate* isolate) {
 	node_buffer_plugin.add_function("swap16", slim::plugin::node::Buffer::Swap16);
 	node_buffer_plugin.add_function("swap32", slim::plugin::node::Buffer::Swap32);
 	node_buffer_plugin.add_function("swap64", slim::plugin::node::Buffer::Swap64);
+	node_util_plugin.add_plugin("constants", &node_util_constants_plugin);
 	node_plugin.add_plugin("buffer", &node_buffer_plugin);
+	node_plugin.add_plugin("util", &node_util_plugin);
 	node_plugin.expose_plugin();
 	return;
 };
@@ -817,4 +833,48 @@ v8::Maybe<size_t> slim::plugin::node::StringBytes::Size(v8::Isolate* isolate, v8
 		case HEX:
 			return v8::Just<size_t>(view.length() / 2);
 	}
+}
+static void slim::plugin::node::util::GetOwnNonIndexProperties(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	v8::Local<v8::Context> context = args.GetIsolate()->GetCurrentContext();
+/* 	CHECK(args[0]->IsObject());
+	CHECK(args[1]->IsUint32()); */
+	v8::Local<v8::Object> object = args[0].As<v8::Object>();
+	v8::Local<v8::Array> properties;
+	v8::PropertyFilter filter = static_cast<v8::PropertyFilter>(args[1].As<v8::Uint32>()->Value());
+	if(!object->GetPropertyNames(context, v8::KeyCollectionMode::kOwnOnly, filter, v8::IndexFilter::kSkipIndices).ToLocal(&properties)) {
+		return;
+	}
+	args.GetReturnValue().Set(properties);
+  }
+static void slim::plugin::node::util::IsInsideNodeModules(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	auto* isolate = args.GetIsolate();
+	//CHECK_EQ(args.Length(), 2);
+	//CHECK(args[0]->IsInt32());  // frame_limit
+	// The second argument is the default value.
+	int frames_limit = args[0].As<v8::Int32>()->Value();
+	v8::Local<v8::StackTrace> stack = v8::StackTrace::CurrentStackTrace(isolate, frames_limit);
+	int frame_count = stack->GetFrameCount();
+	// If the search requires looking into more than |frames_limit| frames, give
+	// up and return the specified default value.
+	if(frame_count == frames_limit) {
+		return args.GetReturnValue().Set(args[1]);
+	}
+	bool result = false;
+	for(int i = 0; i < frame_count; ++i) {
+	  	v8::Local<v8::StackFrame> stack_frame = stack->GetFrame(isolate, i);
+	  	v8::Local<v8::String> script_name = stack_frame->GetScriptName();
+	  	if(script_name.IsEmpty() || script_name->Length() == 0) {
+			continue;
+	  	}
+	  	auto script_name_str = slim::utilities::v8StringToString(isolate, script_name);
+	  	if(script_name_str.starts_with("node:")) {
+			continue;
+	  	}
+	  	if(script_name_str.find("/node_modules/") != std::string::npos || script_name_str.find("\\node_modules\\") != std::string::npos ||
+					script_name_str.find("/node_modules\\") != std::string::npos || script_name_str.find("\\node_modules/") != std::string::npos) {
+			result = true;
+			break;
+	  	}
+	}
+	args.GetReturnValue().Set(result);
 }
