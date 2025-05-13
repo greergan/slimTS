@@ -105,7 +105,8 @@ namespace slim::plugin {
             else if constexpr (std::is_same_v<int, property_value_data_type>) {
                 plugin_template->Set(slim::utilities::StringToV8String(isolate, property_name_string), v8::Integer::New(isolate, property_value), v8::ReadOnly);
             }
-            else if constexpr (std::is_same_v<double, property_value_data_type> || std::is_same_v<float, property_value_data_type>) {
+            else if constexpr (std::is_same_v<double, property_value_data_type> || std::is_same_v<float, property_value_data_type>
+                                                                                    || std::is_same_v<unsigned long, property_value_data_type>) {
                 plugin_template->Set(slim::utilities::StringToV8String(isolate, property_name_string), v8::Number::New(isolate, property_value), v8::ReadOnly);
             }
             else {
