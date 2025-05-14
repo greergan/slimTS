@@ -24,6 +24,7 @@
 #define OS_EOL  "\n"
 #endif
 namespace slim::common::platform {
+	const std::string eol(OS_EOL);
 }
 
 #endif
