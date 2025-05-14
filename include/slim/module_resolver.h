@@ -6,8 +6,8 @@
 namespace slim::module::resolver {
 	struct import_specifier {
 		import_specifier();
-		import_specifier(std::string_view specifier_string,  v8::Local<v8::Context>& context, v8::Local<v8::Module> synthetic_module);
-		import_specifier(std::string_view specifier_string_view_in, v8::Local<v8::Context>& context, const bool is_entry_point_value);
+		import_specifier(std::string specifier_string_in, v8::Local<v8::Context>& context, v8::Local<v8::Module> synthetic_module);
+		import_specifier(std::string specifier_string_in, v8::Local<v8::Context>& context, const bool is_entry_point_value);
 		v8::Local<v8::Module>& get_module();
 		const std::string& get_module_status_string();
 		const std::string& get_path() const;
@@ -29,8 +29,7 @@ namespace slim::module::resolver {
 			void instantiate_module();
 	};
 	using specifier_cache = std::unordered_map<std::string, import_specifier>;
-	specifier_cache& resolve_imports(std::string entry_script_file_name_string_view_in,
-											v8::Local<v8::Context> context, const bool is_entry_point_value);
+	specifier_cache& resolve_imports(std::string entry_script_file_name_string_in, v8::Local<v8::Context> context, const bool is_entry_point_value);
 	v8::MaybeLocal<v8::Module> module_call_back_resolver(v8::Local<v8::Context> context,
 		v8::Local<v8::String> v8_input_file_name, v8::Local<v8::FixedArray> import_assertions, v8::Local<v8::Module> referrer);
 }
