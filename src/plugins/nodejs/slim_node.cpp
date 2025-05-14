@@ -245,9 +245,46 @@ namespace slim::plugin::node::Buffer {
 	int32_t IndexOfNumber(const uint8_t* buffer_data, size_t buffer_length, uint32_t needle, int64_t offset_i64, bool is_forward);
 	static int normalizeCompareVal(int val, size_t a_length, size_t b_length);
 };
-namespace slim::plugin::node::util {
+namespace slim::plugin::node::internal::buffer {
+/* 	FastBuffer,
+	markAsUntransferable,
+	addBufferPrototypeMethods,
+	createUnsafeBuffer, */
+}
+namespace slim::plugin::node::internal::errors {
+/* 	codes: {
+		ERR_BUFFER_OUT_OF_BOUNDS,
+		ERR_INVALID_ARG_TYPE,
+		ERR_INVALID_ARG_VALUE,
+		ERR_INVALID_BUFFER_SIZE,
+		ERR_MISSING_ARGS,
+		ERR_OUT_OF_RANGE,
+		ERR_UNKNOWN_ENCODING,
+	  },
+	  genericNodeError, */
+}
+namespace slim::plugin::node::internal::util {
 	static void GetOwnNonIndexProperties(const v8::FunctionCallbackInfo<v8::Value>& args);
 	static void IsInsideNodeModules(const v8::FunctionCallbackInfo<v8::Value>& args);
+}
+namespace slim::plugin::node::internal::util::inspect {
+	// inspect
+}
+namespace slim::plugin::node::internal::util::types {
+/* 	isAnyArrayBuffer,
+	isArrayBufferView,
+	isUint8Array,
+	isTypedArray, */
+}
+namespace slim::plugin::node::internal::validators {
+/* 	validateArray,
+	validateBuffer,
+	validateInteger,
+	validateNumber,
+	validateString, */
+}
+namespace slim::plugin::node::util {
+
 }
 namespace slim::plugin::node::StringBytes {
 	v8::Maybe<size_t> Size(v8::Isolate* isolate, v8::Local<v8::Value> val, enum encoding encoding);
@@ -296,16 +333,18 @@ namespace slim::plugin::node::StringBytes {
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	int ALL_PROPERTIES = v8::PropertyFilter::ALL_PROPERTIES;
 	int ONLY_ENUMERABLE = v8::PropertyFilter::ONLY_ENUMERABLE;
-	//getOwnNonIndexProperties,
-	//isInsideNodeModules,
 	slim::plugin::plugin node_plugin(isolate, "node");
 	slim::plugin::plugin node_buffer_plugin(isolate, "buffer");
-	slim::plugin::plugin node_util_plugin(isolate, "util");
-	slim::plugin::plugin node_util_constants_plugin(isolate, "constants");
-	node_util_plugin.add_function("getOwnNonIndexProperties", slim::plugin::node::util::GetOwnNonIndexProperties);
-	node_util_plugin.add_function("isInsideNodeModules", slim::plugin::node::util::IsInsideNodeModules);
-	node_util_constants_plugin.add_property_immutable("ALL_PROPERTIES", ALL_PROPERTIES);
-	node_util_constants_plugin.add_property_immutable("ONLY_ENUMERABLE", ONLY_ENUMERABLE);
+	slim::plugin::plugin node_internal_plugin(isolate, "internal");
+	slim::plugin::plugin node_internal_buffer_plugin(isolate, "buffer");
+	slim::plugin::plugin node_internal_errors_plugin(isolate, "errors");
+	slim::plugin::plugin node_internal_errors_codes_plugin(isolate, "codes");
+	slim::plugin::plugin node_internal_util_plugin(isolate, "util");
+	slim::plugin::plugin node_internal_util_types_plugin(isolate, "types");
+	slim::plugin::plugin node_internal_util_inspect_plugin(isolate, "inspect");
+	slim::plugin::plugin node_internal_validators_plugin(isolate, "validators");
+//slim::plugin::plugin node_util_plugin(isolate, "util");
+	slim::plugin::plugin node_internal_util_constants_plugin(isolate, "constants");
 	node_buffer_plugin.add_property_immutable("kMaxLength", v8::Uint8Array::kMaxLength);
 	node_buffer_plugin.add_property_immutable("kStringMaxLength", v8::String::kMaxLength);
 	node_buffer_plugin.add_function("atob", slim::plugin::node::Buffer::Atob);
@@ -320,9 +359,31 @@ extern "C" void expose_plugin(v8::Isolate* isolate) {
 	node_buffer_plugin.add_function("swap16", slim::plugin::node::Buffer::Swap16);
 	node_buffer_plugin.add_function("swap32", slim::plugin::node::Buffer::Swap32);
 	node_buffer_plugin.add_function("swap64", slim::plugin::node::Buffer::Swap64);
-	node_util_plugin.add_plugin("constants", &node_util_constants_plugin);
+
+	//node_internal_util_inspect_plugin
+	//node_internal_util_types_plugin
+	//node_internal_util_plugin
+
+	//node_internal_validators_plugin
+	//node_internal_errors_plugin
+	//node_internal_buffers_plugin
+
+	node_internal_util_plugin.add_function("getOwnNonIndexProperties", slim::plugin::node::internal::util::GetOwnNonIndexProperties);
+	node_internal_util_plugin.add_function("isInsideNodeModules", slim::plugin::node::internal::util::IsInsideNodeModules);
+	node_internal_util_constants_plugin.add_property_immutable("ALL_PROPERTIES", ALL_PROPERTIES);
+	node_internal_util_constants_plugin.add_property_immutable("ONLY_ENUMERABLE", ONLY_ENUMERABLE);
+	node_internal_errors_plugin.add_plugin("codes", &node_internal_errors_codes_plugin);
+	node_internal_plugin.add_plugin("buffer", &node_internal_buffer_plugin);
+	node_internal_plugin.add_plugin("errors", &node_internal_errors_plugin);
+	node_internal_plugin.add_plugin("validators", &node_internal_validators_plugin);
+
+	node_internal_util_plugin.add_plugin("inspect", &node_internal_util_inspect_plugin);
+	node_internal_util_plugin.add_plugin("types", &node_internal_util_types_plugin);
+	node_internal_plugin.add_plugin("util", &node_internal_util_plugin);
+	node_internal_util_plugin.add_plugin("constants", &node_internal_util_constants_plugin);
 	node_plugin.add_plugin("buffer", &node_buffer_plugin);
-	node_plugin.add_plugin("util", &node_util_plugin);
+	node_plugin.add_plugin("internal", &node_internal_plugin);
+//node_plugin.add_plugin("util", &node_util_plugin);
 	node_plugin.expose_plugin();
 	return;
 };
@@ -834,7 +895,7 @@ v8::Maybe<size_t> slim::plugin::node::StringBytes::Size(v8::Isolate* isolate, v8
 			return v8::Just<size_t>(view.length() / 2);
 	}
 }
-static void slim::plugin::node::util::GetOwnNonIndexProperties(const v8::FunctionCallbackInfo<v8::Value>& args) {
+static void slim::plugin::node::internal::util::GetOwnNonIndexProperties(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	v8::Local<v8::Context> context = args.GetIsolate()->GetCurrentContext();
 /* 	CHECK(args[0]->IsObject());
 	CHECK(args[1]->IsUint32()); */
@@ -846,7 +907,7 @@ static void slim::plugin::node::util::GetOwnNonIndexProperties(const v8::Functio
 	}
 	args.GetReturnValue().Set(properties);
   }
-static void slim::plugin::node::util::IsInsideNodeModules(const v8::FunctionCallbackInfo<v8::Value>& args) {
+static void slim::plugin::node::internal::util::IsInsideNodeModules(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	auto* isolate = args.GetIsolate();
 	//CHECK_EQ(args.Length(), 2);
 	//CHECK(args[0]->IsInt32());  // frame_limit
