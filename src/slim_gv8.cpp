@@ -165,17 +165,24 @@ void slim::gv8::ReportException(v8::TryCatch* try_catch) {
 	v8::Local<v8::Context> context = isolate->GetCurrentContext();
 	v8::ScriptOrigin script_origin = try_catch->Message()->GetScriptOrigin();
 	std::stringstream exception_string;
+	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	if(!script_origin.ResourceName()->IsUndefined()) {
 		exception_string << std::endl << slim::utilities::v8ValueToString(isolate, script_origin.ResourceName());
 	}
-	exception_string << std::endl << slim::utilities::StringValue(isolate, try_catch->Exception()) << std::endl;
+	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
+	if(try_catch->HasCaught()) {
+		exception_string << std::endl << slim::utilities::StringValue(isolate, try_catch->Exception()) << std::endl;
+	}
+	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	exception_string << slim::utilities::StringValue(isolate, try_catch->Message()->GetSourceLine(context).ToLocalChecked()) << std::endl;
-
+	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	for(int column = 0; column < try_catch->Message()->GetStartColumn(); column++) {
 		exception_string << " ";
 	}
+	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	exception_string << "^" << std::endl;
 	v8::Local<v8::Value> stack_trace = try_catch->StackTrace(context).ToLocalChecked();
+	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	if(!stack_trace.IsEmpty()) {
 		exception_string << std::endl << slim::utilities::v8ValueToString(isolate, stack_trace);
 	}
