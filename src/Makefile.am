@@ -1,6 +1,7 @@
 #https://stackoverflow.com/questions/70584133/when-using-libadd-in-automake-libtool-links-incorrectly
 # might need this for windows linking -> libbar_la_LDFLAGS += -no-undefined
 bin_PROGRAMS  = slim
+#slim_SOURCES = example.cpp slim_utilities.cpp slim_common_log.cpp
 slim_SOURCES  = main.cpp \
 				slim.cpp \
 				slim_builtins.cpp \
