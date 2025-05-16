@@ -1,6 +1,6 @@
 #ifndef __SLIM__MODULE__RESOLVER__H
 #define __SLIM__MODULE__RESOLVER__H
-#include <set>
+#include <filesystem>
 #include <string>
 #include <v8.h>
 namespace slim::module::resolver {
@@ -24,6 +24,7 @@ namespace slim::module::resolver {
 			std::string specifier_string; // .js, .mjs, .ts file name
 			std::string specifier_path_string;
 			std::string specifier_source_code;
+			std::filesystem::path specifier_path;
 			void compile_module();
 			void fetch_source();
 			void instantiate_module();
