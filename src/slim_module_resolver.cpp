@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <regex>
 #include <set>
+#include <unordered_set>
 #include <v8.h>
 #include <slim/common/exception.h>
 #include <slim/common/log.h>
@@ -16,21 +17,100 @@ namespace slim::module::resolver {
 	specifier_cache module_specifier_cache;
 }
 slim::module::resolver::import_specifier::import_specifier() {}
-slim::module::resolver::import_specifier::import_specifier(std::string_view specifier_string, v8::Local<v8::Context>& context,
+slim::module::resolver::import_specifier::import_specifier(std::string specifier_string, v8::Local<v8::Context>& context,
 			v8::Local<v8::Module> synthetic_module) : specifier_string(specifier_string), context(context), v8_module(synthetic_module) {
+	trace(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("begins =>" + specifier_string).c_str(),__FILE__, __LINE__));
 	isolate = context->GetIsolate();
 	instantiate_module();
 	v8_module->Evaluate(context).FromMaybe(v8::Local<v8::Value>());
+	trace(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("begins =>" + specifier_string).c_str(),__FILE__, __LINE__));
 }
-slim::module::resolver::import_specifier::import_specifier(std::string_view specifier_string_view_in,
+slim::module::resolver::import_specifier::import_specifier(std::string specifier_string_in,
 		v8::Local<v8::Context>& context, const bool is_entry_point_value = false) : context(context), is_entry_point_value(is_entry_point_value) {
-	std::filesystem::path specifier_path = std::filesystem::absolute(specifier_string_view_in);
+	trace(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("begins =>" + specifier_string_in).c_str(),__FILE__, __LINE__));
 	isolate = context->GetIsolate();
+	v8::TryCatch try_catch(isolate);
+	bool module_file_found = false;
+	std::unordered_set<std::string> file_extensions = {".mjs", ".ts"};
+	std::unordered_set<std::string> search_paths = {
+		"/home/greergan/product/slim/src/plugins/nodejs/lib"
+	};
+	if(!specifier_string.starts_with("./") && !specifier_string.starts_with("/")) {
+		for(auto& current_search_path : search_paths) {
+			auto current_working_search_path = std::filesystem::path(current_search_path + "/" + specifier_string_in);
+			debug(Message("slim::module::resolver::import_specifier::import_specifier()",current_working_search_path.string().c_str(),__FILE__, __LINE__));
+			debug(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("current_working_search_path.has_extension() => " 
+															+ std::to_string(current_working_search_path.has_extension())).c_str(),__FILE__, __LINE__));
+			if(current_working_search_path.has_extension()) {
+				if(std::filesystem::exists(current_working_search_path)) {
+					debug(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("current_working_search_path exists() => " 
+															+ current_working_search_path.string()).c_str(),__FILE__, __LINE__));
+					module_file_found = true;
+					specifier_path = current_working_search_path;
+					break;
+				}
+			}
+			else {
+				std::unordered_set<std::string> possible_module_names = {
+					current_working_search_path.string(),
+					current_working_search_path.string() + "/index"
+				};
+				for(auto& file_extension : file_extensions) {
+					for(auto& possible_module_name : possible_module_names) {
+						std::filesystem::path possible_module_file_path = possible_module_name + file_extension;
+						if(std::filesystem::exists(possible_module_file_path)) {
+							module_file_found = true;
+							specifier_path = possible_module_file_path;
+							break;
+						}
+						else {
+							debug(Message("slim::module::resolver::import_specifier::import_specifier()",
+								std::string("did not find => " + possible_module_file_path.string()).c_str(),__FILE__, __LINE__));
+						}
+					}
+				}
+			}
+		}
+	}
+	else {
+		specifier_path = std::filesystem::absolute(specifier_string_in);
+		debug(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_path.has_extension() =>" 
+															+ std::to_string(specifier_path.has_extension())).c_str(),__FILE__, __LINE__));
+		if(specifier_path.has_extension()) { 
+			if(std::filesystem::exists(specifier_path)) {
+				module_file_found = true;
+			}
+		}
+		else {
+			std::unordered_set<std::string> possible_module_names = {
+				specifier_string_in,
+				specifier_string_in + "/index"
+			};
+			for(auto& file_extension : file_extensions) {
+				for(auto& possible_module_name : possible_module_names) {
+					std::filesystem::path module_file_path = possible_module_name + "/" + file_extension;
+					if(std::filesystem::exists(module_file_path)) {
+						module_file_found = true;
+						specifier_path = module_file_path;
+						break;
+					}
+				}
+			}
+		}
+	}
+	if(!module_file_found) {
+		error(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("module not found => " + specifier_string_in).c_str(),__FILE__, __LINE__));
+		isolate->ThrowException(StringToV8String(isolate, "module not found => " + specifier_string_in));
+	}
+	if(try_catch.HasCaught()) {
+		slim::gv8::ReportException(&try_catch);
+	}
 	specifier_string = specifier_path.string();
 	specifier_path_string = specifier_path.parent_path().string();
 	fetch_source();
 	compile_module();
 	instantiate_module();
+	trace(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("ends =>" + specifier_string_in).c_str(),__FILE__, __LINE__));
 }
 v8::Local<v8::Module>& slim::module::resolver::import_specifier::get_module() {
 	return v8_module;
@@ -78,9 +158,9 @@ void slim::module::resolver::import_specifier::compile_module() {
 void slim::module::resolver::import_specifier::fetch_source() {
 	trace(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("begins file =>" + specifier_string).c_str(),__FILE__, __LINE__));
 	specifier_source_code = slim::common::fetch_and_apply_macros(specifier_string);
-	std::regex from_pattern("[[:space:]\n]+from[[:space:]\n]+[\\\"\\'][.](\\/.+[^\"])[\\\"\\']");
+/* 	std::regex from_pattern("[[:space:]\n]+from[[:space:]\n]+[\\\"\\'][.](\\/.+[^\"])[\\\"\\']");
 	std::string expanded_path_statement =  " from '" + specifier_path_string + "$1'";
-	specifier_source_code = std::regex_replace(specifier_source_code, from_pattern, expanded_path_statement);
+	specifier_source_code = std::regex_replace(specifier_source_code, from_pattern, expanded_path_statement); */
 	debug(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("specifier_string => " + specifier_string).c_str(), __FILE__, __LINE__));
 	debug(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("specifier_path_string => " + specifier_path_string).c_str(), __FILE__, __LINE__));
 	//debug(Message("slim::module::resolver::import_specifier::fetch_source()",std::string("source_string => " + specifier_source_code).c_str(), __FILE__, __LINE__));
