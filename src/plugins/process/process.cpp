@@ -10,7 +10,6 @@
 #include <slim/plugin.hpp>
 #include <slim/utilities.h>
 namespace slim::plugin::process {
-	bool browser;
 	std::filesystem::path current_working_directory;
 	std::string TSC_WATCHFILE; // typescript env variable
 	v8::Local<v8::Array> args_array;
@@ -50,7 +49,6 @@ extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin process_stdout_plugin(isolate, "stdout");
 	process_plugin.add_property_immutable("platform", slim::common::platform::platform);
 	process_env_plugin.add_property("TSC_WATCHFILE", &slim::plugin::process::TSC_WATCHFILE);
-	process_plugin.add_property("browser", &slim::plugin::process::browser);
 	process_plugin.add_function("cwd", 	slim::plugin::process::cwd);
 	process_plugin.add_function("exit", slim::plugin::process::exit_wrapper);
 	process_plugin.add_function("nextTick", slim::plugin::process::nextTick);
