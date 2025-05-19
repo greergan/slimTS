@@ -13,54 +13,78 @@
 #include <slim/gv8.h>
 #include <slim/module_resolver.h>
 #include <slim/utilities.h>
+
+#include <iostream>
 namespace {
-	using namespace slim::common::log;
+	using namespace slim::common;
 	using namespace slim::utilities;
+	using namespace v8;
+	using namespace std;
+	void PrintStackTrace(Isolate* isolate, Local<Value> error) {
+		if(error->IsObject()) {
+			Local<Object> error_obj = error->ToObject(isolate->GetCurrentContext()).ToLocalChecked();
+			Local<String> message_key = String::NewFromUtf8Literal(isolate, "message");
+			Local<Value> message_value;
+			Local<String> stack_key = String::NewFromUtf8Literal(isolate, "stack");
+			Local<Value> stack_value;
+			if(error_obj->Get(isolate->GetCurrentContext(), StringToV8String(isolate, "stack")).ToLocal(&stack_value) && stack_value->IsString()) {
+				cout << "\n" << v8ValueToString(isolate, stack_value) << "\n";
+			}
+			return;
+		}
+    	cout << "\n" << v8ValueToString(isolate, error) << "\n";
+	}
+	void OnPromiseRejected(PromiseRejectMessage message) {
+		Isolate* isolate = message.GetPromise()->GetIsolate();
+		Local<Value> value = message.GetValue();
+		PrintStackTrace(isolate, value);
+	}
 }
 void slim::run(std::string file_name_string_in) {
-	trace(Message("slim::run()","begins",__FILE__, __LINE__));
+	log::trace(log::Message("slim::run()","begins",__FILE__, __LINE__));
 	bool is_script_a_module = file_name_string_in.ends_with(".mjs") ? true : false;
 	auto isolate = slim::gv8::GetIsolate();
+	isolate->SetPromiseRejectCallback(OnPromiseRejected);
 	v8::Isolate::Scope isolate_scope(isolate);
 	v8::HandleScope handle_scope(isolate);
-	debug(Message("slim::run","calling slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","calling slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
 	slim::gv8::CreateGlobalTemplate();
-	debug(Message("slim::run","called slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","called slim::gv8::CreateGlobalTemplate()",__FILE__, __LINE__));
 // sort this better please
 // not sure why this has to be done before creating a new context
-debug(Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
+log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
 	auto no_content = [](const v8::FunctionCallbackInfo<v8::Value>& args){};
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "setTimeout", v8::FunctionTemplate::New(isolate, no_content));
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "clearTimeout", v8::FunctionTemplate::New(isolate, no_content));
 	slim::gv8::GetGlobalObjectTemplate()->Set(isolate, "require", v8::FunctionTemplate::New(isolate, slim::builtins::require));
-	debug(Message("slim::run","created builtin stubs",__FILE__, __LINE__));
-	debug(Message("slim::run","calling slim::gv8::GetNewContext()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","created builtin stubs",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","calling slim::gv8::GetNewContext()",__FILE__, __LINE__));
 	auto context = slim::gv8::GetNewContext();
-	debug(Message("slim::run","called slim::gv8::GetNewContext()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","called slim::gv8::GetNewContext()",__FILE__, __LINE__));
 	if(context.IsEmpty()) {
-		error(Message("slim::run","Error creating context",__FILE__, __LINE__));
+		log::error(log::Message("slim::run","Error creating context",__FILE__, __LINE__));
 		throw("Error creating context");
 	}
 	v8::Context::Scope context_scope(context);
-	debug(Message("slim::run","creating primordials object",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","creating primordials object",__FILE__, __LINE__));
 	context->Global()->Set(context, slim::utilities::StringToV8Name(isolate, "primordials"), v8::Object::New(isolate));
-	debug(Message("slim::run","created primordials object",__FILE__, __LINE__));
-	debug(Message("slim::run","calling slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","created primordials object",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","calling slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
 	std::string primordials_file_name_string("/home/greergan/product/slim/src/plugins/nodejs/lib/internal/per_context/primordials.min.js");
 	slim::gv8::FetchCompileAndRunJSFunction(context, primordials_file_name_string);
-	debug(Message("slim::run","called slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
-	debug(Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","called slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
 	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
-	debug(Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
+	log::debug(log::Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
 	if(is_script_a_module) {
 		v8::TryCatch try_catch(isolate);
-		debug(Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
+		log::debug(log::Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
 		bool is_entry_point = true;
 		auto& import_module_cache = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
 		for(auto& [name, obj] : import_module_cache) {
-			debug(Message("module name", std::string(name).c_str(),__FILE__,__LINE__));
+			log::debug(log::Message("module name", std::string(name).c_str(),__FILE__,__LINE__));
 		}
-		debug(Message("slim::run()",std::string("found this many modules => " + std::to_string(import_module_cache.size())).c_str(),__FILE__, __LINE__));
+		log::debug(log::Message("slim::run()",std::string("found this many modules => " + std::to_string(import_module_cache.size())).c_str(),__FILE__, __LINE__));
 		std::string entry_point_specifier_string;
 		for(auto& [specifier_string, import_specifier_struct] : import_module_cache) {
 			if(import_specifier_struct.is_entry_point()) {
@@ -77,54 +101,54 @@ debug(Message("slim::run","creating builtin stubs",__FILE__, __LINE__));
 			}
 		}
 		if(try_catch.HasCaught()) {
-			error(Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
+			log::error(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 			slim::gv8::ReportException(&try_catch);
 		}
 	}
 	else {
-		trace(Message("slim::run","is a script",__FILE__, __LINE__));
-		trace(Message("slim::run","calling slim::gv8::CompileScript()",__FILE__, __LINE__));
+		log::trace(log::Message("slim::run","is a script",__FILE__, __LINE__));
+		log::debug(log::Message("slim::run","calling slim::gv8::CompileScript()",__FILE__, __LINE__));
 		v8::TryCatch try_catch(isolate);
 		//auto script = slim::gv8::CompileScript(slim::common::fetch::fetch(file_name_string_in), file_name_string_in);
 		auto script = slim::gv8::CompileScript(slim::common::fetch_and_apply_macros(file_name_string_in), file_name_string_in);
-		trace(Message("slim::run","called slim::gv8::CompileScript()",__FILE__, __LINE__));
+		log::debug(log::Message("slim::run","called slim::gv8::CompileScript()",__FILE__, __LINE__));
 		if(try_catch.HasCaught()) {
-			trace(Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
+			log::debug(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 			slim::gv8::ReportException(&try_catch);
 		}
 		if(!script.IsEmpty()) {
-			trace(Message("slim::run","calling slim::gv8::RunScript()",__FILE__, __LINE__));
+			log::debug(log::Message("slim::run","calling slim::gv8::RunScript()",__FILE__, __LINE__));
 			bool result = slim::gv8::RunScript(script);
-			trace(Message("slim::run","called slim::gv8::RunScript()",__FILE__, __LINE__));
+			log::debug(log::Message("slim::run","called slim::gv8::RunScript()",__FILE__, __LINE__));
 			if(try_catch.HasCaught()) {
-				trace(Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
+				log::debug(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
 				slim::gv8::ReportException(&try_catch);
 			}
 		}
 	}
-	trace(Message("slim::run()","ends",__FILE__, __LINE__));
+	log::trace(log::Message("slim::run()","ends",__FILE__, __LINE__));
 	return;
 }
 void slim::start(int argc, char* argv[]) {
-	trace(Message("slim::start()","begins",__FILE__, __LINE__));
+	log::trace(log::Message("slim::start()","begins",__FILE__, __LINE__));
 	slim::command_line::set_argv(argc, argv);
-	info(Message("slim::start()",std::string("command line arguments => " + std::to_string(argc)).c_str(),__FILE__, __LINE__));
+	log::info(log::Message("slim::start()",std::string("command line arguments => " + std::to_string(argc)).c_str(),__FILE__, __LINE__));
 	if(argc > 1) {
 		const std::string file_name_string(argv[1]);
-		debug(Message("slim::start()","calling slim::gv8::initialize()",__FILE__, __LINE__));
+		log::debug(log::Message("slim::start()","calling slim::gv8::initialize()",__FILE__, __LINE__));
 		slim::gv8::initialize(argc, argv);
-		debug(Message("slim::start()","called slim::gv8::initialize()",__FILE__, __LINE__));
-		debug(Message("slim::start()","calling slim::run()",__FILE__, __LINE__));
+		log::debug(log::Message("slim::start()","called slim::gv8::initialize()",__FILE__, __LINE__));
+		log::debug(log::Message("slim::start()","calling slim::run()",__FILE__, __LINE__));
 		slim::run(file_name_string);
-		debug(Message("slim::start()","called slim::run()",__FILE__, __LINE__));
+		log::debug(log::Message("slim::start()","called slim::run()",__FILE__, __LINE__));
 		slim::stop();
 	}
-	trace(Message("slim::start()","ends",__FILE__, __LINE__));
+	log::trace(log::Message("slim::start()","ends",__FILE__, __LINE__));
 }
 void slim::stop() {
-	trace(Message("slim::stop()","begins",__FILE__, __LINE__));
+	log::trace(log::Message("slim::stop()","begins",__FILE__, __LINE__));
 	slim::gv8::stop();
-	trace(Message("slim::stop()","ends",__FILE__, __LINE__));
+	log::trace(log::Message("slim::stop()","ends",__FILE__, __LINE__));
 }
 void slim::version(void) {
 /* 	trace(Message("slim::version","begins",__FILE__, __LINE__));
