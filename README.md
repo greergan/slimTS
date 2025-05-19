@@ -16,3 +16,9 @@ $ make
 ./configure --prefix=/home/greergan/product/.local --with-google-v8-dir=/home/greergan/product/google/v8 --with-librdkafka=/home/greergan/product/.local
 
 ./configure --prefix=$PRODUCT/local --with-google-v8-dir=$PRODUCT/google/v8 --with-librdkafka=$PRODUCT/local
+
+
+## Notes
+promise rejection property key names
+"stack"
+"message"
