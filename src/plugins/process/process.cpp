@@ -5,6 +5,7 @@
 #include <v8.h>
 #include <slim/command_line_handler.h>
 #include <slim/common/log.h>
+#include <slim/common/platform.h>
 #include <slim/gv8.h>
 #include <slim/plugin.hpp>
 #include <slim/utilities.h>
@@ -16,7 +17,6 @@ namespace slim::plugin::process {
 	void cwd(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void exit_wrapper(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void nextTick(const v8::FunctionCallbackInfo<v8::Value>& args);
-	void platform(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void stderr_write(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void stdout_write(const v8::FunctionCallbackInfo<v8::Value>& args);
 }
@@ -33,10 +33,6 @@ void slim::plugin::process::exit_wrapper(const v8::FunctionCallbackInfo<v8::Valu
 void slim::plugin::process::nextTick(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
 }
-void slim::plugin::process::platform(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	v8::Isolate* isolate = args.GetIsolate();
-	args.GetReturnValue().Set(slim::utilities::StringToV8String(isolate, "linux"));
-}
 void slim::plugin::process::stderr_write(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	v8::Isolate* isolate = args.GetIsolate();
 	std::string value = slim::utilities::v8ValueToString(isolate, args[0]);
@@ -52,12 +48,12 @@ extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin process_env_plugin(isolate, "env");
 	slim::plugin::plugin process_stderr_plugin(isolate, "stderr");
 	slim::plugin::plugin process_stdout_plugin(isolate, "stdout");
+	process_plugin.add_property_immutable("platform", slim::common::platform::platform);
 	process_env_plugin.add_property("TSC_WATCHFILE", &slim::plugin::process::TSC_WATCHFILE);
 	process_plugin.add_property("browser", &slim::plugin::process::browser);
 	process_plugin.add_function("cwd", 	slim::plugin::process::cwd);
 	process_plugin.add_function("exit", slim::plugin::process::exit_wrapper);
 	process_plugin.add_function("nextTick", slim::plugin::process::nextTick);
-	process_plugin.add_function("platform", slim::plugin::process::platform);
 	process_stderr_plugin.add_function("write", slim::plugin::process::stderr_write);
 	process_stdout_plugin.add_function("write", slim::plugin::process::stdout_write);
 	process_plugin.add_plugin("env", &process_env_plugin);

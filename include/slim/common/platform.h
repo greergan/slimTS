@@ -25,6 +25,7 @@
 #endif
 namespace slim::common::platform {
 	const std::string eol(OS_EOL);
+	const std::string platform(OS_NAME);
 }
 
 #endif
