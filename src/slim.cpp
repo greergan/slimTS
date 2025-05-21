@@ -5,6 +5,7 @@
 #include "config.h"
 #include <slim.h>
 #include <slim/builtins.h>
+#include <slim/builtins/typescript.h>
 #include <slim/command_line_handler.h>
 #include <slim/common/exception.h>
 #include <slim/common/fetch.h>
@@ -43,6 +44,10 @@ namespace {
 void slim::run(std::string file_name_string_in) {
 	log::trace(log::Message("slim::run()","begins",__FILE__, __LINE__));
 	bool is_script_a_module = file_name_string_in.ends_with(".mjs") ? true : false;
+	bool is_typescript_module = file_name_string_in.ends_with(".ts") ? true : false;
+	if(is_typescript_module) {
+		is_script_a_module = true;
+	}
 	auto isolate = slim::gv8::GetIsolate();
 	isolate->SetPromiseRejectCallback(OnPromiseRejected);
 	v8::Isolate::Scope isolate_scope(isolate);
@@ -80,24 +85,28 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 		v8::TryCatch try_catch(isolate);
 		log::debug(log::Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
 		bool is_entry_point = true;
-		auto& import_module_cache = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
-		for(auto& [name, obj] : import_module_cache) {
-			log::debug(log::Message("module name", std::string(name).c_str(),__FILE__,__LINE__));
-		}
-		log::debug(log::Message("slim::run()",std::string("found this many modules => " + std::to_string(import_module_cache.size())).c_str(),__FILE__, __LINE__));
-		std::string entry_point_specifier_string;
-		for(auto& [specifier_string, import_specifier_struct] : import_module_cache) {
-			if(import_specifier_struct.is_entry_point()) {
-				entry_point_specifier_string = specifier_string;
-			}
-		}
-		if(entry_point_specifier_string.size() > 0 && import_module_cache[entry_point_specifier_string].has_module()) {
-			auto& module = import_module_cache[entry_point_specifier_string].get_module();
-			if(module->GetStatus() == v8::Module::Status::kErrored) {
-				isolate->ThrowException(module->GetException());
+		if(is_typescript_module) {
+			auto& typescript_entry_module = slim::module::resolver::resolve_imports("/home/greergan/product/slim/third_party/typescript/tsc.mjs", context, is_entry_point);
+			if(typescript_entry_module->GetStatus() == v8::Module::Status::kErrored) {
+				isolate->ThrowException(typescript_entry_module->GetException());
 			}
 			else {
-				auto result = module->Evaluate(context);
+				auto result = typescript_entry_module->Evaluate(context);
+				if(typescript_entry_module->GetStatus() == v8::Module::Status::kErrored) {
+					isolate->ThrowException(typescript_entry_module->GetException());
+				}
+			}
+		}
+		else {
+			auto& entry_module = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
+			if(entry_module->GetStatus() == v8::Module::Status::kErrored) {
+				isolate->ThrowException(entry_module->GetException());
+			}
+			else {
+				auto result = entry_module->Evaluate(context);
+				if(entry_module->GetStatus() == v8::Module::Status::kErrored) {
+					isolate->ThrowException(entry_module->GetException());
+				}
 			}
 		}
 		if(try_catch.HasCaught()) {
@@ -106,7 +115,6 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 		}
 	}
 	else {
-		log::trace(log::Message("slim::run","is a script",__FILE__, __LINE__));
 		log::debug(log::Message("slim::run","calling slim::gv8::CompileScript()",__FILE__, __LINE__));
 		v8::TryCatch try_catch(isolate);
 		//auto script = slim::gv8::CompileScript(slim::common::fetch::fetch(file_name_string_in), file_name_string_in);
