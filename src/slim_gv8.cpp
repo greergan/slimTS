@@ -11,26 +11,24 @@
 #include <slim/common/log.h>
 #include <slim/plugin/loader.h>
 namespace slim::gv8 {
+	using namespace slim;
+	using namespace slim::common;
 	Gv8Config slim_v8;
-	std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "platform"};
 }
 void slim::gv8::CreateGlobalTemplate() {
 	slim_v8.globalObjectTemplate = v8::ObjectTemplate::New(slim_v8.isolate);
 }
 void slim::gv8::FetchCompileAndRunJSFunction(v8::Local<v8::Context> context, std::string file_name_string) {
-	using namespace slim::common;
-	using namespace slim::utilities;
-	using namespace v8;
 	log::trace(log::Message("slim::gv8::CompileAndRunJSFunction()","begins",__FILE__, __LINE__));
 	auto* isolate = context->GetIsolate();
 	v8::EscapableHandleScope scope(isolate);
-	Local<String> source(StringToV8String(isolate, fetch::fetch(file_name_string.c_str()).str()));
+	v8::Local<v8::String> source(utilities::StringToV8String(isolate, fetch::fetch(file_name_string.c_str()).str()));
 /* 	
 	if (!LoadBuiltinSource(isolate, id).ToLocal(&source)) {
 	  return {};
 	} */
   
-	ScriptOrigin origin(StringToV8String(isolate, file_name_string), 0, 0, true);
+	v8::ScriptOrigin origin(utilities::StringToV8String(isolate, file_name_string), 0, 0, true);
 
 /* 	BuiltinCodeCacheData cached_data{};
 	{
@@ -49,9 +47,9 @@ void slim::gv8::FetchCompileAndRunJSFunction(v8::Local<v8::Context> context, std
 	//const bool has_cache = cached_data.data != nullptr;
 	const bool has_cache = false;
 	const bool should_eager_compile_ = false;
-	ScriptCompiler::CompileOptions options =
-		has_cache ? ScriptCompiler::kConsumeCodeCache
-				  : ScriptCompiler::kNoCompileOptions;
+	v8::ScriptCompiler::CompileOptions options =
+		has_cache ? v8::ScriptCompiler::kConsumeCodeCache
+				  : v8::ScriptCompiler::kNoCompileOptions;
 /* 	if (should_eager_compile_) {
 	  options = ScriptCompiler::kEagerCompile;
 	} else if (!to_eager_compile_.empty()) {
@@ -60,7 +58,7 @@ void slim::gv8::FetchCompileAndRunJSFunction(v8::Local<v8::Context> context, std
 	  }
 	} */
 	//ScriptCompiler::Source script_source(source, origin, has_cache ? cached_data.AsCachedData().release() : nullptr);
-	ScriptCompiler::Source script_source(source, origin, nullptr);
+	v8::ScriptCompiler::Source script_source(source, origin, nullptr);
   
 /* 	per_process::Debug(
 		DebugCategory::CODE_CACHE,
@@ -69,12 +67,12 @@ void slim::gv8::FetchCompileAndRunJSFunction(v8::Local<v8::Context> context, std
 		has_cache ? "with" : "without",
 		options == ScriptCompiler::kEagerCompile ? "eagerly" : "lazily"); */
   
-	auto maybe_fun = ScriptCompiler::CompileFunction(context, &script_source); // parameters->size(), parameters->data(), 0, nullptr, options);
+	auto maybe_fun = v8::ScriptCompiler::CompileFunction(context, &script_source); // parameters->size(), parameters->data(), 0, nullptr, options);
 	//ScriptCompiler::CompileFunction(context, &script_source, parameters->size(), parameters->data(), 0, nullptr, options);
 	
 	// This could fail when there are early errors in the built-in modules,
 	// e.g. the syntax errors
-	Local<Function> fun;
+	v8::Local<v8::Function> fun;
 	if (!maybe_fun.ToLocal(&fun)) {
 	  // In the case of early errors, v8 is already capable of
 	  // decorating the stack for us - note that we use CompileFunction
@@ -122,21 +120,20 @@ void slim::gv8::FetchCompileAndRunJSFunction(v8::Local<v8::Context> context, std
 	//return scope.Escape(fun);
 	scope.Escape(fun);
 	int argc;
-	Local<Value> arguments[] = {};
-	Local<Value> undefined = Undefined(context->GetIsolate());
-	auto results = fun->Call(context, StringToV8Value(isolate, file_name_string), 0, arguments);
-	
-	log::trace(slim::common::log::Message("slim::gv8::CompileAndRunJSFunction()","ends",__FILE__, __LINE__));
+	v8::Local<v8::Value> arguments[] = {};
+	v8::Local<v8::Value> undefined = Undefined(context->GetIsolate());
+	auto results = fun->Call(context, utilities::StringToV8Value(isolate, file_name_string), 0, arguments);
+	log::trace(log::Message("slim::gv8::CompileAndRunJSFunction()","ends",__FILE__, __LINE__));
 }
 v8::Local<v8::Script> slim::gv8::CompileScript(std::string source, std::string name) {
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileScript()","begins",__FILE__, __LINE__));
+	log::trace(log::Message("slim::gv8::CompileScript()","begins",__FILE__, __LINE__));
 	v8::TryCatch try_catch(slim_v8.isolate);
-	v8::MaybeLocal<v8::Script> script = v8::Script::Compile(slim_v8.isolate->GetCurrentContext(), slim::utilities::StringToString(slim_v8.isolate, source));
+	v8::MaybeLocal<v8::Script> script = v8::Script::Compile(slim_v8.isolate->GetCurrentContext(), utilities::StringToString(slim_v8.isolate, source));
 	if(try_catch.HasCaught()) {
-		slim::common::log::error(slim::common::log::Message("slim::gv8::CompileScript()","try_catch.HasCaught()",__FILE__, __LINE__));
+		log::error(log::Message("slim::gv8::CompileScript()","try_catch.HasCaught()",__FILE__, __LINE__));
 		ReportException(&try_catch);
 	}
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::CompileScript()","ends",__FILE__, __LINE__));
+	log::trace(log::Message("slim::gv8::CompileScript()","ends",__FILE__, __LINE__));
 	return script.ToLocalChecked();
 }
 v8::Local<v8::ObjectTemplate>& slim::gv8::GetGlobalObjectTemplate() {
@@ -160,33 +157,43 @@ void slim::gv8::initialize(int argc, char* argv[]) {
 	slim_v8.initialized = true;
 }
 void slim::gv8::ReportException(v8::TryCatch* try_catch) {
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::ReportException","begins",__FILE__, __LINE__));
-	v8::Isolate* isolate = try_catch->Message()->GetIsolate();
-	v8::Local<v8::Context> context = isolate->GetCurrentContext();
-	v8::ScriptOrigin script_origin = try_catch->Message()->GetScriptOrigin();
+	log::trace(log::Message("slim::gv8::ReportException","begins",__FILE__, __LINE__));
+	auto* isolate = try_catch->Message()->GetIsolate();
+	auto context = isolate->GetCurrentContext();
+	auto script_origin = try_catch->Message()->GetScriptOrigin();
+	auto message = try_catch->Message();
+	auto stack_trace = try_catch->StackTrace(context).ToLocalChecked();
+
+	log::debug(log::Message("script_origin.ScriptId()", std::to_string(script_origin.ScriptId()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("script_origin.ColumnOffset()", std::to_string(script_origin.ColumnOffset()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("script_origin.LineOffset()", std::to_string(script_origin.LineOffset()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("script_origin.ResourceName()", utilities::v8ValueToString(isolate, script_origin.ResourceName()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->Get()", utilities::v8StringToString(isolate, message->Get()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetScriptResourceName()", utilities::v8ValueToString(isolate, message->GetScriptResourceName()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetSourceLine()", utilities::v8StringToString(isolate, message->GetSourceLine(context).ToLocalChecked()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->ErrorLevel()", std::to_string(message->ErrorLevel()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetStartColumn()", std::to_string(message->GetStartColumn()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetEndColumn()", std::to_string(message->GetEndColumn()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetStartPosition()", std::to_string(message->GetStartPosition()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetStartPosition()", std::to_string(message->GetEndPosition()).c_str(),__FILE__, __LINE__));
+	
+
 	std::stringstream exception_string;
-	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	if(!script_origin.ResourceName()->IsUndefined()) {
-		exception_string << std::endl << slim::utilities::v8ValueToString(isolate, script_origin.ResourceName());
+		exception_string << "\n" << utilities::v8ValueToString(isolate, script_origin.ResourceName());
 	}
-	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	if(try_catch->HasCaught()) {
-		exception_string << std::endl << slim::utilities::StringValue(isolate, try_catch->Exception()) << std::endl;
+		exception_string << "\n" << utilities::v8ValueToString(isolate, try_catch->Exception()) << "\n";
 	}
-	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
-	exception_string << slim::utilities::StringValue(isolate, try_catch->Message()->GetSourceLine(context).ToLocalChecked()) << std::endl;
-	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
-	for(int column = 0; column < try_catch->Message()->GetStartColumn(); column++) {
+	exception_string << utilities::v8ValueToString(isolate, message->GetSourceLine(context).ToLocalChecked()) << "\n";
+	for(int column = 0; column < message->GetStartColumn(); column++) {
 		exception_string << " ";
 	}
-	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	exception_string << "^" << std::endl;
-	v8::Local<v8::Value> stack_trace = try_catch->StackTrace(context).ToLocalChecked();
-	slim::common::log::debug(slim::common::log::Message("slim::gv8::ReportException","",__FILE__, __LINE__));
 	if(!stack_trace.IsEmpty()) {
-		exception_string << std::endl << slim::utilities::v8ValueToString(isolate, stack_trace);
+		exception_string << "\n" << utilities::v8ValueToString(isolate, stack_trace);
 	}
-	slim::common::log::trace(slim::common::log::Message("slim::gv8::ReportException","calling throw(exception_string)",__FILE__, __LINE__));
+	log::trace(log::Message("slim::gv8::ReportException","ends => throw(exception_string)",__FILE__, __LINE__));
 	throw(exception_string.str());
 }
 bool slim::gv8::RunScript(v8::Local<v8::Script> script) {
