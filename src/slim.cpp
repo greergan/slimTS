@@ -86,27 +86,29 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 		log::debug(log::Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
 		bool is_entry_point = true;
 		if(is_typescript_module) {
-			auto& typescript_entry_module = slim::module::resolver::resolve_imports("/home/greergan/product/slim/third_party/typescript/tsc.mjs", context, is_entry_point);
-			if(typescript_entry_module->GetStatus() == v8::Module::Status::kErrored) {
-				isolate->ThrowException(typescript_entry_module->GetException());
+			auto ts_import_specifier_ptr = slim::module::resolver::resolve_imports("/home/greergan/product/slim/third_party/typescript/tsc.mjs", context, is_entry_point);
+			if(ts_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
+				isolate->ThrowException(ts_import_specifier_ptr->get_module()->GetException());
 			}
 			else {
-				auto result = typescript_entry_module->Evaluate(context);
-				if(typescript_entry_module->GetStatus() == v8::Module::Status::kErrored) {
-					isolate->ThrowException(typescript_entry_module->GetException());
+				auto result = ts_import_specifier_ptr->get_module()->Evaluate(context);
+				if(ts_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
+					isolate->ThrowException(ts_import_specifier_ptr->get_module()->GetException());
 				}
 			}
 		}
 		else {
-			auto& entry_module = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
-			if(entry_module->GetStatus() == v8::Module::Status::kErrored) {
-				isolate->ThrowException(entry_module->GetException());
+			auto module_import_specifier_ptr = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
+			log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
+			if(module_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
+				isolate->ThrowException(module_import_specifier_ptr->get_module()->GetException());
 			}
 			else {
-				auto result = entry_module->Evaluate(context);
-				if(entry_module->GetStatus() == v8::Module::Status::kErrored) {
-					isolate->ThrowException(entry_module->GetException());
+				auto result = module_import_specifier_ptr->get_module()->Evaluate(context);
+				if(module_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
+					isolate->ThrowException(module_import_specifier_ptr->get_module()->GetException());
 				}
+				log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
 			}
 		}
 		if(try_catch.HasCaught()) {
