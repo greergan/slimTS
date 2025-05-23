@@ -250,20 +250,18 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 			module_specifier.compile_module(); // 1st compile
 			cache_import_specifier(std::make_shared<import_specifier>(module_specifier)); // 2nd store it
 			module_specifier.instantiate_module(); // 3rd instantiate it which causes a recursive module import chain of events
-			//specifier_name_string = module_specifier.get_specifier();
-			std::cout << module_specifier.get_specifier() << "\n";
 			current_module_hash_id = module_specifier.get_hash_id();
 		}
 	}
     catch(const slim::common::SlimFileException& _error) {
         std::string error_message = _error.message + ", path => " + _error.path;
         error(Message(_error.call.c_str(), error_message.c_str(),__FILE__, __LINE__));
-		isolate->ThrowError(StringToV8String(isolate, "Module not found: " + specifier_name_string));
+		isolate->ThrowException(StringToV8String(isolate, "Module not found: " + specifier_name_string));
     }
-	if(try_catch.HasCaught()) {
+/* 	if(try_catch.HasCaught()) {
 		error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
 		slim::gv8::ReportException(&try_catch);
-	}
+	} */
 	for(auto& [id, specifier] : by_hash_id_cache) {
 		std::cout << "hash id => " << id << ", specifier => " << specifier->get_specifier() <<"\n";
 	}
@@ -275,7 +273,7 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 	trace(Message("slim::module::resolver::module_call_back_resolver()",std::string("ends empty module => " + specifier_name_string).c_str(), __FILE__, __LINE__));
 	return v8::MaybeLocal<v8::Module>();
 }
-v8::Local<v8::Module>& slim::module::resolver::resolve_imports(
+std::shared_ptr<slim::module::resolver::import_specifier> slim::module::resolver::resolve_imports(
 											std::string entry_script_file_name_string_in, v8::Local<v8::Context> context, const bool is_entry_point_value = false) {
 	trace(Message("slim::module::resolver::resolve_imports()",std::string("begins => " + entry_script_file_name_string_in).c_str(), __FILE__, __LINE__));
 	import_specifier entry_script_specifier(entry_script_file_name_string_in, context, is_entry_point_value, v8::Local<v8::Module>());
@@ -283,7 +281,7 @@ v8::Local<v8::Module>& slim::module::resolver::resolve_imports(
 	cache_import_specifier(std::make_shared<import_specifier>(entry_script_specifier)); // now cache it before instantiate_module
 	entry_script_specifier.instantiate_module(); // instantiate_module causes import recursion where we need hash id to get at the parent path of current import
 	trace(Message("slim::module::resolver::resolve_imports()",std::string("ends => " + entry_script_specifier.get_specifier_url()).c_str(), __FILE__, __LINE__));
-	return entry_script_specifier.get_module();
+	return by_specifier_cache[entry_script_specifier.get_specifier()];
 }
 void slim::module::resolver::import_specifier::resolve_module_path() {
 	trace(Message("slim::module::resolver::resolve_module_path()",std::string("begins => " + specifier_string).c_str(), __FILE__, __LINE__));
@@ -350,11 +348,9 @@ void slim::module::resolver::import_specifier::resolve_module_path() {
 				specifier_path.string() + "/index"
 			};
 			for(auto& file_extension : file_extensions) {
-	std::cout << file_extension << "\n";
 				for(auto& possible_module_name : possible_module_names) {
 					std::string module_file_path = possible_module_name + file_extension;
 					if(std::filesystem::exists(module_file_path)) {
-std::cout << module_file_path << "\n";
 						module_file_found = true;
 						specifier_path = module_file_path;
 						break;
@@ -371,10 +367,11 @@ std::cout << module_file_path << "\n";
 		specifier_string = specifier_path.string();
 		specifier_string_url = "file://" + specifier_string;
 	}
-	if(try_catch.HasCaught()) {
-		error(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("module not found => " + specifier_string).c_str(),__FILE__, __LINE__));
+/* 	if(try_catch.HasCaught()) {
+		error(Message("slim::module::resolver::import_specifier::import_specifier()",std::string("module not found => " + 
+			v8ValueToString(isolate, try_catch.Exception())).c_str(),__FILE__, __LINE__));
 		slim::gv8::ReportException(&try_catch);
-	}
+	} */
 	trace(Message("slim::module::resolver::resolve_module_path()",std::string("ends => " + specifier_string_url).c_str(), __FILE__, __LINE__));
 }
 static void slim::module::resolver::cache_import_specifier(std::shared_ptr<import_specifier> module_import_specifier) {
