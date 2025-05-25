@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-const library_path = path.join(process.cwd(), "../third_party/typescript")
+const library_path = path.join(process.cwd(), "../lib/typescript")
 const cpp_file = '../src/slim_builtins_typescript_definitions.cpp'
 let output = "#include <unordered_map>\n"
 output += "#include <string>\n"
@@ -13,5 +13,7 @@ files.map((file) => {
 		output += `\{"${file}", R"+++(${content})+++"\},`
 	}}
 })
+const content = fs.readFileSync(path.join(process.cwd(), "../lib") + "/" + "slim_typescript.mjs", 'utf8')
+output += `\{"slim_typescript.mjs", R"+++(${content})+++"\},`
 const fixed_output = output.slice(0, -1) + "};}"
 fs.writeFileSync(cpp_file, fixed_output)
