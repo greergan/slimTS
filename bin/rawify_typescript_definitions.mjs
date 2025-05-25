@@ -1,19 +1,20 @@
 import fs from 'fs'
 import path from 'path'
 const library_path = path.join(process.cwd(), "../lib/typescript")
-const cpp_file = '../src/slim_builtins_typescript_definitions.cpp'
-let output = "#include <unordered_map>\n"
+const cpp_file = '../src/slim_builtins_typescript_initial_library.cpp'
+let output = "#include <memory>\n"
 output += "#include <string>\n"
-output += "namespace slim::builtins::typescript {"
-output += "std::unordered_map<std::string, std::string> raw_typescript_definitions = {"
+output += "#include <unordered_map>\n"
+output += "namespace slim::builtins::typescript {\n"
+output += "std::unordered_map<std::string, std::shared_ptr<std::string>> raw_typescript_pipe_files = {"
 const files = fs.readdirSync(library_path)
 files.map((file) => {
 	if(file.endsWith(".d.ts")) {{
 		const content = fs.readFileSync(library_path + "/" + file, 'utf8')
-		output += `\{"${file}", R"+++(${content})+++"\},`
+		output += `\{"${file}", std::make_shared<std::string>(R"+++(${content})+++")\},`
 	}}
 })
 const content = fs.readFileSync(path.join(process.cwd(), "../lib") + "/" + "slim_typescript.mjs", 'utf8')
-output += `\{"slim_typescript.mjs", R"+++(${content})+++"\},`
+output += `\{"slim_typescript.mjs", std::make_shared<std::string>(R"+++(${content})+++")\},`
 const fixed_output = output.slice(0, -1) + "};}"
 fs.writeFileSync(cpp_file, fixed_output)
