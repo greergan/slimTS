@@ -45,8 +45,14 @@ slim::module::resolver::import_specifier::import_specifier(std::string specifier
 	log::trace(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("begins => " + specifier_string).c_str(),__FILE__, __LINE__));
 	isolate = context->GetIsolate();
 	specifier_string_original = specifier_string;
-	if(builtins::typescript::raw_typescript_definitions.contains(specifier_string)) {
-		specifier_source_code = macros::apply(builtins::typescript::raw_typescript_definitions[specifier_string], specifier_string);
+	if(builtins::typescript::raw_typescript_pipe_files.contains(specifier_string)) {
+		auto source_file_content_string_pointer = builtins::typescript::get_file_content_pointer(specifier_string);
+		if(!source_file_content_string_pointer.get()->empty()) {
+			specifier_source_code = macros::apply(source_file_content_string_pointer, specifier_string);
+		}
+		else {
+			isolate->ThrowError(utilities::StringToV8String(isolate, "file not found =>" + specifier_string));
+		}
 	}
 	else {
 		resolve_module_path();

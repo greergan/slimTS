@@ -12,6 +12,12 @@ namespace slim::builtins::typescript {
 int slim::builtins::typescript::get_specifier_module_hash_id() {
 	return hash_id;
 }
+std::shared_ptr<std::string> slim::builtins::typescript::get_file_content_pointer(std::string file_name_string) {
+	if(raw_typescript_pipe_files.contains(file_name_string)) {
+		return raw_typescript_pipe_files[file_name_string];
+	}
+	return std::make_shared<std::string>();
+}
 void slim::builtins::typescript::initialize(v8::Isolate* isolate) {
 	log::trace(log::Message("slim::builtins::typescript::initialize()","begins",__FILE__, __LINE__));
 	auto context = isolate->GetCurrentContext();
