@@ -19,6 +19,10 @@ static void replace_token(const char* token, std::string& line_of_text, const st
 		//slim::common::log::debug(slim::common::log::Message("replace_token()", line_of_text.c_str(),__FILE__, __LINE__));
 	}
 }
+std::string slim::macros::apply(const std::string& file_contents, const std::string& absolute_path_to_file) {
+	std::stringstream file_contents_stream(file_contents);
+	return apply(file_contents_stream, absolute_path_to_file);
+}
 std::string slim::macros::apply(std::stringstream& input_string_stream, const std::string& absolute_path_to_file) {
 	slim::common::log::trace(slim::common::log::Message("slim::macros::apply()","begins",__FILE__, __LINE__));
 	int last_file_directory_separator = absolute_path_to_file.find_last_of("/");
