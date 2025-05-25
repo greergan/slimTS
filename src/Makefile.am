@@ -6,6 +6,8 @@ slim_SOURCES  = main.cpp \
 				slim.cpp \
 				slim_builtins.cpp \
 				slim_builtins_dummy_console_provider.cpp \
+				slim_builtins_typescript.cpp \
+				slim_builtins_typescript_initial_library.cpp \
 				slim_command_line_handler.cpp \
 				slim_common_fetch.cpp \
 				slim_common_fetch_and_apply_macros.cpp \
