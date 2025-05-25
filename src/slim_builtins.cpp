@@ -3,6 +3,7 @@
 #include <v8.h>
 #include <slim/builtins.h>
 #include <slim/builtins/dummy_console_provider.h>
+#include <slim/builtins/typescript.h>
 #include <slim/common/log.h>
 #include <slim/gv8.h>
 #include <slim/plugin.hpp>
@@ -25,6 +26,7 @@ void slim::builtins::initialize(v8::Isolate* isolate, v8::Local<v8::ObjectTempla
 	trace(Message("slim::builtins::initialize()","after load",__FILE__, __LINE__));
 	slim_objects.expose_plugin();
 	trace(Message("slim::builtins::initialize()","after expose slim_objects",__FILE__, __LINE__));
+	slim::builtins::typescript::initialize(isolate);
 	trace(Message("slim::builtins::initialize()","ends",__FILE__, __LINE__));
 }
 void slim::builtins::require(const v8::FunctionCallbackInfo<v8::Value>& args) {

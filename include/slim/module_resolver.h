@@ -16,13 +16,16 @@ namespace slim::module::resolver {
 		const std::string& get_module_status_string();
 		const std::filesystem::path& get_specifier_path() const;
 		const std::string& get_specifier() const;
+		const std::string& get_source_code() const;
 		const std::string& get_specifier_url() const;
+		void set_source_code(std::string source_code);
 		const bool has_module() const;
 		const bool is_entry_point() const;
 		private:
 			bool has_module_value = false;
 			bool is_entry_point_value = false;
 			bool is_synthetic_module = false;
+			bool is_typescript_compiler_initialized = false;
 			v8::Isolate* isolate;
 			v8::Local<v8::Context> context;
 			v8::Local<v8::Module> v8_module;
@@ -32,9 +35,13 @@ namespace slim::module::resolver {
 			std::string specifier_string_url;
 			std::string specifier_string_original;
 			std::string specifier_source_code;
+			std::string specifier_original_source_code;
 			std::filesystem::path specifier_path;
+			v8::Local<v8::Function> typescript_compile_function;
 			void fetch_source();
 			void resolve_module_path();
+			void initialize_typescript_compiler();
+			void call_typescript_compiler();
 	};
 	using specifier_cache_by_specifier = std::unordered_map<std::string, std::shared_ptr<import_specifier>>;
 	using specifier_cache_by_hash_id = std::unordered_map<int, std::shared_ptr<import_specifier>>;
