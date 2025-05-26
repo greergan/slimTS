@@ -11,10 +11,11 @@ const files = fs.readdirSync(library_path)
 files.map((file) => {
 	if(file.endsWith(".d.ts")) {{
 		const content = fs.readFileSync(library_path + "/" + file, 'utf8')
-		output += `\{"${file}", std::make_shared<std::string>(R"+++(${content})+++")\},`
+		output += `\{"file:///lib/${file}", std::make_shared<std::string>(R"+++(${content})+++")\},`
 	}}
 })
 const content = fs.readFileSync(path.join(process.cwd(), "../lib") + "/" + "slim_typescript.mjs", 'utf8')
-output += `\{"slim_typescript.mjs", std::make_shared<std::string>(R"+++(${content})+++")\},`
+output += `\{"file:///lib/slim_typescript.mjs", std::make_shared<std::string>(R"+++(${content})+++")\},`
 const fixed_output = output.slice(0, -1) + "};}"
+console.log(`writing ${cpp_file}`)
 fs.writeFileSync(cpp_file, fixed_output)
