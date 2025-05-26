@@ -4,9 +4,9 @@ const library_path = path.join(process.cwd(), "../lib/typescript")
 const cpp_file = '../src/slim_builtins_typescript_initial_library.cpp'
 let output = "#include <memory>\n"
 output += "#include <string>\n"
-output += "#include <unordered_map>\n"
+output += "#include <slim/common/memory_mapper.h>\n"
 output += "namespace slim::builtins::typescript {\n"
-output += "std::unordered_map<std::string, std::shared_ptr<std::string>> raw_typescript_pipe_files = {"
+output += "slim::common::memory_mapper::map_container typescript_map_container = {"
 const files = fs.readdirSync(library_path)
 files.map((file) => {
 	if(file.endsWith(".d.ts")) {{
