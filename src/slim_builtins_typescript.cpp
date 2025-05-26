@@ -30,8 +30,10 @@ void slim::builtins::typescript::initialize(v8::Isolate* isolate) {
 	auto specifier_string = "slim_typescript.mjs";
 	v8::TryCatch try_catch(isolate);
 	auto typescript_import_specifier = slim::module::resolver::resolve_imports(specifier_string, context, true);
+	hash_id = typescript_import_specifier.get()->get_hash_id();
+	log::debug(log::Message("slim::builtins::typescript::initialize() hash_id => ", typescript_import_specifier.get()->get_module_status_string().c_str() ,__FILE__, __LINE__));
 	typescript_import_specifier->get_module()->Evaluate(context);
-	hash_id = typescript_import_specifier->get_hash_id();
+	log::debug(log::Message("slim::builtins::typescript::initialize()", "in the middle 2" ,__FILE__, __LINE__));
 	if(try_catch.HasCaught()) {
 		log::error(log::Message("slim::builtins::typescript::initialize","try_catch.HasCaught()",__FILE__, __LINE__));
 		slim::gv8::ReportException(&try_catch);
