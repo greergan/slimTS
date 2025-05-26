@@ -12,6 +12,7 @@ slim_SOURCES  = main.cpp \
 				slim_common_fetch.cpp \
 				slim_common_fetch_and_apply_macros.cpp \
 				slim_common_log.cpp \
+				slim_common_memory_mapper.cpp \
 				slim_gv8.cpp \
 				slim_macros.cpp \
 				slim_module_resolver.cpp \
