@@ -30,6 +30,8 @@ namespace slim::module::resolver {
 	};
 	static specifier_cache_by_specifier by_specifier_cache;
 	static specifier_cache_by_hash_id by_hash_id_cache;
+	std::string typescript_compiled_specifier_string_url;
+	void receive_compiled_file_name(const v8::FunctionCallbackInfo<v8::Value>& args);
 }
 slim::module::resolver::import_specifier::import_specifier() {}
 slim::module::resolver::import_specifier::import_specifier(std::string specifier_string, v8::Local<v8::Context>& context, v8::Local<v8::Module> synthetic_module) 
@@ -38,7 +40,7 @@ slim::module::resolver::import_specifier::import_specifier(std::string specifier
 	isolate = context->GetIsolate();
 	instantiate_module();
 	v8_module->Evaluate(context).FromMaybe(v8::Local<v8::Value>());
-	log::trace(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("begins => " + specifier_string).c_str(),__FILE__, __LINE__));
+	log::trace(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("ends => " + specifier_string).c_str(),__FILE__, __LINE__));
 }
 slim::module::resolver::import_specifier::import_specifier(std::string specifier_string, v8::Local<v8::Context>& context, const bool is_entry_point_value, v8::Local<v8::Module> referrer)
 																	: specifier_string(specifier_string), context(context), referrer(referrer), is_entry_point_value(is_entry_point_value) {
@@ -53,10 +55,14 @@ slim::module::resolver::import_specifier::import_specifier(std::string specifier
 	else {
 		resolve_module_path();
 		fetch_source();
+		memory_mapper::register_path("directories", specifier_string_url.substr(0, specifier_string_url.find_last_of("/")));
+		builtins::typescript::put_file_content(specifier_string_url, specifier_source_code);
 		if(!is_typescript_compiler_initialized) {
 			initialize_typescript_compiler();
 		}
 		call_typescript_compiler();
+		specifier_source_code = *memory_mapper::read("typescript_chain", typescript_compiled_specifier_string_url);
+		specifier_string_url = typescript_compiled_specifier_string_url;
 	}
 	log::trace(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("ends => " + this->get_specifier_url()).c_str(),__FILE__, __LINE__));
 }
@@ -96,7 +102,7 @@ const bool slim::module::resolver::import_specifier::is_entry_point() const {
 }
 void slim::module::resolver::import_specifier::set_source_code(std::string source_code) {
 	specifier_original_source_code = specifier_source_code;
-	specifier_original_source_code = source_code;
+	specifier_source_code = source_code;
 }
 void slim::module::resolver::import_specifier::compile_module() {
 	log::trace(log::Message("slim::module::resolver::import_specifier::compile_module()",std::string("begins => " + specifier_string_url).c_str(),__FILE__, __LINE__));
@@ -145,35 +151,39 @@ void slim::module::resolver::import_specifier::instantiate_module() {
 void slim::module::resolver::import_specifier::initialize_typescript_compiler() {
 	log::trace(log::Message("slim::module::resolver::initialize_typescript_compiler()", std::string("begins => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 	int typescript_specifier_hash_id = builtins::typescript::get_specifier_module_hash_id();
-	log::trace(log::Message("slim::module::resolver::initialize_typescript_compiler()", std::to_string(typescript_specifier_hash_id).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("slim::module::resolver::initialize_typescript_compiler()", std::to_string(typescript_specifier_hash_id).c_str(),__FILE__, __LINE__));
 	auto typescript_import_specifier = by_hash_id_cache[typescript_specifier_hash_id];
-	log::trace(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got import_specifier",__FILE__, __LINE__));
+	log::debug(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got import_specifier",__FILE__, __LINE__));
 	auto typescript_module_namespace_object = typescript_import_specifier->get_module()->GetModuleNamespace()->ToObject(context).ToLocalChecked();
-	log::trace(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got namespace object",__FILE__, __LINE__));
+	log::debug(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got namespace object",__FILE__, __LINE__));
 	auto v8_function_name_string = utilities::StringToV8String(isolate, "compile");
 	v8::Local<v8::Value> v8_function_value;
 	if(!typescript_module_namespace_object->Get(context, v8_function_name_string).ToLocal(&v8_function_value)) {
 		std::cerr << "Error getting function." << std::endl;
 	}
-	log::trace(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got v8_function_value object",__FILE__, __LINE__));
+	log::debug(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got v8_function_value object",__FILE__, __LINE__));
 	typescript_compile_function = v8::Local<v8::Function>::Cast(v8_function_value);
-	log::trace(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got typescript_compile_function",__FILE__, __LINE__));
+	log::debug(log::Message("slim::module::resolver::initialize_typescript_compiler()", "got typescript_compile_function",__FILE__, __LINE__));
 	if(typescript_compile_function.IsEmpty()) {
 		std::cerr << "typescript_compile_function.IsEmpty()" << std::endl;
 	}
 	is_typescript_compiler_initialized = true;
 	log::trace(log::Message("slim::module::resolver::initialize_typescript_compiler()", std::string("ends => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 }
+void slim::module::resolver::receive_compiled_file_name(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	typescript_compiled_specifier_string_url = utilities::v8ValueToString(args.GetIsolate(), args[0]);
+}
 void slim::module::resolver::import_specifier::call_typescript_compiler() {
 	log::trace(log::Message("slim::module::resolver::call_typescript_compiler()", std::string("begins => " + specifier_string_url).c_str(),__FILE__, __LINE__));
-    const int argc = 1;
-    v8::Local<v8::Value> args[argc] = {utilities::StringToV8String(isolate, specifier_string_url)};
+	auto receive_compiled_file_name_function_template = v8::FunctionTemplate::New(isolate, slim::module::resolver::receive_compiled_file_name);
+	auto receive_compiled_file_name_function = receive_compiled_file_name_function_template->GetFunction(context).ToLocalChecked();
+    const int argc = 2;
+    v8::Local<v8::Value> args[argc] = {utilities::StringToV8String(isolate, specifier_string_url),receive_compiled_file_name_function};
 	auto call_result = typescript_compile_function->Call(context, context->Global(), argc, args).ToLocalChecked();
 	log::debug(log::Message("slim::module::resolver::run_typescript()", std::string("have called typescript_compile_function => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 	if(call_result.IsEmpty()) {
 		std::cerr << "Error calling function." << std::endl;
 	}
-	set_source_code(utilities::v8ValueToString(isolate, call_result));
 	log::trace(log::Message("slim::module::resolver::call_typescript_compiler()", std::string("ends => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 }
 void IterateFixedArray(v8::Isolate* isolate, v8::Local<v8::FixedArray> fixed_array) {
@@ -220,9 +230,9 @@ void IterateFixedArray(v8::Isolate* isolate, v8::Local<v8::FixedArray> fixed_arr
   } */
 v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 		v8::Local<v8::Context> context, v8::Local<v8::String> v8_specifier_name, v8::Local<v8::FixedArray> import_assertions, v8::Local<v8::Module> referrer) {
-	log::trace(log::Message("slim::module::resolver::module_call_back_resolver()","begins", __FILE__, __LINE__));
-	log::debug(log::Message("slim::module::resolver::module_call_back_resolver()",std::string("import_assertions->Length() => " + std::to_string(import_assertions->Length())).c_str(), __FILE__, __LINE__));
 	auto isolate = context->GetIsolate();
+	log::trace(log::Message("slim::module::resolver::module_call_back_resolver()",std::string("begins => " + utilities::v8StringToString(isolate, v8_specifier_name)).c_str(), __FILE__, __LINE__));
+	log::debug(log::Message("slim::module::resolver::module_call_back_resolver()",std::string("import_assertions->Length() => " + std::to_string(import_assertions->Length())).c_str(), __FILE__, __LINE__));
 	v8::TryCatch try_catch(isolate);
 	std::string specifier_name_string = utilities::v8StringToString(isolate, v8_specifier_name);
 	//IterateFixedArray(isolate, referrer->GetModuleRequests());
@@ -304,16 +314,32 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 				}
 			}
 		}
+		else {
+			import_specifier module_specifier(specifier_name_string, context, false, referrer);
+			module_specifier.compile_module(); // compile module so we can get at the hash id during module imports
+			log::trace(log::Message("slim::module::resolver::module_call_back_resolver()", std::string("get_module_status_string() => " + module_specifier.get_module_status_string()).c_str(),__FILE__, __LINE__));
+			if(module_specifier.get_module()->GetStatus() == v8::Module::Status::kErrored) {
+				isolate->ThrowException(module_specifier.get_module()->GetException());
+			}
+			else {
+				cache_import_specifier(std::make_shared<import_specifier>(module_specifier)); // now cache it before instantiate_module
+				module_specifier.instantiate_module(); // instantiate_module causes import recursion where we need hash id to get at the parent path of current import
+				if(module_specifier.get_module()->GetStatus() == v8::Module::Status::kErrored) {
+					isolate->ThrowException(module_specifier.get_module()->GetException());
+				}
+				current_module_hash_id = module_specifier.get_hash_id();
+				log::debug(log::Message("slim::module::resolver::module_call_back_resolver()", std::string("get_module_status_string() => " + module_specifier.get_module_status_string()).c_str(),__FILE__, __LINE__));
+			}
+		}
 	}
     catch(const slim::common::SlimFileException& _error) {
         std::string error_message = _error.message + ", path => " + _error.path;
         log::error(log::Message(_error.call.c_str(), error_message.c_str(),__FILE__, __LINE__));
 		isolate->ThrowException(utilities::StringToV8String(isolate, "Module not found: " + specifier_name_string));
     }
-/* 	if(try_catch.HasCaught()) {
-		error(Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
-		slim::gv8::ReportException(&try_catch);
-	} */
+	catch (...) {
+		log::error(log::Message("slim::module::resolver::module_call_back_resolver()",std::string("caught unknown error => " + specifier_name_string).c_str(), __FILE__, __LINE__));
+	}
 	if(by_hash_id_cache.contains(current_module_hash_id)) {
 		log::trace(log::Message("slim::module::resolver::module_call_back_resolver()",
 			std::string("ends => " + (by_hash_id_cache[current_module_hash_id]->get_specifier_url().length() > 0 
@@ -321,8 +347,28 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 							+ " => " + std::to_string(current_module_hash_id)).c_str(), __FILE__, __LINE__));
 		return by_hash_id_cache[current_module_hash_id]->get_module();
 	}
-	log::trace(log::Message("slim::module::resolver::module_call_back_resolver()",std::string("ends empty module => " + specifier_name_string).c_str(), __FILE__, __LINE__));
-	return v8::MaybeLocal<v8::Module>();
+
+		isolate->ThrowError(utilities::StringToV8String(isolate, "Module is empty: " + specifier_name_string));
+		isolate->ThrowException(utilities::StringToV8String(isolate, "Module is empty: " + specifier_name_string));
+	if(try_catch.HasCaught()) {
+		log::error(log::Message("slim::module::resolver::module_call_back_resolver()", "try_catch.HasCaught()",__FILE__, __LINE__));
+		log::error(log::Message("slim::module::resolver::module_call_back_resolver()", utilities::v8ValueToString(isolate, try_catch.Exception()).c_str(),__FILE__, __LINE__));
+		slim::gv8::ReportException(&try_catch);
+	}
+	log::error(log::Message("slim::module::resolver::module_call_back_resolver()",std::string("ends empty module => " + specifier_name_string).c_str(), __FILE__, __LINE__));
+/* 	const size_t frameLimit = 100; // Set a limit for the number of frames to capture
+    v8::Local<v8::StackTrace> stackTrace = v8::StackTrace::CurrentStackTrace(isolate, frameLimit);
+    int frameCount = stackTrace->GetFrameCount();
+    for (int i = 0; i < frameCount; ++i) {
+        v8::Local<v8::StackFrame> frame = stackTrace->GetFrame(isolate, i);
+        v8::Local<v8::String> functionName = frame->GetFunctionName();
+        v8::Local<v8::String> scriptName = frame->GetScriptName();
+        int lineNumber = frame->GetLineNumber();
+        int column = frame->GetColumn();
+		log::error(log::Message(utilities::v8StringToString(isolate, scriptName).c_str(),utilities::v8StringToString(isolate, functionName).c_str(),__FILE__, __LINE__));
+    } */
+
+	//return v8::MaybeLocal<v8::Module>();
 }
 std::shared_ptr<slim::module::resolver::import_specifier> slim::module::resolver::resolve_imports(
 											std::string entry_script_file_name_string_in, v8::Local<v8::Context> context, const bool is_entry_point_value = false) {
