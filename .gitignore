@@ -25,3 +25,4 @@ src/slim
 *.lo
 *.la
 .vscode
+src/slim_builtins_typescript_initial_library.cpp
