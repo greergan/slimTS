@@ -1,10 +1,13 @@
 #include <filesystem>
+#include <memory>
 #include <v8.h>
 #include <slim/builtins/typescript.h>
 #include <slim/common/fetch_and_apply_macros.h>
 #include <slim/gv8.h>
 #include <slim/common/memory_mapper.h>
 #include <slim/module_resolver.h>
+
+#include <iostream>
 using namespace slim::common;
 namespace slim::builtins::typescript {
 	static int hash_id;
@@ -13,6 +16,14 @@ namespace slim::builtins::typescript {
 }
 int slim::builtins::typescript::get_specifier_module_hash_id() {
 	return hash_id;
+}
+void slim::builtins::typescript::put_file_content(std::string file_name_url_string, std::string file_data_string) {
+	log::trace(log::Message("slim::builtins::typescript::put_file_content()", std::string("begins => " + file_name_url_string).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("slim::builtins::typescript::put_file_content()", std::string("file size before storage => " + std::to_string(file_data_string.size())).c_str(),__FILE__, __LINE__));
+	//typescript_map_container[file_name_url_string] = std::make_shared<std::string>(file_data_string);
+	slim::common::memory_mapper::write("typescript_chain", file_name_url_string, file_data_string);
+	//log::debug(log::Message("slim::builtins::typescript::put_file_content()", std::string("file size after storage => " + std::to_string(typescript_map_container[file_name_url_string]->size())).c_str(),__FILE__, __LINE__));
+	log::trace(log::Message("slim::builtins::typescript::put_file_content()",std::string("ends => " + file_name_url_string).c_str(),__FILE__, __LINE__));
 }
 std::shared_ptr<std::string> slim::builtins::typescript::get_file_content_pointer(std::string file_name_string) {
 	log::trace(log::Message("slim::builtins::typescript::get_file_content_pointer()",std::string("begins => " + file_name_string).c_str(),__FILE__, __LINE__));

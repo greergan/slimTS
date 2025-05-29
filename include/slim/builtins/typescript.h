@@ -9,6 +9,7 @@
 namespace slim::builtins::typescript {
 	std::shared_ptr<std::string> get_file_content_pointer(std::string file_name_string);
 	int get_specifier_module_hash_id();
+	void put_file_content(std::string file_name_string, std::string file_data_string);
 	void initialize(v8::Isolate* isolate);
 }
 #endif
