@@ -33,6 +33,7 @@ namespace slim::module::resolver {
 			std::string v8_module_status;
 			std::string specifier_string; // .js, .mjs, .ts file name
 			std::string specifier_string_url;
+			std::string compiled_specifier_string_url;
 			std::string specifier_string_original;
 			std::string specifier_source_code;
 			std::string specifier_original_source_code;
