@@ -1,0 +1,1 @@
+import {memoryAdaptor} from 'fs'
