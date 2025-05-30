@@ -5,7 +5,7 @@
  */
 #include <sys/stat.h>
 #include <cstdio> 
-
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <unordered_map>
@@ -25,6 +25,7 @@ namespace slim::plugin::fs {
 	void _close(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void fstat(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void _open(const v8::FunctionCallbackInfo<v8::Value>& args);
+	void read_directory_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void readFileUtf8(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void stat(const v8::FunctionCallbackInfo<v8::Value>& args);;
 	void memory_adaptor(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -190,6 +191,20 @@ void slim::plugin::fs::_open(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	args.GetReturnValue().Set(v8::Int32::New(isolate, open_files[file_name_string].file_handle));
 	log::trace(log::Message("slim::plugin::fs::open()", "ends", __FILE__, __LINE__));
 }
+void slim::plugin::fs::read_directory_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	auto* isolate = args.GetIsolate();
+	auto context = isolate->GetCurrentContext();
+	auto directory_string = utilities::v8ValueToString(isolate, args[0]);
+	log::trace(log::Message("slim::plugin::fs::read_directory_sync()", std::string("begins => " + directory_string).c_str(), __FILE__, __LINE__));
+	auto entries_array = v8::Array::New(isolate);
+	int count = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(directory_string)) {
+		entries_array->Set(context, count, utilities::StringToV8String(isolate, entry.path().string())) ;
+		count++;
+    }
+	args.GetReturnValue().Set(entries_array);
+	log::trace(log::Message("slim::plugin::fs::read_directory_sync()", std::string("ends => " + directory_string).c_str(), __FILE__, __LINE__));
+}
 void slim::plugin::fs::readFileUtf8(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	log::trace(log::Message("slim::plugin::fs::readFileUtf8()", "begins", __FILE__, __LINE__));
 	v8::Isolate* isolate = args.GetIsolate();
@@ -318,6 +333,7 @@ extern "C" void expose_plugin(v8::Isolate* isolate) {
 	fs_plugin.add_function("fstat", slim::plugin::fs::fstat);
 	fs_plugin.add_function("memoryAdaptor", slim::plugin::fs::memory_adaptor);
 	fs_plugin.add_function("open", slim::plugin::fs::_open);
+	fs_plugin.add_function("readdirSync", slim::plugin::fs::read_directory_sync);
 	fs_plugin.add_function("readFileUtf8", slim::plugin::fs::readFileUtf8);
 	slim::plugin::plugin realpathSync_plugin(isolate, "realpathSync");
 	realpathSync_plugin.add_function("native", slim::plugin::fs::realpathSync::native);
