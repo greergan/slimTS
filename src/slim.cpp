@@ -71,13 +71,6 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 		throw("Error creating context");
 	}
 	v8::Context::Scope context_scope(context);
-	log::debug(log::Message("slim::run","creating primordials object",__FILE__, __LINE__));
-	context->Global()->Set(context, slim::utilities::StringToV8Name(isolate, "primordials"), v8::Object::New(isolate));
-	log::debug(log::Message("slim::run","created primordials object",__FILE__, __LINE__));
-	log::debug(log::Message("slim::run","calling slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
-	std::string primordials_file_name_string("/home/greergan/product/slim/src/plugins/nodejs/lib/internal/per_context/primordials.min.js");
-	slim::gv8::FetchCompileAndRunJSFunction(context, primordials_file_name_string);
-	log::debug(log::Message("slim::run","called slim::gv8::FetchCompileAndRunJSFunction()",__FILE__, __LINE__));
 	log::debug(log::Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
 	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
 	log::debug(log::Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
