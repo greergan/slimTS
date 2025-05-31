@@ -230,15 +230,16 @@ void slim::plugin::fs::write_file_sync(const v8::FunctionCallbackInfo<v8::Value>
 	log::trace(log::Message("slim::plugin::fs::write_file_sync()", "ends", __FILE__, __LINE__));
 }
 void slim::plugin::fs::read_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::fs::read_file_sync()", "begins",__FILE__, __LINE__));
+	log::trace(log::Message("slim::plugin::fs::read_file_sync()", std::string("begins number of args => " + std::to_string(args.Length())).c_str() ,__FILE__, __LINE__));
 	auto* isolate = args.GetIsolate();
-	if(args.Length() != 1) {
+/* 	if(args.Length() != 1) {
 		isolate->ThrowError(utilities::StringToString(isolate, "slim::plugin::fs::read_file_sync requires 1 string arguments"));
-	}
+	} */
 /* 	if(args[0]->IsUndefined() || args[1]->IsUndefined() || !args[0]->IsString() || !args[1]->IsString()) {
 		isolate->ThrowError(utilities::StringToString(isolate, "slim::plugin::fs::read_file_sync requires two string argument"));
 	} */
-	//log::debug(log::Message("slim::plugin::fs::read_file_sync()", "",__FILE__, __LINE__));
+	auto t = utilities::v8ValueToString(isolate, args[1]);
+	log::debug(log::Message("slim::plugin::fs::read_file_sync()", utilities::v8ValueToString(isolate, args[1]).c_str(),__FILE__, __LINE__));
 	auto file_name_string = utilities::v8ValueToString(isolate, args[0]);
 	//log::debug(log::Message("slim::plugin::fs::read_file_sync()", file_name_string.c_str(),__FILE__, __LINE__));
 	auto file_content_string = fetch::fetch(file_name_string).str();
