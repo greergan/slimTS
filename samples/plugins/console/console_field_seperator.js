@@ -1,0 +1,11 @@
+//console.clear();
+//console.configuration.info.field_separator.inverse = true;
+console.info("beginning fieldSeparator test");
+console.configuration.fieldSeparator = "|";
+console.info("fieldSeparator should now be '|'");
+console.configuration.fieldSeparator = "?";
+console.info("fieldSeparator should now be '?'");
+console.configuration.fieldSeparator = "!";
+console.info("fieldSeparator should now be '!'");
+console.configuration.fieldSeparator = ":";
+console.info("ending fieldSeparator test");
