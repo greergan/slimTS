@@ -30,7 +30,7 @@ void slim::plugin::loader::load_plugin(v8::Isolate* isolate, const std::string p
     slim::common::log::trace(slim::common::log::Message("slim::plugin::loader", "begins", __FILE__, __LINE__));
     auto open_bits = global_scope ? RTLD_NOW | RTLD_GLOBAL : RTLD_NOW;
     std::string plugin_so_path = plugin_library_path + plugin_name_string + ".so";
-    if(!loaded_plugins[plugin_name_string]) {
+    if(true) {
         slim::common::log::debug(slim::common::log::Message("slim::plugin::loader", std::string("loading plugin => " + plugin_name_string).c_str(), __FILE__, __LINE__));
         loaded_plugins[plugin_name_string] = dlopen(plugin_so_path.c_str(), open_bits);
         if(!loaded_plugins[plugin_name_string]) {
