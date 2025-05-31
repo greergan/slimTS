@@ -1,7 +1,7 @@
 AC_COPYRIGHT([[Copyright 2022-2025 Jeff Greer. All rights reserved. Restrictions apply, see COPYRIGHT and LICENSE files.]])
-AC_INIT([slim], [0.1.0])
-libdir='${exec_prefix}/lib/slim'
-moduledir='${exec_prefix}/share/slim'
+AC_INIT([slimTS], [0.1.0])
+libdir='${exec_prefix}/lib/slimTS'
+moduledir='${exec_prefix}/share/slimTS'
 AC_ARG_WITH(google-v8-dir,       [--with-google-v8-dir=DIR   path to installed Google v8 source directory])
 AC_ARG_WITH(librdkafka,          [--with-librdkafka=DIR   path to librdkafka installation filesystem i.e. /usr/local])
 AC_LANG_PUSH([C++])
