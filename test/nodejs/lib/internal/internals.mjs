@@ -1,1 +1,0 @@
-import errors from 'internal/errors'
