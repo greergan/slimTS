@@ -6,7 +6,7 @@
 #include <slim/utilities.h>
 #include <slim/plugin/loader.h>
 namespace slim::plugin::loader {
-    std::string plugin_library_path = slim::path::getExecutableDir() + "/../lib/slim/";
+    std::string plugin_library_path = slim::path::getExecutableDir() + "/../lib/slimTS/";
     std::unordered_map<std::string, void*> loaded_plugins = {};
 }
 void slim::plugin::loader::load(const v8::FunctionCallbackInfo<v8::Value>& args) {
