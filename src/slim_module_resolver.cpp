@@ -22,7 +22,7 @@
 namespace slim::module::resolver {
 	using namespace slim;
 	using namespace slim::common;
-	static std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "path", "process", "node"};
+	static std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "path", "process", "memoryAdaptor"};
 	std::array<char*, 3> file_extensions = {".mjs", ".ts", ".js"};
 	std::vector<std::string> search_paths = {
 		"",
