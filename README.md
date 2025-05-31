@@ -50,7 +50,7 @@ librdkafa from Confluent Inc.
 1. clone the source from [GitHub](https://github.com/confluentinc/librdkafka)
   librdkafka - compiled and installed, it must be configured as follows along with [these requirements](https://github.com/confluentinc/librdkafka?tab=readme-ov-file#build-from-source). slimTS does not support the optional packages that are listed at this time.
 ```
-./configure --enable-static --prefix=/path/to/instal/to
+./configure --enable-static --prefix=/path/to/install/to
 ```
 [boringssl](https://boringssl.googlesource.com/boringssl) by Google  
 The slimTS ssl plugin is linked against the boringssl libraries
@@ -79,7 +79,7 @@ autoreconf -vfi
 ```
 3. Run the configure script
 ```
-./configure --prefix=/path/to/instal \
+./configure --prefix=/path/to/install \
     --with-google-v8-dir=/path/to/google/v8 \
 			--with-librdkafka=/path/to/installed/librdkafka
 ```  
@@ -98,7 +98,7 @@ The output executable is named slim. It expects to be installed properly so that
 slim samples/hello_world.mjs
 ```
 
-##Plugin modules
+## Plugin modules  
 The bare minimum of functionality is present in most plugins. There will be an attempt to match standard Node.js interfaces over time.
 - boringssl
 - console
