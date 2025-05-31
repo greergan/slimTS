@@ -12,13 +12,12 @@
 #include <slim/gv8.h>
 #include <slim/common/fetch.h>
 #include <slim/common/log.h>
-#include <slim/common/memory_mapper.h>
 #include <slim/plugin.hpp>
 /* #include <simdutf/simdutf.h>
 #include <simdutf/simdutf.cpp> */
-	using namespace slim::common;
-	using namespace slim;
 namespace slim::plugin::fs {
+	using namespace slim;
+	using namespace slim::common;
 	class SlimFileBuf;
 	struct FileInfo;
 	static std::unordered_map<std::string, FileInfo> open_files;
@@ -26,17 +25,13 @@ namespace slim::plugin::fs {
 	void fstat(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void _open(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void read_directory_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
+	void read_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void readFileUtf8(const v8::FunctionCallbackInfo<v8::Value>& args);
-	void stat(const v8::FunctionCallbackInfo<v8::Value>& args);;
-	void memory_adaptor(const v8::FunctionCallbackInfo<v8::Value>& args);
+	void stat_sync(const v8::FunctionCallbackInfo<v8::Value>& args);;
+	void write_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
+	void write_to_file_descriptor_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
 	namespace realpathSync {
 		void native(const v8::FunctionCallbackInfo<v8::Value>& args);
-	}
-	namespace memory_mapper {
-		void read_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
-		void write_to_file_descriptor_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
-		void write_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
-		void stat_sync(const v8::FunctionCallbackInfo<v8::Value>& args);
 	}
 	void is_true(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void is_false(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -199,7 +194,7 @@ void slim::plugin::fs::read_directory_sync(const v8::FunctionCallbackInfo<v8::Va
 	auto entries_array = v8::Array::New(isolate);
 	int count = 0;
     for (const auto& entry : std::filesystem::directory_iterator(directory_string)) {
-		entries_array->Set(context, count, utilities::StringToV8String(isolate, entry.path().string())) ;
+		entries_array->Set(context, count, utilities::StringToV8String(isolate, entry.path().filename().string())) ;
 		count++;
     }
 	args.GetReturnValue().Set(entries_array);
@@ -212,9 +207,8 @@ void slim::plugin::fs::readFileUtf8(const v8::FunctionCallbackInfo<v8::Value>& a
 		isolate->ThrowException(utilities::StringToV8String(isolate, "slim::plugin::fs::readFileUtf8() requires => file_name"));
 	}
 	std::string file_name = utilities::v8ValueToString(isolate, args[0]);
-	using namespace slim::common::fetch;
 	//simdutf::convert_latin1_to_utf8_safe(src, src_len, dst, dst_len);
-	args.GetReturnValue().Set(utilities::StringToV8String(isolate, fetch(file_name).str()));
+	args.GetReturnValue().Set(utilities::StringToV8String(isolate, fetch::fetch(file_name).str()));
 	log::trace(log::Message("slim::plugin::fs::readFileUtf8()", "ends", __FILE__, __LINE__));
 }
 void slim::plugin::fs::realpathSync::native(const v8::FunctionCallbackInfo<v8::Value>& args) {
@@ -222,31 +216,42 @@ void slim::plugin::fs::realpathSync::native(const v8::FunctionCallbackInfo<v8::V
 	//slim::utilities::BoolToV8Boolean(isolate, false);
 	//args.GetReturnValue().Set(slim::utilities::BoolToV8Boolean(isolate, false));
 }
-void slim::plugin::fs::memory_mapper::read_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::read_file_sync()", "begins",__FILE__, __LINE__));
+void slim::plugin::fs::write_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	log::trace(log::Message("slim::plugin::fs::write_file_sync()", "begins", __FILE__, __LINE__));
 	auto* isolate = args.GetIsolate();
-	if(args.Length() != 2) {
-		isolate->ThrowError(utilities::StringToString(isolate, "fs.memoryAdaptor requires two string arguments"));
+	auto file_name_string = utilities::v8ValueToString(isolate, args[0]);
+	auto file_content_string = utilities::v8ValueToString(isolate, args[1]);
+	slim::common::log::debug(true);
+	std::ofstream output_file_stream(file_name_string);
+	if(output_file_stream.is_open()) {
+		output_file_stream << file_content_string;
+		output_file_stream.close();
+	}
+	log::trace(log::Message("slim::plugin::fs::write_file_sync()", "ends", __FILE__, __LINE__));
+}
+void slim::plugin::fs::read_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	log::trace(log::Message("slim::plugin::fs::read_file_sync()", "begins",__FILE__, __LINE__));
+	auto* isolate = args.GetIsolate();
+	if(args.Length() != 1) {
+		isolate->ThrowError(utilities::StringToString(isolate, "slim::plugin::fs::read_file_sync requires 1 string arguments"));
 	}
 /* 	if(args[0]->IsUndefined() || args[1]->IsUndefined() || !args[0]->IsString() || !args[1]->IsString()) {
-		isolate->ThrowError(utilities::StringToString(isolate, "fs.memoryAdaptor requires two string argument"));
+		isolate->ThrowError(utilities::StringToString(isolate, "slim::plugin::fs::read_file_sync requires two string argument"));
 	} */
-	//log::debug(log::Message("slim::plugin::fs::memory_mapper::read_file_sync()", "",__FILE__, __LINE__));
-	auto chain_handle_string = utilities::v8ValueToString(isolate, args[0]);
-	auto file_name_string = utilities::v8ValueToString(isolate, args[1]);
-	//log::debug(log::Message("slim::plugin::fs::memory_mapper::read_file_sync()", chain_handle_string.c_str(),__FILE__, __LINE__));
-	//log::debug(log::Message("slim::plugin::fs::memory_mapper::read_file_sync()", file_name_string.c_str(),__FILE__, __LINE__));
-	auto file_content = slim::common::memory_mapper::read(chain_handle_string, file_name_string);
-	//log::debug(log::Message("slim::plugin::fs::memory_mapper::read_file_sync()", std::string("file size => " + std::to_string(file_content.get()->size())).c_str(),__FILE__, __LINE__));
-	args.GetReturnValue().Set(utilities::StringToV8String(isolate, *file_content.get()));
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::read_file_sync()", "ends",__FILE__, __LINE__));
+	//log::debug(log::Message("slim::plugin::fs::read_file_sync()", "",__FILE__, __LINE__));
+	auto file_name_string = utilities::v8ValueToString(isolate, args[0]);
+	//log::debug(log::Message("slim::plugin::fs::read_file_sync()", file_name_string.c_str(),__FILE__, __LINE__));
+	auto file_content_string = fetch::fetch(file_name_string).str();
+	//log::debug(log::Message("slim::plugin::fs::read_file_sync()", std::string("file size => " + std::to_string(file_content.get()->size())).c_str(),__FILE__, __LINE__));
+	args.GetReturnValue().Set(utilities::StringToV8String(isolate, file_content_string));
+	log::trace(log::Message("slim::plugin::fs::read_file_sync()", "ends",__FILE__, __LINE__));
 }
-void slim::plugin::fs::memory_mapper::stat_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::stat_sync()", "begins",__FILE__, __LINE__));
+void slim::plugin::fs::stat_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	log::trace(log::Message("slim::plugin::fs::stat_sync()", "begins",__FILE__, __LINE__));
 	auto* isolate = args.GetIsolate();
 	auto context = isolate->GetCurrentContext();
-	if(common::memory_mapper::exists(utilities::v8ValueToString(isolate, args[0]), utilities::v8ValueToString(isolate, args[1]))) {
-		log::debug(log::Message("slim::plugin::fs::memory_mapper::stat_sync()", "a file exists",__FILE__, __LINE__));
+/* 	if(common::exists(utilities::v8ValueToString(isolate, args[0]), utilities::v8ValueToString(isolate, args[1]))) {
+		log::debug(log::Message("slim::plugin::fs::stat_sync()", "a file exists",__FILE__, __LINE__));
 		auto stats_object = v8::Object::New(isolate);
 		auto is_true_function_template = v8::FunctionTemplate::New(isolate, is_true);
 		auto is_true_function = is_true_function_template->GetFunction(context).ToLocalChecked();
@@ -255,10 +260,10 @@ void slim::plugin::fs::memory_mapper::stat_sync(const v8::FunctionCallbackInfo<v
 		auto is_false_function = is_false_function_template->GetFunction(context).ToLocalChecked();
 		stats_object->Set(context, utilities::StringToV8String(isolate, "isDirectory"), is_false_function);
 		args.GetReturnValue().Set(stats_object);
-		log::debug(log::Message("slim::plugin::fs::memory_mapper::stat_sync()", "a file exists",__FILE__, __LINE__));
+		log::debug(log::Message("slim::plugin::fs::stat_sync()", "a file exists",__FILE__, __LINE__));
 	}
-	else if(common::memory_mapper::exists("directories", utilities::v8ValueToString(isolate, args[1]))) {
-		log::debug(log::Message("slim::plugin::fs::memory_mapper::stat_sync()", "a directory exists",__FILE__, __LINE__));
+	else if(common::exists("directories", utilities::v8ValueToString(isolate, args[1]))) {
+		log::debug(log::Message("slim::plugin::fs::stat_sync()", "a directory exists",__FILE__, __LINE__));
 		auto stats_object = v8::Object::New(isolate);
 		auto is_false_function_template = v8::FunctionTemplate::New(isolate, is_false);
 		auto is_false_function = is_false_function_template->GetFunction(context).ToLocalChecked();
@@ -267,74 +272,35 @@ void slim::plugin::fs::memory_mapper::stat_sync(const v8::FunctionCallbackInfo<v
 		auto is_true_function = is_true_function_template->GetFunction(context).ToLocalChecked();
 		stats_object->Set(context, utilities::StringToV8String(isolate, "isDirectory"), is_true_function);
 		args.GetReturnValue().Set(stats_object);
-		log::debug(log::Message("slim::plugin::fs::memory_mapper::stat_sync()", "a directory exists",__FILE__, __LINE__));
+		log::debug(log::Message("slim::plugin::fs::stat_sync()", "a directory exists",__FILE__, __LINE__));
 	}
 	else {
 		args.GetReturnValue().SetUndefined();
-		log::debug(log::Message("slim::plugin::fs::memory_mapper::stat_sync()", "found nothing return => undefined",__FILE__, __LINE__));
-	}
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::stat_sync()", "ends",__FILE__, __LINE__));
-}
-void slim::plugin::fs::memory_mapper::write_file_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::write_file_sync()", "begins",__FILE__, __LINE__));
-	auto* isolate = args.GetIsolate();
-	auto chain_handle_string = utilities::v8ValueToString(isolate, args[0]);
-	auto file_name_string = utilities::v8ValueToString(isolate, args[1]);
-	auto file_data_string = utilities::v8ValueToString(isolate, args[2]);
-	log::debug(log::Message("slim::plugin::fs::memory_mapper::write_file_sync()", chain_handle_string.c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("slim::plugin::fs::memory_mapper::write_file_sync()", file_name_string.c_str(),__FILE__, __LINE__));
-	slim::common::memory_mapper::write(chain_handle_string, file_name_string, file_data_string);
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::write_file_sync()", "ends",__FILE__, __LINE__));
-}
-void slim::plugin::fs::memory_mapper::write_to_file_descriptor_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::write_to_file_descriptor_sync()", "begins",__FILE__, __LINE__));
-	auto* isolate = args.GetIsolate();
-	auto chain_handle_string = utilities::v8ValueToString(isolate, args[0]);
-	auto file_name_string = utilities::v8ValueToString(isolate, args[1]);
-	auto file_data_string = utilities::v8ValueToString(isolate, args[2]);
-	log::debug(log::Message("slim::plugin::fs::memory_mapper::write_to_file_descriptor_sync()", chain_handle_string.c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("slim::plugin::fs::memory_mapper::write_to_file_descriptor_sync()", file_name_string.c_str(),__FILE__, __LINE__));
-	slim::common::memory_mapper::write(chain_handle_string, file_name_string, file_data_string);
-	log::trace(log::Message("slim::plugin::fs::memory_mapper::write_to_file_descriptor_sync()", "begins",__FILE__, __LINE__));
-}
-void slim::plugin::fs::memory_adaptor(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::fs::memory_adaptor()", "begins",__FILE__, __LINE__));
-	v8::Isolate* isolate = args.GetIsolate();
-/* 	if(args[0]->IsUndefined() || !args[0]->IsString()) {
-		isolate->ThrowError(utilities::StringToString(isolate, "fs.memoryAdaptor requires a single string argument"));
-		log::error(log::Message("slim::plugin::fs::memory_adaptor()", "error",__FILE__, __LINE__));
+		log::debug(log::Message("slim::plugin::fs::stat_sync()", "found nothing return => undefined",__FILE__, __LINE__));
 	} */
-	log::debug(log::Message("slim::plugin::fs::memory_adaptor()", "",__FILE__, __LINE__));
-	auto context = isolate->GetCurrentContext();
-	auto read_file_function_template = v8::FunctionTemplate::New(isolate, memory_mapper::read_file_sync);
-	auto write_file_function_template = v8::FunctionTemplate::New(isolate, memory_mapper::write_file_sync);
-	auto write_file_descriptor_function_template = v8::FunctionTemplate::New(isolate, memory_mapper::write_to_file_descriptor_sync);
-	auto stat_sync_function_template = v8::FunctionTemplate::New(isolate, memory_mapper::stat_sync);
-	log::debug(log::Message("slim::plugin::fs::memory_adaptor()", "function templates created",__FILE__, __LINE__));
-	auto read_file_function = read_file_function_template->GetFunction(context).ToLocalChecked();
-	auto write_file_function = write_file_function_template->GetFunction(context).ToLocalChecked();
-	auto write_file_descriptor_function = write_file_descriptor_function_template->GetFunction(context).ToLocalChecked();
-	auto stat_sync_function = stat_sync_function_template->GetFunction(context).ToLocalChecked();
-	log::debug(log::Message("slim::plugin::fs::memory_adaptor()", "functions created",__FILE__, __LINE__));
-	auto memory_adaptor_object = v8::Object::New(isolate);
-	log::debug(log::Message("slim::plugin::fs::memory_adaptor()", "created memory_adaptor_object",__FILE__, __LINE__));
-	memory_adaptor_object->Set(context, utilities::StringToV8String(isolate, "readFileSync"), read_file_function);
-	memory_adaptor_object->Set(context, utilities::StringToV8String(isolate, "writeSync"), write_file_descriptor_function);
-	memory_adaptor_object->Set(context, utilities::StringToV8String(isolate, "writeFileSync"), write_file_function);
-	memory_adaptor_object->Set(context, utilities::StringToV8String(isolate, "statSync"), stat_sync_function);
-	log::debug(log::Message("slim::plugin::fs::memory_adaptor()", "set memory_adaptor_object functions",__FILE__, __LINE__));
-	args.GetReturnValue().Set(memory_adaptor_object);
-	log::trace(log::Message("slim::plugin::fs::memory_adaptor()", "ends",__FILE__, __LINE__));
+	log::trace(log::Message("slim::plugin::fs::stat_sync()", "ends",__FILE__, __LINE__));
 }
+
+void slim::plugin::fs::write_to_file_descriptor_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	log::trace(log::Message("slim::plugin::fs::write_to_file_descriptor_sync()", "begins",__FILE__, __LINE__));
+	auto* isolate = args.GetIsolate();
+	auto file_name_string = utilities::v8ValueToString(isolate, args[0]);
+	auto file_data_string = utilities::v8ValueToString(isolate, args[1]);
+	log::debug(log::Message("slim::plugin::fs::write_to_file_descriptor_sync()", file_name_string.c_str(),__FILE__, __LINE__));
+	
+	log::trace(log::Message("slim::plugin::fs::write_to_file_descriptor_sync()", "begins",__FILE__, __LINE__));
+}
+
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin fs_plugin(isolate, "fs");
 	fs_plugin.add_function("close", slim::plugin::fs::_close);
 	fs_plugin.add_function("closeSync", slim::plugin::fs::_close);
 	fs_plugin.add_function("fstat", slim::plugin::fs::fstat);
-	fs_plugin.add_function("memoryAdaptor", slim::plugin::fs::memory_adaptor);
 	fs_plugin.add_function("open", slim::plugin::fs::_open);
 	fs_plugin.add_function("readdirSync", slim::plugin::fs::read_directory_sync);
 	fs_plugin.add_function("readFileUtf8", slim::plugin::fs::readFileUtf8);
+	fs_plugin.add_function("readFileSync", slim::plugin::fs::read_file_sync);
+	fs_plugin.add_function("writeFileSync", slim::plugin::fs::write_file_sync);
 	slim::plugin::plugin realpathSync_plugin(isolate, "realpathSync");
 	realpathSync_plugin.add_function("native", slim::plugin::fs::realpathSync::native);
 	fs_plugin.add_plugin("realpathSync", &realpathSync_plugin);
