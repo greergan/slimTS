@@ -2,10 +2,17 @@
 #include <slim/common/memory_mapper.h>
 #include <slim/common/log.h>
 using namespace slim::common;
-void slim::common::memory_mapper::attach(std::string pipe_name_string, pipe_map_pointer file_map) {
+void slim::common::memory_mapper::attach(std::string pipe_name_string) {
 	log::trace(log::Message("slim::common::memory_mapper::attach()", std::string("begins => " + pipe_name_string).c_str(), __FILE__, __LINE__));
-	pipes[pipe_name_string] = file_map;
+	if(!pipes.contains(pipe_name_string)) {
+		create(pipe_name_string);
+	}
 	log::trace(log::Message("slim::common::memory_mapper::attach()", std::string("ends => " + pipe_name_string).c_str(), __FILE__, __LINE__));
+}
+void slim::common::memory_mapper::attach(std::string pipe_name_string, pipe_map_pointer file_map) {
+	log::trace(log::Message("slim::common::memory_mapper::attach()", std::string("begins file_map => " + pipe_name_string).c_str(), __FILE__, __LINE__));
+	pipes[pipe_name_string] = file_map;
+	log::trace(log::Message("slim::common::memory_mapper::attach()", std::string("ends => file_map" + pipe_name_string).c_str(), __FILE__, __LINE__));
 }
 void slim::common::memory_mapper::create(std::string pipe_name_string) {
 	log::trace(log::Message("slim::common::memory_mapper::create()", std::string("begins => " + pipe_name_string).c_str(), __FILE__, __LINE__));
