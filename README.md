@@ -98,7 +98,7 @@ The output executable is named slim. It expects to be installed properly so that
 slim samples/hello_world.mjs
 ```
 
-##Plugin modules  
+## Plugin modules  
 The bare minimum of functionality is present in most plugins. There will be an attempt to match standard Node.js interfaces over time.
 - boringssl
 - console
