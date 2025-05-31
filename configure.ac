@@ -23,8 +23,6 @@ else
 	librdkafkapp="$with_librdkafka/lib/librdkafka++.so"
 	KAFKALIB_PATH="$with_librdkafka/lib"
 fi
-AC_MSG_NOTICE([$with_google_v8_dir])
-AC_MSG_NOTICE([$CPPFLAGS])
 AC_CHECK_FILE([$with_google_v8_dir/include/v8.h], [],[AC_MSG_ERROR([could not locate Google v8 main library header file, use --with-google-v8--dir=DIR])])
 AC_CHECK_FILE([$with_google_v8_dir/include/libplatform/libplatform.h], [],[AC_MSG_ERROR([could not locate Google v8 main library header file, use --with-google-v8-dir=DIR])])
 AC_CHECK_FILE([$with_librdkafka/include/librdkafka/rdkafkacpp.h], [],[AC_MSG_ERROR([could not locate librdkafka installation file system, use --with-librdkafka=DIR])])
@@ -49,9 +47,11 @@ AC_CONFIG_FILES([
 	src/plugins/fs/Makefile
 	src/plugins/kafka/Makefile
 	src/plugins/network/Makefile
+	src/plugins/memoryAdaptor/Makefile
 	src/plugins/os/Makefile
 	src/plugins/path/Makefile
 	src/plugins/process/Makefile
 ])
+(cd bin && node bundle_lib_files.mjs)
 LT_INIT
 AC_OUTPUT
