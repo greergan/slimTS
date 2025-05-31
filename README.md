@@ -79,7 +79,7 @@ autoreconf -vfi
 ```
 3. Run the configure script
 ```
-./configure --prefix=/path/to/instal \
+./configure --prefix=/path/to/install \
     --with-google-v8-dir=/path/to/google/v8 \
 			--with-librdkafka=/path/to/installed/librdkafka
 ```  
