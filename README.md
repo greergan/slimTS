@@ -50,7 +50,7 @@ librdkafa from Confluent Inc.
 1. clone the source from [GitHub](https://github.com/confluentinc/librdkafka)
   librdkafka - compiled and installed, it must be configured as follows along with [these requirements](https://github.com/confluentinc/librdkafka?tab=readme-ov-file#build-from-source). slimTS does not support the optional packages that are listed at this time.
 ```
-./configure --enable-static --prefix=/path/to/instal/to
+./configure --enable-static --prefix=/path/to/install/to
 ```
 [boringssl](https://boringssl.googlesource.com/boringssl) by Google  
 The slimTS ssl plugin is linked against the boringssl libraries
