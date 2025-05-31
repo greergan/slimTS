@@ -1,3 +1,4 @@
+import console from 'console'
 import fs from 'fs'
 import path from 'path'
 const custom_library_files = [];
@@ -28,14 +29,3 @@ output += `\{"slim_typescript.mjs", std::make_shared<std::string>(R"+++(${conten
 let fixed_output = output.slice(0, -1) + "};}"
 console.log(`writing ${cpp_file}`)
 fs.writeFileSync(cpp_file, fixed_output)
-
-
-const tsconfig = {
-  "compilerOptions": {
-	"paths": {
-		"*": custom_library_files
-	}
-  }
-}
-
-//console.log(tsconfig)
