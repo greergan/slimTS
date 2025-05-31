@@ -8,8 +8,6 @@
 #include <slim/builtins/typescript.h>
 #include <slim/command_line_handler.h>
 #include <slim/common/exception.h>
-#include <slim/common/fetch.h>
-#include <slim/common/fetch_and_apply_macros.h>
 #include <slim/common/log.h>
 #include <slim/gv8.h>
 #include <slim/module_resolver.h>
@@ -74,47 +72,24 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 	log::debug(log::Message("slim::run","calling slim::builtins::initialize()",__FILE__, __LINE__));
 	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
 	log::debug(log::Message("slim::run","called slim::builtins::initialize()",__FILE__, __LINE__));
-	if(is_script_a_module) {
-		v8::TryCatch try_catch(isolate);
-		log::debug(log::Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
-		bool is_entry_point = true;
-		auto module_import_specifier_ptr = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
-		log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
+	v8::TryCatch try_catch(isolate);
+	log::debug(log::Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
+	bool is_entry_point = true;
+	auto module_import_specifier_ptr = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
+	log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
+	if(module_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
+		isolate->ThrowException(module_import_specifier_ptr->get_module()->GetException());
+	}
+	else {
+		auto result = module_import_specifier_ptr->get_module()->Evaluate(context);
 		if(module_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
 			isolate->ThrowException(module_import_specifier_ptr->get_module()->GetException());
 		}
-		else {
-			auto result = module_import_specifier_ptr->get_module()->Evaluate(context);
-			if(module_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
-				isolate->ThrowException(module_import_specifier_ptr->get_module()->GetException());
-			}
-			log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
-		}
-
-		if(try_catch.HasCaught()) {
-			log::error(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
-			slim::gv8::ReportException(&try_catch);
-		}
+		log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
 	}
-	else {
-		log::debug(log::Message("slim::run","calling slim::gv8::CompileScript()",__FILE__, __LINE__));
-		v8::TryCatch try_catch(isolate);
-		//auto script = slim::gv8::CompileScript(slim::common::fetch::fetch(file_name_string_in), file_name_string_in);
-		auto script = slim::gv8::CompileScript(slim::common::fetch_and_apply_macros(file_name_string_in), file_name_string_in);
-		log::debug(log::Message("slim::run","called slim::gv8::CompileScript()",__FILE__, __LINE__));
-		if(try_catch.HasCaught()) {
-			log::debug(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
-			slim::gv8::ReportException(&try_catch);
-		}
-		if(!script.IsEmpty()) {
-			log::debug(log::Message("slim::run","calling slim::gv8::RunScript()",__FILE__, __LINE__));
-			bool result = slim::gv8::RunScript(script);
-			log::debug(log::Message("slim::run","called slim::gv8::RunScript()",__FILE__, __LINE__));
-			if(try_catch.HasCaught()) {
-				log::debug(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
-				slim::gv8::ReportException(&try_catch);
-			}
-		}
+	if(try_catch.HasCaught()) {
+		log::error(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
+		slim::gv8::ReportException(&try_catch);
 	}
 	log::trace(log::Message("slim::run()","ends",__FILE__, __LINE__));
 	return;
