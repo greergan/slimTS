@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -11,6 +12,7 @@ namespace slim::command_line {
 	char** v8_configuration_values;
 	static std::unordered_map<std::string, std::string> slim_configuration_values;
 	static std::vector<std::string> script_configuration_values;
+	static std::unordered_set<std::string> allowed_file_extensions{".js",".mjs",".ts"};
 	static std::unordered_set<std::string> possible_slim_command_line_arguments
 		{"--print-all", "--print-debug", "--print-error", "--print-info", "--print-trace", "--print-typescript_warnings"};
 	static std::unordered_map<std::string, bool> slim_command_line_argument_has_value;
@@ -22,8 +24,10 @@ char** slim::command_line::set_argv(int argc, char *argv[]) {
 	log::trace(log::Message("slim::command_line::set_argv()","begins",__FILE__, __LINE__));
 	slim_configuration_values["slim_executable"] = slim::path::getExecutablePath();
 	script_configuration_values.push_back(slim_configuration_values["slim_executable"]);
+	//slim_configuration_values["script_name"] = std::string("");
 	bool done_searching_for_v8_arguments = false;
 	bool done_searching_for_slim_arguments = false;
+	bool found_module_source_file = false;
 	try {
 		for(int index = 1; index < argc; index++) {
 			auto argument = std::string(argv[index]);
@@ -56,16 +60,29 @@ char** slim::command_line::set_argv(int argc, char *argv[]) {
 					}
 				}			
 			}
-			else if(std::filesystem::exists(argument)) {
+			else if(argument.find_last_of(".") >= 0) { // we found what looks like a file name so finish up
+				found_module_source_file = true; // it might not be true but it is
 				done_searching_for_slim_arguments = true;
 				done_searching_for_v8_arguments = true;
-				auto script_name = std::filesystem::absolute(argument).string();
-				script_configuration_values.push_back(script_name);
-				slim_configuration_values["script_name"] = script_name;
+				if(std::filesystem::exists(argument)) {
+					auto script_path = std::filesystem::absolute(argument);
+					if(allowed_file_extensions.contains(script_path.extension().string())) {
+						auto script_name = std::regex_replace(script_path.string(), std::regex("/./"), "/");
+						script_configuration_values.push_back(script_name);
+						slim_configuration_values["script_name"] = script_name;
+					}
+				}
+				else {
+					throw "module file not found => " + argument;
+				}
 			}
 			else {
 				v8_configuration_values[index] = argv[index];
 			}
+		}
+		if(!found_module_source_file) {
+			//search for index.{js|ts|mjs}
+			//throw "module file not specified";
 		}
 	}
 	catch(const std::bad_alloc& e) {
