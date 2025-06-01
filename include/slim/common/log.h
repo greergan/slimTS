@@ -6,7 +6,7 @@
 
 namespace slim::common::log {
 	static bool allow_debug = false;
-	static bool allow_error = true;
+	static bool allow_error = false;
 	static bool allow_info = false;
 	static bool allow_trace = false;
 	struct Message {
@@ -22,6 +22,7 @@ namespace slim::common::log {
 		Message(const std::string text, const char* file, const int line_number)
 			: text(const_cast<char*>(text.c_str())), file(const_cast<char*>(file)), line_number(line_number) {}
 	};
+	void all(const bool value);
 	void print(const std::string log_level, const slim::common::log::Message message);
 	void error(const bool value);
 	void error(const slim::common::log::Message message);

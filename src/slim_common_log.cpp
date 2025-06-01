@@ -34,7 +34,12 @@ static std::string yellow(const char* input) {
 static std::string white(const char* input) {
 	return colorize(input, "white");
 }
-
+void slim::common::log::all(bool value) {
+	slim::common::log::allow_debug = value;
+	slim::common::log::allow_error = value;
+	slim::common::log::allow_info = value;
+	slim::common::log::allow_trace = value;
+}
 void slim::common::log::debug(bool value) {
 	slim::common::log::allow_debug = value;
 }
