@@ -25,8 +25,7 @@ namespace slim::module::resolver {
 	static std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "path", "process", "memoryAdaptor"};
 	std::array<char*, 3> file_extensions = {".mjs", ".ts", ".js"};
 	std::vector<std::string> search_paths = {
-		"",
-		"/home/greergan/product/slim/src/plugins/nodejs/lib/"
+		""
 	};
 	static specifier_cache_by_specifier by_specifier_cache;
 	static specifier_cache_by_hash_id by_hash_id_cache;
@@ -423,17 +422,23 @@ void slim::module::resolver::import_specifier::resolve_module_path() {
 		}
 	}
 	else {
-		if(by_hash_id_cache.contains(referrer->GetIdentityHash())) {
+		log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_string => " +  specifier_string).c_str(),__FILE__, __LINE__));
+		if(!referrer.IsEmpty() > 0 && by_hash_id_cache.contains(referrer->GetIdentityHash())) {
+			log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_string => " +  specifier_string).c_str(),__FILE__, __LINE__));
 			auto parent_path = by_hash_id_cache[referrer->GetIdentityHash()]->get_specifier_path().parent_path().string();
+			log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_string => " +  specifier_string).c_str(),__FILE__, __LINE__));
 			if(specifier_string.starts_with("./")) {
+				log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_string => " +  specifier_string).c_str(),__FILE__, __LINE__));
 				specifier_path = std::filesystem::absolute(parent_path + "/" + specifier_string.substr(2));
+				log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_path.string() => " +  specifier_path.string()).c_str(),__FILE__, __LINE__));
 			}
+			log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_string => " +  specifier_string).c_str(),__FILE__, __LINE__));
 		}
 		else {
-			specifier_path = specifier_string.starts_with(".") ? std::filesystem::absolute(specifier_string.substr(2)) : std::filesystem::absolute(specifier_string); 
+			log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_string => " +  specifier_string).c_str(),__FILE__, __LINE__));
+			specifier_path = specifier_string.starts_with(".") ? std::filesystem::absolute(specifier_string.substr(2)) : std::filesystem::absolute(specifier_string);
 		}
-		log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_path.has_extension() => " +  std::string(specifier_path.has_extension() ? "true" : "false")).c_str(),__FILE__, __LINE__));
-		log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_path.string() => " +  specifier_path.string()).c_str(),__FILE__, __LINE__));
+		log::debug(log::Message("slim::module::resolver::import_specifier::import_specifier()",std::string("specifier_string => " +  specifier_string).c_str(),__FILE__, __LINE__));
 		if(specifier_path.has_extension()) { 
 			if(std::filesystem::exists(specifier_path)) {
 				module_file_found = true;
