@@ -35,10 +35,11 @@ static std::string white(const char* input) {
 	return colorize(input, "white");
 }
 void slim::common::log::all(bool value) {
-	slim::common::log::allow_debug = value;
-	slim::common::log::allow_error = value;
-	slim::common::log::allow_info = value;
-	slim::common::log::allow_trace = value;
+	allow_debug = value;
+	allow_error = value;
+	allow_info = value;
+	allow_trace = value;
+	allow_typescript_warning = value;
 }
 void slim::common::log::debug(bool value) {
 	slim::common::log::allow_debug = value;
@@ -51,8 +52,7 @@ void slim::common::log::error(bool value) {
 	slim::common::log::allow_error = value;
 }
 void slim::common::log::error(const slim::common::log::Message message) {
-	if(slim::common::log::allow_error)
-		slim::common::log::print(red("ERROR => "), message);
+	slim::common::log::print(red("ERROR => "), message);
 }
 void slim::common::log::info(bool value) {
 	slim::common::log::allow_info = value;
@@ -67,6 +67,13 @@ void slim::common::log::trace(bool value) {
 void slim::common::log::trace(const slim::common::log::Message message) {
 	if(slim::common::log::allow_trace)
 		slim::common::log::print(cyan("TRACE => "), message);
+}
+void slim::common::log::typescript_warning(bool value) {
+	slim::common::log::allow_typescript_warning = value;
+}
+void slim::common::log::typescript_warning(const slim::common::log::Message message) {
+	if(slim::common::log::allow_typescript_warning)
+		slim::common::log::print(yellow("TS WARNING => "), message);
 }
 void slim::common::log::print(const std::string log_level, const slim::common::log::Message message) {
 	if(message.call == nullptr)

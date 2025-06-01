@@ -171,6 +171,13 @@ void slim::module::resolver::import_specifier::initialize_typescript_compiler() 
 }
 void slim::module::resolver::receive_compiled_file_name(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	typescript_compiled_specifier_string_url = utilities::v8ValueToString(args.GetIsolate(), args[0]);
+	auto* isolate = args.GetIsolate();
+	auto context = isolate->GetCurrentContext();
+	auto messages_array = args[1].As<v8::Array>();
+	for(int index = 0; index < messages_array->Length(); index++) {
+		log::typescript_warning(log::Message("",
+			utilities::v8ValueToString(isolate, messages_array->Get(context, index).ToLocalChecked()).c_str(), __FILE__, __LINE__));
+	}
 }
 void slim::module::resolver::import_specifier::call_typescript_compiler() {
 	log::trace(log::Message("slim::module::resolver::call_typescript_compiler()", std::string("begins => " + specifier_string_url).c_str(),__FILE__, __LINE__));

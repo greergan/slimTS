@@ -12,7 +12,7 @@ namespace slim::command_line {
 	static std::unordered_map<std::string, std::string> slim_configuration_values;
 	static std::vector<std::string> script_configuration_values;
 	static std::unordered_set<std::string> possible_slim_command_line_arguments
-		{"--print-all", "--print-debug", "--print-error", "--print-info", "--print-trace"};
+		{"--print-all", "--print-debug", "--print-error", "--print-info", "--print-trace", "--print-typescript_warnings"};
 	static std::unordered_map<std::string, bool> slim_command_line_argument_has_value;
 }
 const std::string& slim::command_line::get_script_name() {
@@ -50,6 +50,9 @@ char** slim::command_line::set_argv(int argc, char *argv[]) {
 					}
 					else if(argument == "--print-trace") {
 						log::trace(true);
+					}
+					else if(argument == "--print-typescript_warnings") {
+						log::typescript_warning(true);
 					}
 				}			
 			}

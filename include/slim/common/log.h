@@ -9,6 +9,7 @@ namespace slim::common::log {
 	static bool allow_error = false;
 	static bool allow_info = false;
 	static bool allow_trace = false;
+	static bool allow_typescript_warning = false;
 	struct Message {
 		char* call = nullptr;
 		char* file = nullptr;
@@ -32,5 +33,7 @@ namespace slim::common::log {
 	void info(const slim::common::log::Message message);
 	void trace(const bool value);
 	void trace(const slim::common::log::Message message);
+	void typescript_warning(const bool value);
+	void typescript_warning(const slim::common::log::Message message);
 }
 #endif
