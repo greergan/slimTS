@@ -98,7 +98,7 @@ void slim::start(int argc, char* argv[]) {
 	log::trace(log::Message("slim::start()","begins",__FILE__, __LINE__));
 	auto v8_command_line_arguments = slim::command_line::set_argv(argc, argv);
 	auto& script_name = slim::command_line::get_script_name();
-	if(script_name.length() > 4) {
+	if(script_name.length() >= 4) {
 		log::debug(log::Message("slim::start()",std::string("script => " + script_name).c_str(),__FILE__, __LINE__));
 		if(v8_command_line_arguments) {
 			log::debug(log::Message("slim::start()","some v8 command line arguments",__FILE__, __LINE__));
