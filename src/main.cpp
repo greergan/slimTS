@@ -4,34 +4,31 @@
 #include <slim/common/exception.h>
 #include <slim/common/log.h>
 int main(int argc, char *argv[]) {
-    slim::common::log::debug(true);
-    slim::common::log::info(true);
-    slim::common::log::trace(true);
-    slim::common::log::trace(slim::common::log::Message("begins",__FILE__, __LINE__));
+    using namespace slim::common;
+    log::trace(log::Message("begins",__FILE__, __LINE__));
     try {
-        slim::common::log::trace(slim::common::log::Message("top of try",__FILE__, __LINE__));
-        slim::version();
+        log::trace(log::Message("top of try",__FILE__, __LINE__));
         slim::start(argc, argv);
-        slim::common::log::trace(slim::common::log::Message("bottom of try",__FILE__, __LINE__));
+        log::trace(log::Message("bottom of try",__FILE__, __LINE__));
     }
     catch(std::string exception) {
-        slim::common::log::trace(slim::common::log::Message("caught exception",__FILE__, __LINE__));
-        slim::common::log::error(slim::common::log::Message(exception,__FILE__, __LINE__));
+        log::trace(log::Message("caught exception",__FILE__, __LINE__));
+        log::error(log::Message(exception,__FILE__, __LINE__));
         slim::stop();
-        slim::common::log::trace(slim::common::log::Message("exiting",__FILE__, __LINE__));
+        log::trace(log::Message("exiting",__FILE__, __LINE__));
         exit(1);
     }
     catch(const slim::common::SlimFileException& error) {
         std::string error_message = error.message + ", path => " + error.path;
-        slim::common::log::error(slim::common::log::Message(error.call.c_str(), error_message.c_str(),__FILE__, __LINE__));
+        log::error(log::Message(error.call.c_str(), error_message.c_str(),__FILE__, __LINE__));
         slim::stop();
-        slim::common::log::trace(slim::common::log::Message("exiting",__FILE__, __LINE__));
+        log::trace(log::Message("exiting",__FILE__, __LINE__));
         exit(1);
     }
     catch(const slim::common::SlimException& error) {
-        slim::common::log::error(slim::common::log::Message(error.call.c_str(), error.message.c_str(),__FILE__, __LINE__));
+        log::error(log::Message(error.call.c_str(), error.message.c_str(),__FILE__, __LINE__));
         slim::stop();
-        slim::common::log::trace(slim::common::log::Message("exiting",__FILE__, __LINE__));
+        log::trace(log::Message("exiting",__FILE__, __LINE__));
         exit(1);
     }
     catch (const std::invalid_argument& e) {
@@ -40,16 +37,16 @@ int main(int argc, char *argv[]) {
     catch (const std::runtime_error& e) {
         std::cerr << "Runtime error: " << e.what() << std::endl;
         slim::stop();
-        slim::common::log::trace(slim::common::log::Message("exiting",__FILE__, __LINE__));
+        log::trace(log::Message("exiting",__FILE__, __LINE__));
         exit(1);
     }
     catch(...) {
-        slim::common::log::error(slim::common::log::Message("caught unknown exception",__FILE__, __LINE__));
+        log::error(log::Message("caught unknown exception",__FILE__, __LINE__));
         slim::stop();
-        slim::common::log::trace(slim::common::log::Message("exiting",__FILE__, __LINE__));
+        log::trace(log::Message("exiting",__FILE__, __LINE__));
         exit(1);
     }
     slim::stop();
-    slim::common::log::trace(slim::common::log::Message("exiting",__FILE__, __LINE__));
+    log::trace(log::Message("exiting",__FILE__, __LINE__));
     return 0;
 }
