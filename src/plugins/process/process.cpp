@@ -60,12 +60,12 @@ extern "C" void expose_plugin(v8::Isolate* isolate) {
 	v8::Local<v8::Context> context = isolate->GetCurrentContext();
 	v8::Local<v8::Object> full_process_plugin_object = process_plugin.new_instance();
 	v8::Local<v8::Array> argv_array = v8::Array::New(isolate);
-	std::vector<std::string> argv_vector = slim::command_line::get_argv();
+	std::vector<std::string> argv_vector;// = slim::command_line::get_argv();
 	uint32_t argv_index = 0;
-	for(auto& command_line_argument: argv_vector) {
+/* 	for(auto& command_line_argument: argv_vector) {
 		auto result = argv_array->Set(context, argv_index, slim::utilities::StringToV8Value(isolate, command_line_argument));
 		argv_index++;
-	}
+	} */
 	v8::Maybe<bool> set_results = full_process_plugin_object->Set(context, slim::utilities::StringToV8String(isolate, "argv"), argv_array);
 	if(!set_results.IsJust()) {
 		isolate->ThrowException(slim::utilities::StringToV8String(isolate, "slim::plugin::process::expose_plugin() failed to load object properties"));

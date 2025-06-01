@@ -76,7 +76,7 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 	log::debug(log::Message("slim::run()", "calling  resolve_imports()",__FILE__, __LINE__));
 	bool is_entry_point = true;
 	auto module_import_specifier_ptr = slim::module::resolver::resolve_imports(file_name_string_in, context, is_entry_point);
-	log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
 	if(module_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
 		isolate->ThrowException(module_import_specifier_ptr->get_module()->GetException());
 	}
@@ -85,7 +85,7 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 		if(module_import_specifier_ptr->get_module()->GetStatus() == v8::Module::Status::kErrored) {
 			isolate->ThrowException(module_import_specifier_ptr->get_module()->GetException());
 		}
-		log::trace(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
+		log::debug(log::Message("slim::run()", std::string("get_module_status_string() => " + module_import_specifier_ptr->get_module_status_string()).c_str(),__FILE__, __LINE__));
 	}
 	if(try_catch.HasCaught()) {
 		log::error(log::Message("slim::run","try_catch.HasCaught()",__FILE__, __LINE__));
@@ -96,16 +96,20 @@ log::debug(log::Message("slim::run","creating builtin stubs",__FILE__, __LINE__)
 }
 void slim::start(int argc, char* argv[]) {
 	log::trace(log::Message("slim::start()","begins",__FILE__, __LINE__));
-	slim::command_line::set_argv(argc, argv);
-	log::info(log::Message("slim::start()",std::string("command line arguments => " + std::to_string(argc)).c_str(),__FILE__, __LINE__));
-	if(argc > 1) {
-		const std::string file_name_string(argv[1]);
-		log::debug(log::Message("slim::start()","calling slim::gv8::initialize()",__FILE__, __LINE__));
-		slim::gv8::initialize(argc, argv);
-		log::debug(log::Message("slim::start()","called slim::gv8::initialize()",__FILE__, __LINE__));
-		log::debug(log::Message("slim::start()","calling slim::run()",__FILE__, __LINE__));
-		slim::run(file_name_string);
-		log::debug(log::Message("slim::start()","called slim::run()",__FILE__, __LINE__));
+	auto v8_command_line_arguments = slim::command_line::set_argv(argc, argv);
+	auto& script_name = slim::command_line::get_script_name();
+	if(script_name.length() > 4) {
+		log::debug(log::Message("slim::start()",std::string("script => " + script_name).c_str(),__FILE__, __LINE__));
+		if(v8_command_line_arguments) {
+			log::debug(log::Message("slim::start()","some v8 command line arguments",__FILE__, __LINE__));
+			slim::gv8::initialize(sizeof(v8_command_line_arguments) / sizeof(v8_command_line_arguments[0]), v8_command_line_arguments);
+		}
+		else {
+			log::debug(log::Message("slim::start()","without any v8 command line arguments",__FILE__, __LINE__));
+			char* empty[0];
+			slim::gv8::initialize(0, empty);
+		}
+		slim::run(script_name);
 		slim::stop();
 	}
 	log::trace(log::Message("slim::start()","ends",__FILE__, __LINE__));
@@ -116,8 +120,8 @@ void slim::stop() {
 	log::trace(log::Message("slim::stop()","ends",__FILE__, __LINE__));
 }
 void slim::version(void) {
-/* 	trace(Message("slim::version","begins",__FILE__, __LINE__));
+ 	//trace(Message("slim::version","begins",__FILE__, __LINE__));
     std::cout << "slim:  " << VERSION << "\n";
-    std::cout << "libv8: " << std::string(v8::V8::GetVersion()) << "\n"; */
+    std::cout << "libv8: " << std::string(v8::V8::GetVersion()) << "\n";
     return;
 }
