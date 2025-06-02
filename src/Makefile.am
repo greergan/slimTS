@@ -19,6 +19,7 @@ slim_SOURCES  = main.cpp \
 				slim_common_network_address_set.cpp \
 				slim_common_network_client_connection_handler_common.cpp \
 				slim_common_network_client_request_handler_metrics.cpp \
+				slim_common_network_listener.cpp \
 				slim_common_utilities.cpp \
 				slim_gv8.cpp \
 				slim_macros.cpp \
