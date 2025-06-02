@@ -11,11 +11,14 @@ slim_SOURCES  = main.cpp \
 				slim_command_line_handler.cpp \
 				slim_common_fetch.cpp \
 				slim_common_fetch_and_apply_macros.cpp \
+				slim_common_http.cpp \
+				slim_common_http_parser.cpp \
 				slim_common_log.cpp \
 				slim_common_memory_mapper.cpp \
 				slim_common_metrics.cpp \
 				slim_common_network_address_set.cpp \
 				slim_common_network_client_connection_handler_common.cpp \
+				slim_common_network_client_request_handler_metrics.cpp \
 				slim_common_utilities.cpp \
 				slim_gv8.cpp \
 				slim_macros.cpp \
