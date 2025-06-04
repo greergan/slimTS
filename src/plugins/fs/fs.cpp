@@ -9,7 +9,6 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
-#include <slim/gv8.h>
 #include <slim/common/fetch.h>
 #include <slim/common/log.h>
 #include <slim/plugin.hpp>

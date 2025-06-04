@@ -1,6 +1,4 @@
 #include <string>
-#include <slim/gv8.h>
-#include <slim/common/fetch.h>
 #include <slim/common/log.h>
 #include <slim/common/memory_mapper.h>
 #include <slim/plugin.hpp>

@@ -10,15 +10,13 @@
 #include <unordered_map>
 #include <vector>
 #include <v8.h>
-#include <slim/gv8.h>
 #include <slim/plugin.hpp>
 #include <slim/utilities.h>
 /*
  * Reference https://console.spec.whatwg.org/#printer
  */
 namespace slim::console {
-    v8::Isolate* console_isolate = slim::gv8::GetIsolate();
-    v8::Local<v8::Array> listen_array = v8::Array::New(console_isolate);
+//    v8::Local<v8::Array> listen_array = v8::Array::New(isolate);
     bool listening = false;
     bool output_when_listening = false;
     /* remember to keep these in sync through out other definitions */
@@ -385,7 +383,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
     }
     auto isolate = args.GetIsolate();
     v8::HandleScope scope(isolate);
-    auto context = console_isolate->GetCurrentContext();
+    auto context = isolate->GetCurrentContext();
     v8::Local<v8::Object> log_message;
     std::stringstream output;
     std::stringstream color_output;
@@ -417,7 +415,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
         }
     };
     if(listening) {
-        log_message = v8::Object::New(console_isolate);           
+        log_message = v8::Object::New(isolate);           
         auto result = log_message->DefineOwnProperty(
             context,
             slim::utilities::StringToName(isolate, "logLevel"),
@@ -479,7 +477,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
         }
     }
     if(listening) {
-        v8::Local<v8::Context> context = console_isolate->GetCurrentContext();
+        v8::Local<v8::Context> context = isolate->GetCurrentContext();
         v8::Local<v8::Promise::Resolver> resolver = v8::Promise::Resolver::New(context).ToLocalChecked();
         if(output_when_listening) {
             auto result = log_message->DefineOwnProperty(
@@ -495,7 +493,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
             slim::utilities::StringToValue(isolate, output.str())
         );
         result = resolver->Resolve(context, log_message);
-        result = listen_array->Set(console_isolate->GetCurrentContext(), listen_array->Length(), resolver->GetPromise());
+        //result = listen_array->Set(isolate->GetCurrentContext(), listen_array->Length(), resolver->GetPromise());
     }
     else {
         std::cerr << color_output.str() << "\n";
@@ -542,7 +540,7 @@ void slim::console::info(const v8::FunctionCallbackInfo<v8::Value>& args) {
 void slim::console::listen(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();
     v8::HandleScope scope(isolate);
-    args.GetReturnValue().Set(listen_array);
+    //args.GetReturnValue().Set(listen_array);
 }
 void slim::console::log(const v8::FunctionCallbackInfo<v8::Value>& args) {
     local_print(args, level_configurations["log"]);

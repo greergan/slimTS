@@ -6,7 +6,6 @@
 #include <slim/command_line_handler.h>
 #include <slim/common/log.h>
 #include <slim/common/platform.h>
-#include <slim/gv8.h>
 #include <slim/plugin.hpp>
 #include <slim/utilities.h>
 namespace slim::plugin::process {

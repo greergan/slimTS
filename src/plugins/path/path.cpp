@@ -1,6 +1,5 @@
 #include <v8.h>
 #include <slim/common/log.h>
-#include <slim/gv8.h>
 #include <slim/plugin.hpp>
 #include <slim/utilities.h>
 namespace slim::plugin::path {
