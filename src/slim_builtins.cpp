@@ -6,7 +6,6 @@
 #include <slim/builtins/typescript.h>
 #include <slim/common/log.h>
 #include <slim/common/memory_mapper.h>
-#include <slim/gv8.h>
 #include <slim/plugin.hpp>
 #include <slim/plugin/loader.h>
 /* look at source file product/google/v8/src/init/bootstrapper.cc */
