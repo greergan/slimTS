@@ -9,9 +9,9 @@
 #include <slim/path.h>
 namespace slim::command_line {
 	using namespace slim::common;
-	char** v8_configuration_values;
 	static std::unordered_map<std::string, std::string> slim_configuration_values;
 	static std::vector<std::string> script_configuration_values;
+	static std::vector<std::string> v8_configuration_values;
 	static std::unordered_set<std::string> allowed_file_extensions{".js",".mjs",".ts"};
 	static std::unordered_set<std::string> possible_slim_command_line_arguments
 		{"--print-all", "--print-debug", "--print-error", "--print-info", "--print-trace", "--print-typescript_warnings"};
@@ -20,9 +20,10 @@ namespace slim::command_line {
 const std::string& slim::command_line::get_script_name() {
 	return slim_configuration_values["script_name"];
 }
-char** slim::command_line::set_argv(int argc, char *argv[]) {
+std::vector<std::string> slim::command_line::set_argv(int argc, char *argv[]) {
 	log::trace(log::Message("slim::command_line::set_argv()","begins",__FILE__, __LINE__));
 	slim_configuration_values["slim_executable"] = slim::path::getExecutablePath();
+	v8_configuration_values.push_back(slim::path::getExecutablePath());
 	script_configuration_values.push_back(slim_configuration_values["slim_executable"]);
 	//slim_configuration_values["script_name"] = std::string("");
 	bool done_searching_for_v8_arguments = false;
@@ -77,7 +78,7 @@ char** slim::command_line::set_argv(int argc, char *argv[]) {
 				}
 			}
 			else {
-				v8_configuration_values[index] = argv[index];
+				v8_configuration_values.push_back(std::string(argv[index]));
 			}
 		}
 		if(!found_module_source_file) {
