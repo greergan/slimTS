@@ -30,6 +30,7 @@ namespace slim::common::log {
 	void debug(const bool value);
 	void debug(const slim::common::log::Message message);
 	void info(const bool value);
+	void info(const std::string value_string);
 	void info(const slim::common::log::Message message);
 	void trace(const bool value);
 	void trace(const slim::common::log::Message message);
