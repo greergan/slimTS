@@ -82,10 +82,6 @@ void slim::launcher::launch(std::string script_name_string) {
 		}
 
 	}
-	//isolate->Exit();
-	//log::debug(log::Message("slim::launcher::launch()","exited isolate",__FILE__, __LINE__));
-	//isolate->Dispose();
-	//log::debug(log::Message("slim::launcher::launch()","disposed isolate",__FILE__, __LINE__));
 	log::trace(log::Message("slim::launcher::launch()","ends",__FILE__, __LINE__));
 }
 void slim::launcher::tear_down() {
