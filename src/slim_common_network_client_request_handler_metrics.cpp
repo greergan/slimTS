@@ -48,7 +48,7 @@ static std::string slim::common::network::client::request::handler::metrics::get
 	return metrics_stream.str();
 }
 std::string slim::common::network::client::request::handler::metrics::handle_request(char* request_pointer,
-		slim::common::network::client::connection::Information& client_connection_information, slim::common::Metrics& metrics) {
+		const slim::common::network::client::connection::Information& client_connection_information, slim::common::Metrics& metrics) {
 	std::cout << "tendril::client::request::handler::metrics::handle_request\n";
 	slim::common::http::Request request(request_pointer);
 	slim::common::http::Response response;

@@ -14,18 +14,21 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <slim/common/log.h>
 #include <slim/common/network/client/connection/handler/common.h>
 #include <slim/common/network/client/connection/information.h>
 #include <slim/common/metrics.h>
 
-
-#include <iostream>
 #define BUFFER_SIZE 2048
+namespace slim::common::network::client::connection::handler::common {
+	using namespace slim::common;
+}
 
 void slim::common::network::client::connection::handler::common::handle_client_connection(
 			slim::common::network::client::connection::Information& client_connection_information,
 			std::function<std::string(char*, slim::common::network::client::connection::Information&, slim::common::Metrics&)> client_request_handler,
 			slim::common::Metrics& metrics) {
+	log::trace(log::Message("slim::common::network::client::connection::handler::common::handle_client_connection()", "begins",__FILE__,__LINE__));
 	metrics.counters["threads_started"].inc();
 	std::future<std::string> response;
 	timeval timeout;
@@ -38,7 +41,6 @@ void slim::common::network::client::connection::handler::common::handle_client_c
 		timeout.tv_usec = client_connection_information.read_timeout;
 	}
 	timeout.tv_usec = 1000;
-
 	for(;;) {
 		FD_ZERO(&read_set);
 		FD_ZERO(&except_set);
@@ -55,6 +57,10 @@ void slim::common::network::client::connection::handler::common::handle_client_c
 			bytes_read = read(client_connection_information.socket_handle, read_buffer, BUFFER_SIZE);
 			if(*read_buffer) {
 				response = std::async(client_request_handler, read_buffer, std::ref(client_connection_information), std::ref(metrics));
+/* 				const auto is_future_ready = [&response]()->bool {
+					return response.valid() ? response.wait_for(std::chrono::seconds(0)) == std::future_status::ready : false;
+				};
+				while(!is_future_ready()) */
 				response_string = response.get();
 			}
 			break;
@@ -71,7 +77,6 @@ void slim::common::network::client::connection::handler::common::handle_client_c
 			}   
 		}
 	}
-	std::cout << "waiting to write\n";
 	for(;;) {
 		FD_ZERO(&write_set);
 		FD_ZERO(&except_set);
@@ -91,4 +96,5 @@ void slim::common::network::client::connection::handler::common::handle_client_c
 	shutdown(client_connection_information.socket_handle, SHUT_WR);
 	close(client_connection_information.socket_handle);
 	metrics.counters["threads_ended"].inc();
+	log::trace(log::Message("slim::common::network::client::connection::handler::common::handle_client_connection()", "ends",__FILE__,__LINE__));
 }
