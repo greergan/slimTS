@@ -21,13 +21,12 @@ slim_SOURCES  = main.cpp \
 				slim_common_network_client_request_handler_metrics.cpp \
 				slim_common_network_listener.cpp \
 				slim_common_utilities.cpp \
-				slim_gv8.cpp \
+				slim_exception_handler.cpp \
+				slim_launcher.cpp \
 				slim_macros.cpp \
+				slim_metrics_server.cpp \
+				slim_module_import_specifier.cpp \
 				slim_module_resolver.cpp \
-				slim_network_http_headers.cpp \
-				slim_network_http_response.cpp\
-				slim_network_http_request.cpp \
-				slim_network_http_url.cpp \
 				slim_path.cpp \
 				slim_plugin_loader.cpp\
 				slim_utilities.cpp \
