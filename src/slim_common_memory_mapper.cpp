@@ -12,11 +12,11 @@ void slim::common::memory_mapper::attach(std::string pipe_name_string) {
 void slim::common::memory_mapper::attach(std::string pipe_name_string, pipe_map_pointer file_map) {
 	log::trace(log::Message("slim::common::memory_mapper::attach()", std::string("begins file_map => " + pipe_name_string).c_str(), __FILE__, __LINE__));
 	pipes[pipe_name_string] = file_map;
-	log::trace(log::Message("slim::common::memory_mapper::attach()", std::string("ends => file_map" + pipe_name_string).c_str(), __FILE__, __LINE__));
+	log::trace(log::Message("slim::common::memory_mapper::attach()", std::string("ends file_map => " + pipe_name_string).c_str(), __FILE__, __LINE__));
 }
 void slim::common::memory_mapper::create(std::string pipe_name_string) {
 	log::trace(log::Message("slim::common::memory_mapper::create()", std::string("begins => " + pipe_name_string).c_str(), __FILE__, __LINE__));
-		using content_pointer = std::shared_ptr<std::string>;
+	using content_pointer = std::shared_ptr<std::string>;
 	using map_container = std::unordered_map<std::string, content_pointer>;
 	using pipe_map_pointer = std::shared_ptr<map_container>;
 	if(!pipes.contains(pipe_name_string)) {
