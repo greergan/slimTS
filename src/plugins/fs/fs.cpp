@@ -207,7 +207,7 @@ void slim::plugin::fs::readFileUtf8(const v8::FunctionCallbackInfo<v8::Value>& a
 	}
 	std::string file_name = utilities::v8ValueToString(isolate, args[0]);
 	//simdutf::convert_latin1_to_utf8_safe(src, src_len, dst, dst_len);
-	args.GetReturnValue().Set(utilities::StringToV8String(isolate, fetch::fetch(file_name).str()));
+	args.GetReturnValue().Set(utilities::StringToV8String(isolate, *fetch::string(file_name)));
 	log::trace(log::Message("slim::plugin::fs::readFileUtf8()", "ends", __FILE__, __LINE__));
 }
 void slim::plugin::fs::realpathSync::native(const v8::FunctionCallbackInfo<v8::Value>& args) {
@@ -241,9 +241,9 @@ void slim::plugin::fs::read_file_sync(const v8::FunctionCallbackInfo<v8::Value>&
 	log::debug(log::Message("slim::plugin::fs::read_file_sync()", utilities::v8ValueToString(isolate, args[1]).c_str(),__FILE__, __LINE__));
 	auto file_name_string = utilities::v8ValueToString(isolate, args[0]);
 	//log::debug(log::Message("slim::plugin::fs::read_file_sync()", file_name_string.c_str(),__FILE__, __LINE__));
-	auto file_content_string = fetch::fetch(file_name_string).str();
+	auto file_content_string = fetch::string(file_name_string);
 	//log::debug(log::Message("slim::plugin::fs::read_file_sync()", std::string("file size => " + std::to_string(file_content.get()->size())).c_str(),__FILE__, __LINE__));
-	args.GetReturnValue().Set(utilities::StringToV8String(isolate, file_content_string));
+	args.GetReturnValue().Set(utilities::StringToV8String(isolate, *file_content_string));
 	log::trace(log::Message("slim::plugin::fs::read_file_sync()", "ends",__FILE__, __LINE__));
 }
 void slim::plugin::fs::stat_sync(const v8::FunctionCallbackInfo<v8::Value>& args) {

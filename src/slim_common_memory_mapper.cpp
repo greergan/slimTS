@@ -48,7 +48,14 @@ std::shared_ptr<std::string> slim::common::memory_mapper::read(std::string pipe_
 	log::trace(log::Message("slim::common::memory_mapper::read()", std::string("begins => " + pipe_name_string).c_str(), __FILE__, __LINE__));
 	log::trace(log::Message("slim::common::memory_mapper::read()", std::string("begins => " + file_name_string).c_str(), __FILE__, __LINE__));
 	if(pipes.contains(pipe_name_string)) {
+		log::debug(log::Message("slim::common::memory_mapper::read()", std::string("found pipe_name => " + pipe_name_string).c_str(), __FILE__, __LINE__));
 		if(pipes[pipe_name_string].get()->contains(file_name_string)) {
+			auto file_content_pointer = pipes[pipe_name_string].get()->find(file_name_string)->second;
+			log::debug(log::Message("slim::common::memory_mapper::read()", std::string("found file_url => " + file_name_string).c_str(), __FILE__, __LINE__));
+			log::debug(log::Message("slim::common::memory_mapper::read()",
+					std::string("file size => " + std::to_string(file_content_pointer->size())).c_str(), __FILE__, __LINE__));
+			log::trace(log::Message("slim::common::memory_mapper::read()", std::string("ends => " + pipe_name_string).c_str(), __FILE__, __LINE__));
+			log::trace(log::Message("slim::common::memory_mapper::read()", std::string("ends => " + file_name_string).c_str(), __FILE__, __LINE__));
 			return pipes[pipe_name_string].get()->find(file_name_string)->second;
 		}
 		else {
@@ -70,11 +77,11 @@ void slim::common::memory_mapper::register_path(std::string pipe_name_string, st
 	}
 	if(pipes.contains(pipe_name_string)) {
 		auto path = path_in;
-		pipes[pipe_name_string].get()->emplace(path, std::make_unique<std::string>(""));
+		pipes[pipe_name_string].get()->emplace(path, std::make_shared<std::string>(""));
 		int position = 0;
 		while((position = path.find_last_of('/')) != std::string::npos) {
 			path = path.substr(0, position);
-			pipes[pipe_name_string].get()->emplace(path, std::make_unique<std::string>(""));
+			pipes[pipe_name_string].get()->emplace(path, std::make_shared<std::string>(""));
 			if(path.ends_with("://")) {
 				break;
 			}
@@ -84,12 +91,17 @@ void slim::common::memory_mapper::register_path(std::string pipe_name_string, st
 	log::trace(log::Message("slim::common::memory_mapper::register_path()", std::string("ends => " + pipe_name_string).c_str(), __FILE__, __LINE__));
 	log::trace(log::Message("slim::common::memory_mapper::register_path()", std::string("ends => " + path_in).c_str(), __FILE__, __LINE__));
 }
-void slim::common::memory_mapper::write(std::string pipe_name_string, std::string file_name_string, std::string content_string) {
+void slim::common::memory_mapper::write(std::string pipe_name_string, std::string file_name_string, std::shared_ptr<std::string> content_string_pointer) {
 	log::trace(log::Message("slim::common::memory_mapper::write()", std::string("begins => " + pipe_name_string).c_str(), __FILE__, __LINE__));
 	log::trace(log::Message("slim::common::memory_mapper::write()", std::string("begins => " + file_name_string).c_str(), __FILE__, __LINE__));
-	log::debug(log::Message("slim::common::memory_mapper::write()", std::string("content length => " + std::to_string(content_string.size())).c_str(), __FILE__, __LINE__));
-	if(pipes.contains(pipe_name_string)) {
-		pipes[pipe_name_string].get()->emplace(file_name_string, std::make_unique<std::string>(content_string));
+	log::debug(log::Message("slim::common::memory_mapper::write()", std::string("content length => " + std::to_string(content_string_pointer->size())).c_str(), __FILE__, __LINE__));
+	try {
+		if(pipes.contains(pipe_name_string)) {
+			pipes[pipe_name_string].get()->emplace(file_name_string, content_string_pointer);
+		}
+	}
+	catch(const std::bad_alloc& e) {
+		throw(e);
 	}
 	log::trace(log::Message("slim::common::memory_mapper::write()", std::string("ends => " + pipe_name_string).c_str(), __FILE__, __LINE__));
 	log::trace(log::Message("slim::common::memory_mapper::write()", std::string("ends => " + file_name_string).c_str(), __FILE__, __LINE__));

@@ -88,7 +88,7 @@ void slim::plugin::memory_adaptor::write(const v8::FunctionCallbackInfo<v8::Valu
 	log::debug(log::Message("slim::plugin::memory_adaptor::write()", chain_handle_string.c_str(),__FILE__, __LINE__));
 	log::debug(log::Message("slim::plugin::memory_adaptor::write()", content_name_string.c_str(),__FILE__, __LINE__));
 	log::debug(log::Message("slim::plugin::memory_adaptor::write()", std::to_string(content_data_string.length()).c_str(),__FILE__, __LINE__));
-	memory_mapper::write(chain_handle_string, content_name_string, content_data_string);
+	memory_mapper::write(chain_handle_string, content_name_string, std::make_shared<std::string>(content_data_string));
 	log::trace(log::Message("slim::plugin::memory_adaptor::write()", "ends",__FILE__, __LINE__));
 }
 extern "C" void expose_plugin(v8::Isolate* isolate) {

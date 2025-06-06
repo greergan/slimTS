@@ -15,15 +15,17 @@ namespace slim::module {
 		const std::string& get_module_status_string();
 		const std::filesystem::path& get_specifier_path() const;
 		const std::string& get_specifier() const;
-		const std::string& get_source_code() const;
+		std::shared_ptr<std::string> get_source_code() const;
 		const std::string& get_specifier_url() const;
 		void set_source_code(std::string source_code);
 		const bool has_module() const;
 		const bool is_entry_point() const;
+		const bool is_typescript_specifier() const;
 		private:
 			bool has_module_value = false;
 			bool is_entry_point_value = false;
 			bool is_synthetic_module = false;
+			bool is_typescript_specifier_value = false;
 			bool is_typescript_compiler_initialized = false;
 			v8::Isolate* isolate;
 			v8::Local<v8::Context> context;
@@ -34,14 +36,13 @@ namespace slim::module {
 			std::string specifier_string_url;
 			std::string compiled_specifier_string_url;
 			std::string specifier_string_original;
-			std::string specifier_source_code;
-			std::string specifier_original_source_code;
+			std::shared_ptr<std::string> specifier_source_code_pointer;
+			std::shared_ptr<std::string> specifier_original_source_code_pointer;
 			std::filesystem::path specifier_path;
 			v8::Local<v8::Function> typescript_compile_function;
 			void fetch_source();
+			void is_typescript_specifier(bool answer);
 			void resolve_module_path();
-			void initialize_typescript_compiler();
-			void call_typescript_compiler();
 	};
 }
 #endif

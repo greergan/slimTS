@@ -15,7 +15,7 @@ namespace slim::common::memory_mapper {
 	bool exists(std::string pipe_name_string, std::string content_name_string);
 	std::shared_ptr<std::string> read(std::string pipe_name_string, std::string content_name_string);
 	void register_path(std::string pipe_name_string, std::string path);
-	void write(std::string pipe_name_string, std::string content_name_string, std::string content_string);
+	void write(std::string pipe_name_string, std::string content_name_string, std::shared_ptr<std::string> content_string_pointer);
 	void delete_unordered_map(std::string pipe_name_string);
 }
 #endif
