@@ -4,8 +4,7 @@
 #include <string>
 #include <sstream>
 namespace slim::macros {
-	std::string apply(const std::shared_ptr<std::string> file_contents, const std::string& absolute_path_to_file);
-	std::string apply(const std::string& file_contents, const std::string& absolute_path_to_file);
-	std::string apply(std::stringstream& input_sting_stream, const std::string& file_name_string);
+	std::unique_ptr<std::string> apply(std::shared_ptr<std::string> content_pointer, const std::string& absolute_path_to_file);
+	std::unique_ptr<std::stringstream> apply(std::unique_ptr<std::stringstream> input_stringstream_pointer, const std::string& absolute_path_to_file);
 }
 #endif
