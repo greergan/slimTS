@@ -25,7 +25,7 @@ library_paths.map((library_path) => {
 	})
 })
 const content = fs.readFileSync(path.join(process.cwd(), "../lib") + "/" + "slim_typescript.mjs", 'utf8')
-output += `\{"slim_typescript.mjs", std::make_shared<std::string>(R"+++(${content})+++")\},`
+output += `\{"file:///bin/slim_typescript.mjs", std::make_shared<std::string>(R"+++(${content})+++")\},`
 let fixed_output = output.slice(0, -1) + "};}"
 console.log(`writing ${cpp_file}`)
 fs.writeFileSync(cpp_file, fixed_output)
