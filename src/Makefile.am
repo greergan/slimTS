@@ -10,7 +10,6 @@ slim_SOURCES  = main.cpp \
 				slim_builtins_typescript_initial_library.cpp \
 				slim_command_line_handler.cpp \
 				slim_common_fetch.cpp \
-				slim_common_fetch_and_apply_macros.cpp \
 				slim_common_http.cpp \
 				slim_common_http_parser.cpp \
 				slim_common_log.cpp \
