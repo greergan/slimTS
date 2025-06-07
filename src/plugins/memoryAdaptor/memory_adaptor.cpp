@@ -22,8 +22,7 @@ void slim::plugin::memory_adaptor::attach(const v8::FunctionCallbackInfo<v8::Val
 	log::trace(log::Message("slim::plugin::memory_adaptor::attach()", "begins",__FILE__, __LINE__));
 	auto* isolate = args.GetIsolate();
 	auto chain_handle_string = utilities::v8ValueToString(isolate, args[0]);
-	log::debug(log::Message("slim::plugin::memory_adaptor::attach()", std::string("begins =>" + chain_handle_string).c_str(),__FILE__, __LINE__));
-	memory_mapper::attach(chain_handle_string);
+	memory_mapper::create(chain_handle_string);
 	log::trace(log::Message("slim::plugin::memory_adaptor::attach()", "ends",__FILE__, __LINE__));
 }
 void slim::plugin::memory_adaptor::exists(const v8::FunctionCallbackInfo<v8::Value>& args) {
