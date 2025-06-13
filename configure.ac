@@ -50,6 +50,7 @@ AC_CONFIG_FILES([
 	src/plugins/os/Makefile
 	src/plugins/path/Makefile
 	src/plugins/process/Makefile
+	src/plugins/queue/Makefile
 ])
 (cd bin && node bundle_lib_files.mjs)
 LT_INIT

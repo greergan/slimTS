@@ -7,6 +7,7 @@ SUBDIRS += src/plugins/memoryAdaptor
 SUBDIRS += src/plugins/os
 SUBDIRS += src/plugins/path
 SUBDIRS += src/plugins/process
+SUBDIRS += src/plugins/queue
 
 slim:
 	@cd src && make
