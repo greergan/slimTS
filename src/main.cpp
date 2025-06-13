@@ -1,6 +1,6 @@
 #include "config.h"
 #include <iostream>
-#include <slim.h>
+#include <slim/slim.h>
 #include <slim/common/exception.h>
 #include <slim/common/log.h>
 int main(int argc, char *argv[]) {
