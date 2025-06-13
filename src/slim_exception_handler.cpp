@@ -45,7 +45,7 @@ void slim::exception_handler::v8_try_catch_handler(v8::TryCatch* try_catch) {
 	log::debug(log::Message("message->GetStartColumn()", std::to_string(message->GetStartColumn()).c_str(),__FILE__, __LINE__));
 	log::debug(log::Message("message->GetEndColumn()", std::to_string(message->GetEndColumn()).c_str(),__FILE__, __LINE__));
 	log::debug(log::Message("message->GetStartPosition()", std::to_string(message->GetStartPosition()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->GetStartPosition()", std::to_string(message->GetEndPosition()).c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetEndPosition()", std::to_string(message->GetEndPosition()).c_str(),__FILE__, __LINE__));
 	std::stringstream exception_string;
 	if(!script_origin.ResourceName()->IsUndefined()) {
 		exception_string << "\n" << utilities::v8ValueToString(isolate, script_origin.ResourceName());
@@ -61,6 +61,7 @@ void slim::exception_handler::v8_try_catch_handler(v8::TryCatch* try_catch) {
 	if(!stack_trace.IsEmpty()) {
 		exception_string << "\n" << utilities::v8ValueToString(isolate, stack_trace);
 	}
+	log::info(exception_string.str());
 	log::trace(log::Message("slim::exception_handler::try_catch_handler()","ends",__FILE__, __LINE__));
 	throw(exception_string.str());
 }
