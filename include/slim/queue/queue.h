@@ -1,11 +1,12 @@
 #ifndef __SLIM__QUEUE__H
 #define __SLIM__QUEUE__H
 #include <atomic>
-#include <memory>
+#include <mutex>
 #include <string>
 #include <queue>
 #include <vector>
 namespace slim::queue {
+	extern std::mutex queue_mutex;
 	struct file_storage {
 		std::string file_name_string;
 		std::string storage_container_handle;
@@ -20,14 +21,14 @@ namespace slim::queue {
 		std::atomic<bool> submitted = false;
 		bool errored = false;
 		job();
-		job(std::string source_storage_handle, std::string source_file_name_string);
+		job(std::string queue_name_string, std::string source_storage_handle, std::string source_file_name_string);
 		void set_ticket_id(long new_ticket_id);
 		long get_ticket_id();
 		private:
 			long ticket_id;
 	};
-	void complete_job(job);
 	job* get_job(std::string queue_name_string);
-	void submit(job* job_object, std::string queue_name_string);
+	job* find_job(std::string queue_name_string, long job_ticket_id);
+	void submit(job* job_object);
 }
 #endif

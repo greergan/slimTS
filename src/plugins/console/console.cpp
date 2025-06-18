@@ -269,7 +269,7 @@ namespace slim::console {
             auto printf_string = slim::utilities::StringValue(isolate, args[index]);
             std::regex format("(%s)|(%d)|(%f)|(%i)|(%o)|(%O)");
             for(auto i = std::sregex_iterator(printf_string.begin(), printf_string.end(), format); i != std::sregex_iterator(); i++) {
-                std::cerr << "now in position " << i->position() << "\n";
+                std::cout << "now in position " << i->position() << "\n";
                 index++;
                 if(i->str() == "%s") {
                     printf_string = std::regex_replace(printf_string, std::regex("(%s)"),
@@ -328,7 +328,7 @@ namespace slim::console {
         else {
             output << colorize(configuration, value_stream.str());
         }
-        std::cerr << output.str() << "\n";
+        std::cout << output.str() << "\n";
     }
 }
 std::string slim::console::colorize(auto* configuration, const std::string string_value) {
@@ -485,7 +485,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
                 slim::utilities::StringToName(isolate, "logMessage"),
                 slim::utilities::StringToValue(isolate, color_output.str())
             );
-            std::cerr << color_output.str() << "\n";
+            std::cout << color_output.str() << "\n";
         }
         auto result = log_message->DefineOwnProperty(
             context,
@@ -496,7 +496,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
         //result = listen_array->Set(isolate->GetCurrentContext(), listen_array->Length(), resolver->GetPromise());
     }
     else {
-        std::cerr << color_output.str() << "\n";
+        std::cout << color_output.str() << "\n";
     }
     return;
 }
@@ -505,7 +505,7 @@ void slim::console::assert_console(const v8::FunctionCallbackInfo<v8::Value>& ar
     puts("assert not implemented");
 }
 void slim::console::clear(const v8::FunctionCallbackInfo<v8::Value>& args) {
-    std::cerr << "\x1B[2J\x1B[H";
+    std::cout << "\x1B[2J\x1B[H";
 }
 void slim::console::count(const v8::FunctionCallbackInfo<v8::Value>& args) {
     puts("count not implemented");
@@ -554,20 +554,20 @@ void slim::console::print_colors(const v8::FunctionCallbackInfo<v8::Value>& args
         int index = 0;
         for(auto color: colors) {
             *property = color;
-            std::cerr << colorize(&temp_configuration, *property) << " ";
+            std::cout << colorize(&temp_configuration, *property) << " ";
             index++;
             if(index == 5 || index == 10 || index == 13 || index == 16) {
-                std::cerr << "\n\t";
+                std::cout << "\n\t";
             }
         }
         *property = "default";
     };
-    std::cerr << ".text_color\n\t";
+    std::cout << ".text_color\n\t";
     print_color(&temp_configuration.text_color);
-    std::cerr << "\n\n";
-    std::cerr << ".background_color\n\t";
+    std::cout << "\n\n";
+    std::cout << ".background_color\n\t";
     print_color(&temp_configuration.background_color);
-    std::cerr << "\n";
+    std::cout << "\n";
 }
 void slim::console::table(const v8::FunctionCallbackInfo<v8::Value>& args) {
     local_print(args, level_configurations["table"]);

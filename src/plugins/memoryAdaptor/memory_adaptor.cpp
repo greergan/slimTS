@@ -5,8 +5,8 @@
 namespace slim::plugin::memory_adaptor {
 	using namespace slim::common;
 	using namespace slim;
-	void attach(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void exists(const v8::FunctionCallbackInfo<v8::Value>& args);
+	void list_keys(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void read(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void write(const v8::FunctionCallbackInfo<v8::Value>& args);
 	void is_true(const v8::FunctionCallbackInfo<v8::Value>& args);
@@ -17,13 +17,6 @@ void ::slim::plugin::memory_adaptor::is_true(const v8::FunctionCallbackInfo<v8::
 }
 void ::slim::plugin::memory_adaptor::is_false(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	args.GetReturnValue().Set(v8::Boolean::New(args.GetIsolate(), false));
-}
-void slim::plugin::memory_adaptor::attach(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::memory_adaptor::attach()", "begins",__FILE__, __LINE__));
-	auto* isolate = args.GetIsolate();
-	auto chain_handle_string = utilities::v8ValueToString(isolate, args[0]);
-	memory_mapper::create(chain_handle_string);
-	log::trace(log::Message("slim::plugin::memory_adaptor::attach()", "ends",__FILE__, __LINE__));
 }
 void slim::plugin::memory_adaptor::exists(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	log::trace(log::Message("slim::plugin::memory_adaptor::exists()", "begins",__FILE__, __LINE__));
@@ -69,31 +62,45 @@ void slim::plugin::memory_adaptor::read(const v8::FunctionCallbackInfo<v8::Value
 		isolate->ThrowError(utilities::StringToString(isolate, "memory_adaptor.memoryAdaptor requires two string argument"));
 	} */
 	//log::debug(log::Message("slim::plugin::memory_adaptor::read()", "",__FILE__, __LINE__));
-	auto chain_handle_string = utilities::v8ValueToString(isolate, args[0]);
+	auto slot_handle_string = utilities::v8ValueToString(isolate, args[0]);
 	auto content_name_string = utilities::v8ValueToString(isolate, args[1]);
-	log::debug(log::Message("slim::plugin::memory_adaptor::read()", chain_handle_string.c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("slim::plugin::memory_adaptor::read()", slot_handle_string.c_str(),__FILE__, __LINE__));
 	log::debug(log::Message("slim::plugin::memory_adaptor::read()", content_name_string.c_str(),__FILE__, __LINE__));
-	auto content_string_pointer = memory_mapper::read(chain_handle_string, content_name_string);
+	auto content_string_pointer = memory_mapper::read(slot_handle_string, content_name_string);
 	log::debug(log::Message("slim::plugin::memory_adaptor::read()", std::string("content size => " + std::to_string(content_string_pointer.get()->size())).c_str(),__FILE__, __LINE__));
 	args.GetReturnValue().Set(utilities::StringToV8String(isolate, *content_string_pointer.get()));
 	log::trace(log::Message("slim::plugin::memory_adaptor::read()", "ends",__FILE__, __LINE__));
 }
+void slim::plugin::memory_adaptor::list_keys(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	log::trace(log::Message("slim::plugin::memory_adaptor::list_keys()", "begins",__FILE__, __LINE__));
+	auto* isolate = args.GetIsolate();
+	auto context = isolate->GetCurrentContext();
+	auto slot_handle_string = utilities::v8ValueToString(isolate, args[0]);
+	auto v8_keys_array = v8::Array::New(isolate);
+	int index = 0;
+	for(auto& key_string: memory_mapper::list_keys(slot_handle_string)) {
+		v8_keys_array->Set(context, index, utilities::StringToV8String(isolate, key_string));
+		index++;
+	}
+	args.GetReturnValue().Set(v8_keys_array);
+	log::trace(log::Message("slim::plugin::memory_adaptor::list_keys()", "ends",__FILE__, __LINE__));
+}
 void slim::plugin::memory_adaptor::write(const v8::FunctionCallbackInfo<v8::Value>& args) {
 	log::trace(log::Message("slim::plugin::memory_adaptor::write()", "begins",__FILE__, __LINE__));
 	auto* isolate = args.GetIsolate();
-	auto chain_handle_string = utilities::v8ValueToString(isolate, args[0]);
+	auto slot_handle_string = utilities::v8ValueToString(isolate, args[0]);
 	auto content_name_string = utilities::v8ValueToString(isolate, args[1]);
 	auto content_data_string = utilities::v8ValueToString(isolate, args[2]);
-	log::debug(log::Message("slim::plugin::memory_adaptor::write()", chain_handle_string.c_str(),__FILE__, __LINE__));
+	log::debug(log::Message("slim::plugin::memory_adaptor::write()", slot_handle_string.c_str(),__FILE__, __LINE__));
 	log::debug(log::Message("slim::plugin::memory_adaptor::write()", content_name_string.c_str(),__FILE__, __LINE__));
 	log::debug(log::Message("slim::plugin::memory_adaptor::write()", std::to_string(content_data_string.length()).c_str(),__FILE__, __LINE__));
-	memory_mapper::write(chain_handle_string, content_name_string, std::make_shared<std::string>(content_data_string));
+	memory_mapper::write(slot_handle_string, content_name_string, std::make_shared<std::string>(content_data_string));
 	log::trace(log::Message("slim::plugin::memory_adaptor::write()", "ends",__FILE__, __LINE__));
 }
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin memory_adaptor_plugin(isolate, "memoryAdaptor");
-	memory_adaptor_plugin.add_function("attach", slim::plugin::memory_adaptor::attach);
 	memory_adaptor_plugin.add_function("exists", slim::plugin::memory_adaptor::exists);
+	memory_adaptor_plugin.add_function("listKeys", slim::plugin::memory_adaptor::list_keys);
 	memory_adaptor_plugin.add_function("read", slim::plugin::memory_adaptor::read);
 	memory_adaptor_plugin.add_function("write", slim::plugin::memory_adaptor::write);
 	memory_adaptor_plugin.expose_plugin();

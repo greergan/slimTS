@@ -3,12 +3,12 @@ import fs from 'fs'
 import path from 'path'
 const custom_library_files = [];
 const library_paths = [path.join(process.cwd(), "../lib/typescript"), path.join(process.cwd(), "../lib/custom_definitions")];
-const cpp_file = '../src/slim_builtins_typescript_initial_library.cpp'
+const cpp_file = '../src/slim_system_libraries_typescript.cpp'
 const cpp_custom_libraries = '../src/slim_builtins_typescript_initial_custom_libraries.cpp'
 let output = "#include <memory>\n"
 output += "#include <string>\n"
 output += "#include <slim/common/memory_mapper.h>\n"
-output += "namespace slim::builtins::typescript {\n"
+output += "namespace slim::system::libraries {\n"
 output += "slim::common::memory_mapper::map_container typescript_map_container = {"
 library_paths.map((library_path) => {
 	const files = fs.readdirSync(library_path)
@@ -25,7 +25,7 @@ library_paths.map((library_path) => {
 	})
 })
 const content = fs.readFileSync(path.join(process.cwd(), "../lib") + "/" + "slim_typescript.mjs", 'utf8')
-output += `\{"file:///bin/slim_typescript.mjs", std::make_shared<std::string>(R"+++(${content})+++")\},`
+output += `\{"file:///bin/typescript.mjs", std::make_shared<std::string>(R"+++(${content})+++")\},`
 let fixed_output = output.slice(0, -1) + "};}"
 console.log(`writing ${cpp_file}`)
 fs.writeFileSync(cpp_file, fixed_output)

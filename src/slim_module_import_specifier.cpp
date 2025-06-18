@@ -1,22 +1,20 @@
+#include <future>
 #include <set>
 #include <unordered_set>
 #include <vector>
 #include <v8.h>
-#include <slim/builtins/typescript.h>
 #include <slim/common/fetch.h>
 #include <slim/common/log.h>
 #include <slim/common/memory_mapper.h>
 #include <slim/exception_handler.h>
 #include <slim/macros.h>
 #include <slim/module/import_specifier.h>
-#include <slim/module_resolver.h>
+#include <slim/module/resolver.h>
+#include <slim/queue/queue.h>
 #include <slim/utilities.h>
 namespace slim::module {
 	using namespace slim;
 	using namespace slim::common;
-	v8::Local<v8::Context> typescript_context;
-	std::string typescript_compiled_specifier_string_url;
-	void typescript_call_back(const v8::FunctionCallbackInfo<v8::Value>& args);
 	std::array<char*, 3> file_extensions = {".mjs", ".ts", ".js"};
 	std::vector<std::string> search_paths = {
 		""
@@ -31,28 +29,50 @@ slim::module::import_specifier::import_specifier(v8::Isolate* isolate, std::stri
 	v8_module->Evaluate(context).FromMaybe(v8::Local<v8::Value>());
 	log::trace(log::Message("slim::module::import_specifier::import_specifier()",std::string("ends => " + specifier_string).c_str(),__FILE__, __LINE__));
 }
-slim::module::import_specifier::import_specifier(v8::Isolate* isolate, std::string specifier_string, const bool is_entry_point_value, v8::Local<v8::Module> referrer)
-			: isolate(isolate), specifier_string(specifier_string), context(context), referrer(referrer), is_entry_point_value(is_entry_point_value) {
-	log::trace(log::Message("slim::module::import_specifier::import_specifier()",std::string("begins => " + specifier_string).c_str(),__FILE__, __LINE__));
+slim::module::import_specifier::import_specifier(v8::Isolate* isolate,  variant_specifier script_name_string_or_file_definition_struct,
+		const bool is_entry_point_value, v8::Local<v8::Module> referrer)
+			: isolate(isolate), referrer(referrer), is_entry_point_value(is_entry_point_value) {
+	log::trace(log::Message("slim::module::import_specifier::import_specifier()","begins",__FILE__, __LINE__));
 	context = isolate->GetCurrentContext();
-	if(slim::builtins::typescript::is_typescript_executable(specifier_string)) {
-		log::trace(log::Message("slim::module::import_specifier::import_specifier()",std::string("preparing typescript_executable => " + specifier_string).c_str(),__FILE__, __LINE__));
-		is_typescript_specifier(true);
-		specifier_string_url = specifier_string;
-		specifier_original_source_code_pointer = builtins::typescript::get_file_content_pointer(specifier_string_url);
+	std::shared_ptr<slim::module::import_specifier> module_import_specifier_pointer;
+	// files stored in compiled "library files" such as javascript servers i.e. typescript, less etc...
+	if(std::holds_alternative<specifier_definition>(script_name_string_or_file_definition_struct)) {
+		auto specifier_definition_stuct = std::get<specifier_definition>(script_name_string_or_file_definition_struct);
+		log::trace(log::Message("slim::module::import_specifier::import_specifier()",std::string("preparing new specifier from stored file => " + specifier_definition_stuct.specifier_string_url).c_str(),__FILE__, __LINE__));
+		specifier_string = specifier_definition_stuct.specifier_string_url;
+		specifier_string_url = specifier_definition_stuct.specifier_string_url;
+		specifier_original_source_code_pointer = specifier_definition_stuct.specifier_file_pointer;
 		specifier_source_code_pointer = macros::apply(specifier_original_source_code_pointer, specifier_string_url);
-		log::debug(log::Message("slim::module::import_specifier::import_specifier()",std::string("found typescript executable file => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 	}
 	else {
-		log::trace(log::Message("slim::module::import_specifier::import_specifier()",std::string("preparing new specifier => " + specifier_string).c_str(),__FILE__, __LINE__));
+		specifier_string = std::get<std::string>(script_name_string_or_file_definition_struct);
+		log::trace(log::Message("slim::module::import_specifier::import_specifier()",std::string("preparing new specifier from disk file => " + specifier_string).c_str(),__FILE__, __LINE__));
 		specifier_string_original = specifier_string;
 		resolve_module_path();
 		fetch_source();
-		memory_mapper::register_path("directories", specifier_string_url.substr(0, specifier_string_url.find_last_of("/")));
-		slim::builtins::typescript::store_file_content(specifier_string_url, specifier_source_code_pointer); // step 1
-		slim::builtins::typescript::compile(isolate, specifier_string_url, typescript_call_back);   // step 2
-		specifier_source_code_pointer = slim::builtins::typescript::get_file_content_pointer(typescript_compiled_specifier_string_url); // step 3
-		specifier_string_url = typescript_compiled_specifier_string_url;
+		memory_mapper::write("source_code_storage", specifier_string_url, specifier_source_code_pointer);
+		std::string queue_name_string("typescript");
+		slim::queue::job* transpile_typescript_job = new slim::queue::job(queue_name_string, "source_code_storage", specifier_string_url);
+		transpile_typescript_job->egress_job_file.storage_container_handle = "typescript_storage";
+		std::async(std::launch::async, slim::queue::submit, transpile_typescript_job);
+		if(transpile_typescript_job->errored) {
+			log::debug(log::Message("slim::module::import_specifier::import_specifier()","job completed with errors",__FILE__, __LINE__));
+			std::string errors;
+			for(auto&& error : transpile_typescript_job->errors) {
+				errors += error + "\n";
+			}
+			delete transpile_typescript_job;
+			log::debug(log::Message("slim::module::import_specifier::import_specifier()",errors.c_str(),__FILE__, __LINE__));
+			isolate->ThrowException(utilities::StringToV8String(isolate, errors));
+		}
+		else {
+			slim::queue::file_storage& egress_job_file = transpile_typescript_job->egress_job_file;
+			specifier_source_code_pointer = memory_mapper::read(egress_job_file.storage_container_handle, egress_job_file.file_name_string);
+			log::debug(log::Message("slim::module::import_specifier::import_specifier()",egress_job_file.storage_container_handle.c_str(),__FILE__, __LINE__));
+			log::debug(log::Message("slim::module::import_specifier::import_specifier()",egress_job_file.file_name_string.c_str(),__FILE__, __LINE__));
+			log::debug(log::Message("slim::module::import_specifier::import_specifier()",std::string("file size => " + std::to_string(specifier_source_code_pointer.get()->length())).c_str(),__FILE__, __LINE__));
+			delete transpile_typescript_job;
+		}
 	}
 	log::trace(log::Message("slim::module::import_specifier::import_specifier()",std::string("ends => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 }
@@ -90,12 +110,7 @@ const bool slim::module::import_specifier::has_module() const {
 const bool slim::module::import_specifier::is_entry_point() const {
 	return is_entry_point_value;
 }
-void slim::module::import_specifier::is_typescript_specifier(bool answer) {
-	is_typescript_specifier_value = answer;
-}
-const bool slim::module::import_specifier::is_typescript_specifier() const {
-	return is_typescript_specifier_value;
-}
+
 void slim::module::import_specifier::compile_module() {
 	log::trace(log::Message("slim::module::import_specifier::compile_module()",std::string("begins => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 	v8::TryCatch try_catch(isolate);
@@ -120,7 +135,6 @@ void slim::module::import_specifier::fetch_source() {
 	auto source_string_stream_pointer = slim::macros::apply(slim::common::fetch::stream(specifier_string), specifier_string);
 	specifier_source_code_pointer = std::make_shared<std::string>(source_string_stream_pointer->str());
 	specifier_original_source_code_pointer = std::make_shared<std::string>(source_string_stream_pointer->str());
-	slim::builtins::typescript::store_file_content(specifier_string_url, specifier_source_code_pointer);
 /* 	std::regex from_pattern("[[:space:]\n]+from[[:space:]\n]+[\\\"\\'][.](\\/.+[^\"])[\\\"\\']");
 	std::string expanded_path_statement =  " from '" + specifier_path_string + "$1'";
 	specifier_source_code = std::regex_replace(specifier_source_code, from_pattern, expanded_path_statement); */
@@ -143,19 +157,6 @@ void slim::module::import_specifier::instantiate_module() {
 		std::string("v8_module->InstantiateModule() status => " + get_module_status_string()).c_str(),__FILE__, __LINE__));
 	log::trace(log::Message("slim::module::import_specifier::instantiate_module()",std::string("ends => " + specifier_string_url).c_str(),__FILE__, __LINE__));
 }
-
-void slim::module::typescript_call_back(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::module::typescript_call_back()", "begins",__FILE__, __LINE__));
-	typescript_compiled_specifier_string_url = utilities::v8ValueToString(args.GetIsolate(), args[0]);
-	auto* isolate = args.GetIsolate();
-	auto context = isolate->GetCurrentContext();
-	auto messages_array = args[1].As<v8::Array>();
-	for(int index = 0; index < messages_array->Length(); index++) {
-		log::typescript_warning(log::Message("",
-			utilities::v8ValueToString(isolate, messages_array->Get(context, index).ToLocalChecked()).c_str(), __FILE__, __LINE__));
-	}
-	log::trace(log::Message("slim::module::typescript_call_back()", "ends",__FILE__, __LINE__));
-}
 void slim::module::import_specifier::resolve_module_path() {
 	log::trace(log::Message("slim::module::import_specifier::resolve_module_path()",std::string("begins => " + specifier_string).c_str(), __FILE__, __LINE__));
 	v8::TryCatch try_catch(isolate);
@@ -169,8 +170,8 @@ void slim::module::import_specifier::resolve_module_path() {
 																+ std::to_string(current_working_search_path.has_extension())).c_str(),__FILE__, __LINE__));
 			if(current_working_search_path.has_extension()) {
 				if(std::filesystem::exists(current_working_search_path)) {
-					log::debug(log::Message("slim::module::import_specifier::import_specifier()",std::string("current_working_search_path exists() => " 
-																						+ current_working_search_path.string()).c_str(),__FILE__, __LINE__));
+					log::debug(log::Message("slim::module::import_specifier::import_specifier()", std::string("current_working_search_path exists() => " 
+						+ current_working_search_path.string()).c_str(),__FILE__, __LINE__));
 					module_file_found = true;
 					specifier_path = current_working_search_path;
 					break;

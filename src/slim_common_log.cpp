@@ -63,7 +63,7 @@ void slim::common::log::info(bool value) {
 }
 void slim::common::log::info(const std::string value_string) {
 	std::lock_guard<std::mutex> lock(cerr_mutex);
-	std::cerr << value_string << "\n";
+	std::cout << value_string << "\n";
 }
 void slim::common::log::info(const Message message) {
 	if(allow_info)
@@ -86,10 +86,10 @@ void slim::common::log::typescript_warning(const Message message) {
 void slim::common::log::print(const std::string log_level, const Message message) {
 	if(message.call == nullptr) {
 		std::lock_guard<std::mutex> lock(cerr_mutex);
-		std::cerr << log_level << blue(std::to_string(message.line_number).c_str()) << ":" << purple(message.file) << ":" << white(message.text) << "\n";
+		std::cout << log_level << blue(std::to_string(message.line_number).c_str()) << ":" << purple(message.file) << ":" << white(message.text) << "\n";
 	}
 	else {
 		std::lock_guard<std::mutex> lock(cerr_mutex);
-		std::cerr << log_level << blue(std::to_string(message.line_number).c_str()) << ":" << purple(message.file) << ":" << green(message.call) << ":" << white(message.text) << "\n";
+		std::cout << log_level << blue(std::to_string(message.line_number).c_str()) << ":" << purple(message.file) << ":" << green(message.call) << ":" << white(message.text) << "\n";
 	}
 }

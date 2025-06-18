@@ -2,12 +2,20 @@
 #define __SLIM__MODULE__IMPORT__SPECIFIER__H
 #include <filesystem>
 #include <string>
+#include <variant>
 #include <v8.h>
 namespace slim::module {
+	struct specifier_definition {
+		const std::string specifier_string_url;
+		std::shared_ptr<std::string> specifier_file_pointer;
+		bool is_javascript_source = false;
+		bool is_typescript_source = false;
+	};
+	using variant_specifier = std::variant<std::string, specifier_definition>;
 	struct import_specifier {
 		import_specifier();
 		import_specifier(v8::Isolate* isolate, std::string specifier_string_in, v8::Local<v8::Module> synthetic_module);
-		import_specifier(v8::Isolate* isolate, std::string specifier_string_in, const bool is_entry_point_value, v8::Local<v8::Module> referrer);
+		import_specifier(v8::Isolate* isolate, variant_specifier script_name_string_or_file_definition_struct, const bool is_entry_point_value, v8::Local<v8::Module> referrer);
 		void compile_module();
 		void instantiate_module();
 		int get_hash_id();
@@ -20,13 +28,10 @@ namespace slim::module {
 		void set_source_code(std::string source_code);
 		const bool has_module() const;
 		const bool is_entry_point() const;
-		const bool is_typescript_specifier() const;
 		private:
 			bool has_module_value = false;
 			bool is_entry_point_value = false;
 			bool is_synthetic_module = false;
-			bool is_typescript_specifier_value = false;
-			bool is_typescript_compiler_initialized = false;
 			v8::Isolate* isolate;
 			v8::Local<v8::Context> context;
 			v8::Local<v8::Module> v8_module;
@@ -39,9 +44,7 @@ namespace slim::module {
 			std::shared_ptr<std::string> specifier_source_code_pointer;
 			std::shared_ptr<std::string> specifier_original_source_code_pointer;
 			std::filesystem::path specifier_path;
-			v8::Local<v8::Function> typescript_compile_function;
 			void fetch_source();
-			void is_typescript_specifier(bool answer);
 			void resolve_module_path();
 	};
 }

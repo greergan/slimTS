@@ -6,8 +6,17 @@
 #include <slim/utilities.h>
 #include <slim/plugin/loader.h>
 namespace slim::plugin::loader {
+    using namespace slim::common;
     std::string plugin_library_path = slim::path::getExecutableDir() + "/../lib/slimTS/";
     std::unordered_map<std::string, void*> loaded_plugins = {};
+}
+void slim::plugin::loader::destroy() {
+    log::trace(log::Message("slim::plugin::loader::destroy()", "begins", __FILE__, __LINE__));
+    for(auto [plugin_name_string, plugin] : loaded_plugins) {
+        log::debug(log::Message("slim::plugin::loader::destroy()", plugin_name_string.c_str(), __FILE__, __LINE__));
+        dlclose(loaded_plugins[plugin_name_string]);
+    }
+    log::trace(log::Message("slim::plugin::loader::destroy()", "begins", __FILE__, __LINE__));
 }
 void slim::plugin::loader::load(const v8::FunctionCallbackInfo<v8::Value>& args) {
     auto isolate = args.GetIsolate();
@@ -27,11 +36,11 @@ void slim::plugin::loader::load(const v8::FunctionCallbackInfo<v8::Value>& args)
     return;
 };
 void slim::plugin::loader::load_plugin(v8::Isolate* isolate, const std::string plugin_name_string, const bool global_scope) {
-    slim::common::log::trace(slim::common::log::Message("slim::plugin::loader", "begins", __FILE__, __LINE__));
+    log::trace(log::Message("slim::plugin::loader", "begins", __FILE__, __LINE__));
     auto open_bits = global_scope ? RTLD_NOW | RTLD_GLOBAL : RTLD_NOW;
     std::string plugin_so_path = plugin_library_path + plugin_name_string + ".so";
     if(true) {
-        slim::common::log::debug(slim::common::log::Message("slim::plugin::loader", std::string("loading plugin => " + plugin_name_string).c_str(), __FILE__, __LINE__));
+        log::debug(log::Message("slim::plugin::loader", std::string("loading plugin => " + plugin_name_string).c_str(), __FILE__, __LINE__));
         loaded_plugins[plugin_name_string] = dlopen(plugin_so_path.c_str(), open_bits);
         if(!loaded_plugins[plugin_name_string]) {
             isolate->ThrowException(slim::utilities::StringToValue(isolate, "error loading plugin: " + std::string(dlerror())));
@@ -45,14 +54,14 @@ void slim::plugin::loader::load_plugin(v8::Isolate* isolate, const std::string p
                 dlclose(loaded_plugins[plugin_name_string]);
             }
             else {
-                slim::common::log::debug(slim::common::log::Message("slim::plugin::loader", std::string("exposing plugin => " + plugin_name_string).c_str(), __FILE__, __LINE__));
+                log::debug(log::Message("slim::plugin::loader", std::string("exposing plugin => " + plugin_name_string).c_str(), __FILE__, __LINE__));
                 expose_plugin(isolate);
                 expose_plugin = nullptr;
             }
         }
     }
     else {
-        slim::common::log::debug(slim::common::log::Message("slim::plugin::loader", "plugin already loaded", __FILE__, __LINE__));
+        log::debug(log::Message("slim::plugin::loader", "plugin already loaded", __FILE__, __LINE__));
     }
-    slim::common::log::trace(slim::common::log::Message("slim::plugin::loader", "ends", __FILE__, __LINE__));
+    log::trace(log::Message("slim::plugin::loader", "ends", __FILE__, __LINE__));
 }

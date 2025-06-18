@@ -8,14 +8,14 @@
 #include <slim/common/exception.h>
 #include <slim/common/log.h>
 #include <slim/exception_handler.h>
-#include <slim/module_resolver.h>
 #include <slim/module/import_specifier.h>
+#include <slim/module/resolver.h>
 #include <slim/plugin/loader.h>
 #include <slim/utilities.h>
 namespace slim::module::resolver {
 	using namespace slim;
 	using namespace slim::common;
-	static std::set<std::string> plugins_set{"console", "fs", "kafka", "os", "path", "process", "memoryAdaptor"};
+	static std::set<std::string> plugins_set{"console","fs","kafka","os","path","process","memoryAdaptor","queue"};
 	static specifier_cache_by_specifier by_specifier_cache;
 	static specifier_cache_by_hash_id by_hash_id_cache;
 }
@@ -205,13 +205,21 @@ v8::MaybeLocal<v8::Module> slim::module::resolver::module_call_back_resolver(
 	//return v8::MaybeLocal<v8::Module>();
 }
 std::shared_ptr<slim::module::import_specifier> slim::module::resolver::resolve_imports(v8::Isolate* isolate,
-			std::string entry_script_file_name_string_in, const bool is_entry_point_value = false) {
-	log::trace(log::Message("slim::module::resolver::resolve_imports()",std::string("begins => " + entry_script_file_name_string_in).c_str(), __FILE__, __LINE__));
+		slim::module::variant_specifier script_name_string_or_file_definition_struct, const bool is_entry_point_value = false) {
+	log::trace(log::Message("slim::module::resolver::resolve_imports()","begins", __FILE__, __LINE__));
 	auto context = isolate->GetCurrentContext();
-	import_specifier entry_script_specifier(isolate, entry_script_file_name_string_in, is_entry_point_value, v8::Local<v8::Module>());
-	entry_script_specifier.compile_module(); // compile module so we can get at the hash id during module imports
+	import_specifier entry_script_specifier(isolate, script_name_string_or_file_definition_struct, is_entry_point_value, v8::Local<v8::Module>());
+	log::debug(log::Message("slim::module::resolver::resolve_imports()",std::string("begins => " + entry_script_specifier.get_specifier()).c_str(), __FILE__, __LINE__));
+	entry_script_specifier.compile_module();
+	if(entry_script_specifier.get_module()->GetStatus() == v8::Module::Status::kErrored) {
+		log::error(log::Message("slim::module::resolver::resolve_imports()",std::string("error => " + entry_script_specifier.get_specifier()).c_str(), __FILE__, __LINE__));
+		isolate->ThrowException(entry_script_specifier.get_module()->GetException());
+	}
+	log::debug(log::Message("slim::module::resolver::resolve_imports()",std::string("compiled => " + entry_script_specifier.get_specifier()).c_str(), __FILE__, __LINE__));
 	cache_import_specifier(std::make_shared<import_specifier>(entry_script_specifier)); // now cache it before instantiate_module
+	log::debug(log::Message("slim::module::resolver::resolve_imports()",std::string("cached => " + entry_script_specifier.get_specifier()).c_str(), __FILE__, __LINE__));
 	entry_script_specifier.instantiate_module(); // instantiate_module causes import recursion where we need hash id to get at the parent path of current import
+	log::debug(log::Message("slim::module::resolver::resolve_imports()",std::string("instantiated => " + entry_script_specifier.get_specifier()).c_str(), __FILE__, __LINE__));
 	log::trace(log::Message("slim::module::resolver::resolve_imports()",std::string("ends => " + entry_script_specifier.get_specifier_url()).c_str(), __FILE__, __LINE__));
 	return by_specifier_cache[entry_script_specifier.get_specifier()];
 }
