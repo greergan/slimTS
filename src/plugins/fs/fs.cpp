@@ -220,7 +220,6 @@ void slim::plugin::fs::write_file_sync(const v8::FunctionCallbackInfo<v8::Value>
 	auto* isolate = args.GetIsolate();
 	auto file_name_string = utilities::v8ValueToString(isolate, args[0]);
 	auto file_content_string = utilities::v8ValueToString(isolate, args[1]);
-	slim::common::log::debug(true);
 	std::ofstream output_file_stream(file_name_string);
 	if(output_file_stream.is_open()) {
 		output_file_stream << file_content_string;
