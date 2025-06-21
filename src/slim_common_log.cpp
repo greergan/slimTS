@@ -1,95 +1,116 @@
+#include <unistd.h>
+#include <iomanip>
 #include <iostream>
 #include <mutex>
+#include <sstream>
+#include <unordered_map>
+#include <thread>
 #include <slim/common/log.h>
 namespace slim::common::log {
 	std::mutex cerr_mutex;
 	std::mutex cout_mutex;
+	std::mutex label_mutex;
+	std::string field_separator = "|";
+	bool allow_color_print = true;
+	bool allow_debug_print = false;
+	bool allow_error_print = true;
+	bool allow_info_print = false;
+	bool allow_trace_print = false;
+	bool allow_thread_identity_print = false;
+	std::unordered_map<std::string, std::string> colors {
+		{"black",  "\033[0;30m"},
+		{"blue",   "\033[0;34m"},
+		{"cyan",   "\033[0;36m"},
+		{"green",  "\033[0;32m"},
+		{"magenta","\033[0;35m"},
+		{"red",    "\033[0;31m"},
+		{"white",  "\033[0;37m"},
+		{"yellow", "\033[0;33m"}
+	};
+	auto colorize = [](std::string input, std::string color)->std::string {
+		return allow_color_print ? std::string(colors[color]) + input + "\033[0m" : input;
+	};
+	auto black  = [](std::string input)->std::string {return colorize(input, std::string("black"));};
+	auto blue   = [](std::string input)->std::string {return colorize(input, std::string("blue"));};
+	auto cyan   = [](std::string input)->std::string {return colorize(input, std::string("cyan"));};
+	auto green  = [](std::string input)->std::string {return colorize(input, std::string("green"));};
+	auto magenta= [](std::string input)->std::string {return colorize(input, std::string("magenta"));};
+	auto red    = [](std::string input)->std::string {return colorize(input, std::string("red"));};
+	auto yellow = [](std::string input)->std::string {return colorize(input, std::string("yellow"));};
+	auto white  = [](std::string input)->std::string {return colorize(input, std::string("white"));};
+	auto get_identifiers = []()->std::string {
+		std::stringstream identity_stream;
+		identity_stream << "[" << getpid() << field_separator << std::this_thread::get_id() << "]";
+		return identity_stream.str();
+	};
+	auto construct_label = [](std::string label_string)->std::string {
+		std::string identity_string =
+			allow_thread_identity_print ? label_string == "INFO" ? yellow(get_identifiers()) : white(get_identifiers()) : "";
+		std::string(*color)(std::string);
+		if(label_string == "DEBUG") { color = yellow; }
+		else if(label_string == "ERROR") { color = red; }
+		else if(label_string == "INFO") { color = white; }
+		else if(label_string == "TRACE") { color = cyan; }
+		return color(label_string) + identity_string + color("=>");
+	};
 }
-static std::map<std::string, std::string> colors {
-	{"cyan", "\033[0;36m"},
-	{"blue", "\033[0;34m"},
-	{"green", "\033[0;32m"},
-	{"purple", "\033[0;35m"},
- 	{"red", "\033[0;31m"},
-	{"white", "\033[0;37m"},
-	{"yellow", "\033[0;33m"}
-};
-static std::string colorize(const char* input, const char* color) {
-	return std::string(colors[const_cast<char*>(color)]) + std::string(input) + "\033[0m";
+void slim::common::log::print_all(bool value) {
+	allow_debug_print = value;
+	allow_error_print = value;
+	allow_info_print = value;
+	allow_trace_print = value;
+	allow_thread_identity_print = value;
 }
-static std::string blue(const char* input) {
-	return colorize(input, "blue");
+void slim::common::log::print_color(bool value) {allow_color_print = value;}
+void slim::common::log::print_debug(bool value) {allow_debug_print = value;}
+void slim::common::log::print_error(bool value) {allow_error_print = value;}
+void slim::common::log::print_info(bool value) {allow_info_print = value;}
+void slim::common::log::print_trace(bool value) {allow_trace_print = value;}
+void slim::common::log::print_thread_identity(bool value) {allow_thread_identity_print = value;}
+void slim::common::log::debug(Message message) {
+	if(allow_debug_print) {
+		print(construct_label("DEBUG"), message);
+	}
 }
-static std::string cyan(const char* input) {
-	return colorize(input, "cyan");
+void slim::common::log::error(Message message) {
+	if(allow_error_print) {
+		print(construct_label("ERROR"), message);
+	}
 }
-static std::string green(const char* input) {
-	return colorize(input, "green");
+void slim::common::log::info(Message message) {
+	if(allow_info_print) {
+		print(construct_label("INFO"), message);
+	}
 }
-static std::string purple(const char* input) {
-	return colorize(input, "purple");
+void slim::common::log::trace(Message message) {
+	if(allow_trace_print) {
+		print(construct_label("TRACE"), message);
+	}
 }
-static std::string red(const char* input) {
-	return colorize(input, "red");
+void slim::common::log::info(character_types value) {
+	std::lock_guard<std::mutex> lock(cout_mutex);
+	auto value_t = std::holds_alternative<const char*>(value) ? std::get<const char*>(value) : std::get<std::string>(value);
+	std::cout << value_t << "\n";
 }
-static std::string yellow(const char* input) {
-	return colorize(input, "yellow");
-}
-static std::string white(const char* input) {
-	return colorize(input, "white");
-}
-void slim::common::log::all(bool value) {
-	allow_debug = value;
-	allow_error = value;
-	allow_info = value;
-	allow_trace = value;
-	allow_typescript_warning = value;
-}
-void slim::common::log::debug(bool value) {
-	allow_debug = value;
-}
-void slim::common::log::debug(const Message message) {
-	if(allow_debug)
-		print(yellow("DEBUG => "), message);
-}
-void slim::common::log::error(bool value) {
-	allow_error = value;
-}
-void slim::common::log::error(const Message message) {
-	print(red("ERROR => "), message);
-}
-void slim::common::log::info(bool value) {
-	allow_info = value;
-}
-void slim::common::log::info(const std::string value_string) {
-	std::lock_guard<std::mutex> lock(cerr_mutex);
-	std::cout << value_string << "\n";
-}
-void slim::common::log::info(const Message message) {
-	if(allow_info)
-		print(white("INFO => "), message);
-}
-void slim::common::log::trace(bool value) {
-	allow_trace = value;
-}
-void slim::common::log::trace(const Message message) {
-	if(allow_trace)
-		print(cyan("TRACE => "), message);
-}
-void slim::common::log::typescript_warning(bool value) {
-	allow_typescript_warning = value;
-}
-void slim::common::log::typescript_warning(const Message message) {
-	if(allow_typescript_warning)
-		print(yellow("TS WARNING => "), message);
-}
-void slim::common::log::print(const std::string log_level, const Message message) {
-	if(message.call == nullptr) {
+void slim::common::log::print(std::string label, Message message, bool is_error) {
+	std::stringstream print_text;
+	int width = allow_color_print ? 16 : 4;
+	print_text << label << std::setw(width) << magenta(std::to_string(message.line_number)) << field_separator
+		<< magenta(message.file) << field_separator << green(message.call) << field_separator << white(message.text) << "\n";
+	if(is_error) {
 		std::lock_guard<std::mutex> lock(cerr_mutex);
-		std::cout << log_level << blue(std::to_string(message.line_number).c_str()) << ":" << purple(message.file) << ":" << white(message.text) << "\n";
+		std::cerr << print_text.str();
 	}
 	else {
-		std::lock_guard<std::mutex> lock(cerr_mutex);
-		std::cout << log_level << blue(std::to_string(message.line_number).c_str()) << ":" << purple(message.file) << ":" << green(message.call) << ":" << white(message.text) << "\n";
+		std::lock_guard<std::mutex> lock(cout_mutex);
+		std::cout << print_text.str();
 	}
+}
+slim::common::log::Message::Message(character_types call, character_types text, character_types file, int line_number) : line_number(line_number) {
+	this->call = std::holds_alternative<const char*>(call) ? std::get<const char*>(call)
+		: std::holds_alternative<char*>(call) ? std::string(std::get<char*>(call)) : std::get<std::string>(call);
+	this->text = std::holds_alternative<const char*>(text) ? std::string(std::get<const char*>(text))
+		: std::holds_alternative<char*>(text) ? std::string(std::get<char*>(text)) : std::get<std::string>(text);
+	this->file = std::holds_alternative<const char*>(file) ? std::string(std::get<const char*>(file))
+		: std::holds_alternative<char*>(file) ? std::string(std::get<char*>(file)) : std::get<std::string>(file);
 }

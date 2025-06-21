@@ -1,40 +1,32 @@
-#ifndef __SLIM__COMMON__LOG__HPP
-#define __SLIM__COMMON__LOG__HPP
+#ifndef __SLIM__COMMON__LOG__H
+#define __SLIM__COMMON__LOG__H
 #include <cstring>
-#include <map>
+#include <memory>
+#include <sstream>
 #include <string>
-
+#include <variant>
 namespace slim::common::log {
-	static bool allow_debug = false;
-	static bool allow_error = false;
-	static bool allow_info = false;
-	static bool allow_trace = false;
-	static bool allow_typescript_warning = false;
+	using character_types = std::variant<const char*,char*,std::string>;
 	struct Message {
-		char* call = nullptr;
-		char* file = nullptr;
-		char* text = nullptr;
-		int line_number;
-		int code;
-		Message(const char* call, const char* text, const char* file, const int line_number)
-			: call(const_cast<char*>(call)), text(const_cast<char*>(text)), file(const_cast<char*>(file)), line_number(line_number) {}
-		Message(const char* text, const char* file, const int line_number)
-			: text(const_cast<char*>(text)), file(const_cast<char*>(file)), line_number(line_number) {}
-		Message(const std::string text, const char* file, const int line_number)
-			: text(const_cast<char*>(text.c_str())), file(const_cast<char*>(file)), line_number(line_number) {}
+		int line_number = -1;
+		std::string call;
+		std::string text;
+		std::string file;
+		Message() = delete;
+		Message(character_types call, character_types text, character_types file, int line_number);
 	};
-	void all(const bool value);
-	void print(const std::string log_level, const slim::common::log::Message message);
-	void error(const bool value);
-	void error(const slim::common::log::Message message);
-	void debug(const bool value);
-	void debug(const slim::common::log::Message message);
-	void info(const bool value);
-	void info(const std::string value_string);
-	void info(const slim::common::log::Message message);
-	void trace(const bool value);
-	void trace(const slim::common::log::Message message);
-	void typescript_warning(const bool value);
-	void typescript_warning(const slim::common::log::Message message);
+	void print_all(bool value);
+	void print_color(bool value);
+	void print_debug(bool value);
+	void print_error(bool value);
+	void print_info(bool value);
+	void print_thread_identity(bool value);
+	void print_trace(bool value);
+	void error(Message message);
+	void debug(Message message);
+	void info(Message message);
+	void info(character_types value_string);
+	void trace(Message message);
+	void print(std::string log_level,  Message message, bool is_error = false);
 }
 #endif
