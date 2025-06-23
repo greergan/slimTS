@@ -22,11 +22,13 @@ namespace slim::common::log {
 	void print_info(bool value);
 	void print_thread_identity(bool value);
 	void print_trace(bool value);
+	void print_warn(bool value);
 	void error(Message message);
 	void debug(Message message);
 	void info(Message message);
 	void info(character_types value_string);
 	void trace(Message message);
+	void warn(Message message);
 	void print(std::string log_level,  Message message, bool is_error = false);
 }
 #endif

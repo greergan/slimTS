@@ -16,6 +16,7 @@ namespace slim::common::log {
 	bool allow_error_print = true;
 	bool allow_info_print = false;
 	bool allow_trace_print = false;
+	bool allow_warn_print = false;
 	bool allow_thread_identity_print = false;
 	std::unordered_map<std::string, std::string> colors {
 		{"black",  "\033[0;30m"},
@@ -49,8 +50,9 @@ namespace slim::common::log {
 		std::string(*color)(std::string);
 		if(label_string == "DEBUG") { color = yellow; }
 		else if(label_string == "ERROR") { color = red; }
-		else if(label_string == "INFO") { color = white; }
+		else if(label_string == "INFO")  { color = white; }
 		else if(label_string == "TRACE") { color = cyan; }
+		else if(label_string == "WARN")  { color = magenta; }
 		return color(label_string) + identity_string + color("=>");
 	};
 }
@@ -59,6 +61,7 @@ void slim::common::log::print_all(bool value) {
 	allow_error_print = value;
 	allow_info_print = value;
 	allow_trace_print = value;
+	allow_warn_print = value;
 	allow_thread_identity_print = value;
 }
 void slim::common::log::print_color(bool value) {allow_color_print = value;}
@@ -67,6 +70,7 @@ void slim::common::log::print_error(bool value) {allow_error_print = value;}
 void slim::common::log::print_info(bool value) {allow_info_print = value;}
 void slim::common::log::print_trace(bool value) {allow_trace_print = value;}
 void slim::common::log::print_thread_identity(bool value) {allow_thread_identity_print = value;}
+void slim::common::log::print_warn(bool value) {allow_warn_print = value;}
 void slim::common::log::debug(Message message) {
 	if(allow_debug_print) {
 		print(construct_label("DEBUG"), message);
@@ -85,6 +89,11 @@ void slim::common::log::info(Message message) {
 void slim::common::log::trace(Message message) {
 	if(allow_trace_print) {
 		print(construct_label("TRACE"), message);
+	}
+}
+void slim::common::log::warn(Message message) {
+	if(allow_warn_print) {
+		print(construct_label("WARN"), message);
 	}
 }
 void slim::common::log::info(character_types value) {
