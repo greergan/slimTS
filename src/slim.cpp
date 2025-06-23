@@ -19,6 +19,10 @@ void slim::start(int argc, char* argv[]) {
 	log::trace(log::Message("slim::start()","begins",__FILE__, __LINE__));
 	auto v8_command_line_arguments = slim::command_line::set_argv(argc, argv);
 	auto& script_name_string = slim::command_line::get_script_name();
+	for(auto&& argument_string : v8_command_line_arguments) {
+		log::debug(log::Message("slim::start()","v8 commandline arguments => " + argument_string,__FILE__,__LINE__));	
+	}
+	log::debug(log::Message("slim::start()","preparing to run script => " + script_name_string,__FILE__,__LINE__));
 	slim::service::launcher::marshal_resources(v8_command_line_arguments);
 	slim::module::specifier_definition typescript_specifier_definition_struct{"file:///bin/typescript.mjs", memory_mapper::read("typescript_library", "file:///bin/typescript.mjs")};
 	auto launch_typescript_future = std::async(std::launch::async, slim::service::launcher::launch, typescript_specifier_definition_struct);
@@ -27,14 +31,8 @@ void slim::start(int argc, char* argv[]) {
 	//slim::servers::start::typescript();
 			
 	if(script_name_string.length() >= 4) {
-		log::debug(log::Message("slim::start()",std::string("script => " + script_name_string).c_str(),__FILE__, __LINE__));
-		if(v8_command_line_arguments.size() > 0) {
-			log::debug(log::Message("slim::start()","some v8 command line arguments",__FILE__, __LINE__));
-		}
-		else {
-			log::debug(log::Message("slim::start()","without any v8 command line arguments",__FILE__, __LINE__));
-		}
-		log::debug(log::Message("slim::start()",std::string("launching => " + script_name_string).c_str(),__FILE__, __LINE__));
+		log::debug(log::Message("slim::start()","script => " + script_name_string,__FILE__, __LINE__));
+		log::debug(log::Message("slim::start()","launching => " + script_name_string,__FILE__, __LINE__));
 		auto launch_future = std::async(std::launch::async, slim::service::launcher::launch, script_name_string);
 		if(launch_future.valid()) {
 			log::debug(log::Message("slim::start()","script future is valid",__FILE__, __LINE__));
