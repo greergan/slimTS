@@ -40,8 +40,9 @@ void slim::plugin::queue::job::complete(const v8::FunctionCallbackInfo<v8::Value
 	log::trace(log::Message("slim::plugin::queue::job::complete()", "ends",__FILE__, __LINE__));
 }
 void slim::plugin::queue::listen(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	log::trace(log::Message("slim::plugin::queue::listen()", "begins",__FILE__, __LINE__));
 	auto* isolate = args.GetIsolate();
+	auto queue_name_string = utilities::v8ValueToString(isolate, args[0]);
+	log::trace(log::Message("slim::plugin::queue::listen()", "begins, queue name => " + queue_name_string,__FILE__, __LINE__));
 	v8::HandleScope handle_scope(isolate);
 	auto context = isolate->GetCurrentContext();
 	auto maybe_resolver = v8::Promise::Resolver::New(context);
@@ -50,7 +51,7 @@ void slim::plugin::queue::listen(const v8::FunctionCallbackInfo<v8::Value>& args
 	}
 	auto resolver = maybe_resolver.ToLocalChecked();
 	args.GetReturnValue().Set(resolver->GetPromise());
-	auto queue_name_string = utilities::v8ValueToString(isolate, args[0]);
+	
 	auto job_future = std::async(std::launch::async, slim::queue::get_job, queue_name_string);
 	auto* job = job_future.get();
 	auto v8_job_object = v8::Object::New(isolate);
@@ -70,8 +71,7 @@ void slim::plugin::queue::listen(const v8::FunctionCallbackInfo<v8::Value>& args
 	auto job_complete_function = job_complete_function_template->GetFunction(context).ToLocalChecked();
 	result_of_set = v8_job_object->Set(context, utilities::StringToV8String(isolate, "complete"), job_complete_function);
 	auto result_of_resolve = resolver->Resolve(context, v8_job_object);
-	log::debug(log::Message("slim::plugin::queue::listen()", "received a job",__FILE__, __LINE__));
-	log::trace(log::Message("slim::plugin::queue::listen()", "ends",__FILE__, __LINE__));
+	log::trace(log::Message("slim::plugin::queue::listen()", "ends with job received from , queue name => " + queue_name_string + ", job name => " + job->ingress_job_file.file_name_string ,__FILE__, __LINE__));
 }
 extern "C" void expose_plugin(v8::Isolate* isolate) {
 	slim::plugin::plugin queue_plugin(isolate, "queue");
