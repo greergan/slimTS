@@ -38,8 +38,15 @@ void slim::service::launcher::marshal_resources(std::vector<std::string> v8_conf
 	log::trace(log::Message("slim::service::launcher::marshal_resources()","ends",__FILE__, __LINE__));
 }
 void slim::service::launcher::launch(slim::module::variant_specifier script_name_string_or_file_definition_struct) {
-//void slim::service::launcher::launch(std::string script_name_string) {
-	log::trace(log::Message("slim::service::launcher::launch()","begins",__FILE__, __LINE__));
+	std::string specifier_string;
+	if(std::holds_alternative<slim::module::specifier_definition>(script_name_string_or_file_definition_struct)) {
+		auto specifier_definition_stuct = std::get<slim::module::specifier_definition>(script_name_string_or_file_definition_struct);
+		specifier_string = specifier_definition_stuct.specifier_string_url;
+	}
+	else {
+		specifier_string = std::get<std::string>(script_name_string_or_file_definition_struct);
+	}
+	log::trace(log::Message("slim::service::launcher::launch()","begins => " + specifier_string,__FILE__, __LINE__));
 	auto* isolate = v8::Isolate::New(create_params);
 	log::debug(log::Message("slim::service::launcher::launch()","created new isolate",__FILE__, __LINE__));
 	v8::Isolate::Scope isolate_scope(isolate);
