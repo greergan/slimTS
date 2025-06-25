@@ -56,15 +56,16 @@ void slim::common::memory_mapper::erase(std::string map_name_string) {
 }
 bool slim::common::memory_mapper::exists(std::string map_name_string) {
 	log::trace(log::Message("slim::common::memory_mapper::exists()", "begins => " + map_name_string, __FILE__, __LINE__));
+	int map_size = 0;
 	std::unique_lock<std::mutex> lock(read_mutex);
 	bool answer = maps.count(map_name_string) > 0 ? true : false;
 	if(answer) {
-		auto map = maps.find(map_name_string);
-		log::debug(log::Message("slim::common::memory_mapper::exists()", map_name_string + " map size => " + std::to_string(map->second.get()->size()), __FILE__, __LINE__));
+		map_size = maps.find(map_name_string)->second.get()->size();
 	}
 	std::string answer_message_string = answer ? "true" : "false";
-	log::debug(log::Message("slim::common::memory_mapper::exists()", map_name_string + " map exists => " + answer_message_string, __FILE__, __LINE__));
-	log::trace(log::Message("slim::common::memory_mapper::exists()", "ends map name => " + map_name_string + " exists => " + answer_message_string, __FILE__, __LINE__));
+	log::debug(log::Message("slim::common::memory_mapper::exists()", map_name_string + " map exists => "
+		+ answer_message_string + ", map size => " + std::to_string(map_size), __FILE__, __LINE__));
+	log::trace(log::Message("slim::common::memory_mapper::exists()", "ends map name => " + map_name_string + ", exists => " + answer_message_string, __FILE__, __LINE__));
 	return answer;
 }
 bool slim::common::memory_mapper::exists(std::string map_name_string, std::string file_name_string) {
@@ -95,6 +96,7 @@ const std::vector<std::string> slim::common::memory_mapper::list_keys(std::strin
 std::shared_ptr<std::string> slim::common::memory_mapper::read(std::string map_name_string, std::string file_name_string) {
 	log::trace(log::Message("slim::common::memory_mapper::read()", "begins file => " + file_name_string + " from map => " + map_name_string, __FILE__, __LINE__));
 	std::shared_ptr<std::string> content_pointer;
+	std::string file_found_string = "false";
 	if(exists(map_name_string)) {
 		std::unique_lock<std::mutex> lock(read_mutex);
 		auto content_iterator = maps[map_name_string].get()->find(file_name_string);
@@ -105,14 +107,12 @@ std::shared_ptr<std::string> slim::common::memory_mapper::read(std::string map_n
 			else if(std::holds_alternative<std::shared_ptr<std::string>>(content_iterator->second)) {
 				content_pointer = std::get<std::shared_ptr<std::string>>(content_iterator->second);
 			}
-		}
-		else {
-			log::debug(log::Message("slim::common::memory_mapper::read()", "file not found => " + file_name_string + " in map => " + map_name_string, __FILE__, __LINE__));
+			file_found_string = "true";
+			log::debug(log::Message("slim::common::memory_mapper::read()", "read "
+				+ std::to_string(content_pointer.get()->size()) + " bytes from map name => " + map_name_string + ", file name => " + file_name_string, __FILE__, __LINE__));
 		}
 	}
-	log::debug(log::Message("slim::common::memory_mapper::read()", "read "
-		+ std::to_string(content_pointer.get()->size()) + " bytes from map name => " + map_name_string + " file name => " + file_name_string, __FILE__, __LINE__));
-	log::trace(log::Message("slim::common::memory_mapper::read()", "ends file => " + file_name_string + " from map => " + map_name_string, __FILE__, __LINE__));
+	log::trace(log::Message("slim::common::memory_mapper::read()", "ends file => " + file_name_string + " from map => " + map_name_string + " found => " + file_found_string, __FILE__, __LINE__));
 	return content_pointer;
 }
 std::string slim::common::memory_mapper::read_string(std::string map_name_string, std::string file_name_string) {
@@ -165,7 +165,6 @@ void slim::common::memory_mapper::write(std::string map_name_string, std::string
 			log::debug(log::Message("slim::common::memory_mapper::write()", "handling write case => std::shared_ptr<std::string> for map name => " + map_name_string,__FILE__,__LINE__));
 			std::unique_lock<std::mutex> lock(write_mutex);
 			(*map)[file_name_string] = content_pointer;
-			log::debug(log::Message("slim::common::memory_mapper::write()", "handled write case => std::shared_ptr<std::string> for map name => " + map_name_string,__FILE__,__LINE__));
 		}
 		else {
 			log::error(log::Message("slim::common::memory_mapper::write()", "unknown data type in write request for map name => " + map_name_string + " file name => " + file_name_string,__FILE__,__LINE__));
