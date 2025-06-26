@@ -45,6 +45,7 @@ AC_CONFIG_FILES([
 	src/plugins/console/Makefile
 	src/plugins/csv/Makefile
 	src/plugins/fs/Makefile
+	src/plugins/http_package/Makefile
 	src/plugins/kafka/Makefile
 	src/plugins/memoryAdaptor/Makefile
 	src/plugins/os/Makefile

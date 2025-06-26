@@ -9,6 +9,8 @@
 #include <slim/common/memory_mapper.h>
 #include <slim/module/import_specifier.h>
 #include <slim/module/resolver.h>
+#include <slim/plugin.hpp>
+#include <slim/plugin/loader.h>
 #include <slim/service/launcher.h>
 #include <slim/queue/queue.h>
 namespace slim::service::launcher {
@@ -67,6 +69,9 @@ void slim::service::launcher::launch(slim::module::variant_specifier script_name
 	log::debug(log::Message("slim::service::launcher::launch()","created context",__FILE__, __LINE__));
 	v8::Context::Scope context_scope(context);
 	log::debug(log::Message("slim::service::launcher::launch()","created context scope",__FILE__, __LINE__));
+	slim::plugin::plugin slim_objects(isolate, "slim");
+	slim_objects.add_function("load", slim::plugin::loader::load);
+	slim_objects.expose_plugin();
 	bool is_entry_point = true;
 	auto module_import_specifier_pointer = slim::module::resolver::resolve_imports(isolate, script_name_string_or_file_definition_struct, is_entry_point);
 	log::debug(log::Message("slim::service::launcher::launch()", std::string("get_module_status_string() => " + module_import_specifier_pointer->get_module_status_string()).c_str(),__FILE__, __LINE__));

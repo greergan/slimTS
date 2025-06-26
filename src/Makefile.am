@@ -9,7 +9,9 @@ slim_SOURCES  = main.cpp \
 				slim_system_libraries_typescript.cpp \
 				slim_command_line_handler.cpp \
 				slim_common_fetch.cpp \
-				slim_common_http.cpp \
+				slim_common_http_header.cpp \
+				slim_common_http_request.cpp \
+				slim_common_http_response.cpp \
 				slim_common_http_parser.cpp \
 				slim_common_log.cpp \
 				slim_common_memory_mapper.cpp \

@@ -3,24 +3,22 @@
 #include <memory>
 #include <vector>
 #include <regex>
-#include <v8.h>
 #include <slim/common/exception.h>
 #include <slim/common/fetch.h>
 #include <slim/common/log.h>
-#include <slim/plugin.hpp>
 namespace slim::common::fetch {
     using namespace slim;
     using namespace slim::common;
     const std::regex url_pattern("((http|https)://)[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)");
 }
-std::unique_ptr<std::string> slim::common::fetch::string(const std::string& file_name_string) {
-    log::trace(log::Message("slim::common::fetch::string()",std::string("begins" + file_name_string).c_str(),__FILE__, __LINE__));
+std::unique_ptr<std::string> slim::common::fetch::string(std::string& file_name_string) {
+    log::trace(log::Message("slim::common::fetch::string()",std::string("begins, file name => " + file_name_string).c_str(),__FILE__, __LINE__));
     auto a = stream(file_name_string)->get();
     auto return_string = std::make_unique<std::string>("");
-    log::trace(log::Message("slim::common::fetch::string()",std::string("ends" + file_name_string).c_str(),__FILE__, __LINE__));
+    log::trace(log::Message("slim::common::fetch::string()",std::string("ends, file name => " + file_name_string).c_str(),__FILE__, __LINE__));
     return return_string;
 }
-std::unique_ptr<std::stringstream> slim::common::fetch::stream(const std::string& file_name_string) {
+std::unique_ptr<std::stringstream> slim::common::fetch::stream(std::string& file_name_string) {
     log::trace(log::Message("slim::common::fetch::stream()",std::string("begins" + file_name_string).c_str(),__FILE__, __LINE__));
     std::string input_file_name = file_name_string;
     if(input_file_name.starts_with("file:///") || input_file_name.starts_with("file://")) {

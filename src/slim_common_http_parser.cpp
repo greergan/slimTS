@@ -1,5 +1,4 @@
 #include <sstream>
-#include <sstream>
 #include <string>
 #include <slim/common/http/parser.h>
 static void slim::common::http::parser::parse_line_1(std::string& method_string, Request* request) {
