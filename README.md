@@ -1,11 +1,11 @@
 # SlimTS
-slimTS is a typescript platform written in C++ for the c++20 standards. It takes in either typescript or javascript ES6 modules which are then type checked and then run.
+SlimTS is a typescript platform written in C++ for the c++20 standards. It takes in either typescript or javascript ES6 modules which are then type checked and then run.
 
 There is an embedded tsconfig.json object which toggles specific type checking flags.
 
 Use of the 'require' statement is not supported and never will be. This is a module only platform.
 
-slimTS, so far, has only been built on Ubuntu desktop.
+SlimTS, so far, has only been built on Ubuntu desktop.
 
 ## Security
 The security model is one of lazy-loaded plugins. Even the console is a plugin. This allows for different behavior from the same "object" under different circumstances.
@@ -48,12 +48,12 @@ git checkout 13.1.1
 ```
 librdkafa from Confluent Inc.  
 1. clone the source from [GitHub](https://github.com/confluentinc/librdkafka)
-  librdkafka - compiled and installed, it must be configured as follows along with [these requirements](https://github.com/confluentinc/librdkafka?tab=readme-ov-file#build-from-source). slimTS does not support the optional packages that are listed at this time.
+  librdkafka - compiled and installed, it must be configured as follows along with [these requirements](https://github.com/confluentinc/librdkafka?tab=readme-ov-file#build-from-source). SlimTS does not support the optional packages that are listed at this time.
 ```
 ./configure --enable-static --prefix=/path/to/install/to
 ```
 [boringssl](https://boringssl.googlesource.com/boringssl) by Google  
-The slimTS ssl plugin is linked against the boringssl libraries
+The SlimTS ssl plugin is linked against the boringssl libraries
 ```
 libssl libpki libcrypto
 ```
@@ -65,15 +65,15 @@ The following header files are used
 The build may work with out of the box [OpenSSL](https://www.openssl.org/) but has not been attempted so far.  
 Either way, the plugin does compile but is not in a usable state.
 
-slimTS uses standard installation paths when searching for the required header and library files.
+SlimTS uses standard installation paths when searching for the required header and library files.
 
-## Building slimTS
-slimTS uses the [GNU Autoconf](https://www.gnu.org/software/autoconf/) build configuration tools along with [GNU Make](https://www.gnu.org/software/make/). So far, it has only been built using [GCC](https://gcc.gnu.org/)  
-1. Clone or download the slimTS source from [GitHub](https://github.com/greergan/slimTS)
+## Building SlimTS
+SlimTS uses the [GNU Autoconf](https://www.gnu.org/software/autoconf/) build configuration tools along with [GNU Make](https://www.gnu.org/software/make/). So far, it has only been built using [GCC](https://gcc.gnu.org/)  
+1. Clone or download the SlimTS source from [GitHub](https://github.com/greergan/SlimTS)
 ```
-git clone git@github.com:greergan/slimTS.git
+git clone git@github.com:greergan/SlimTS.git
 ```
-2. Run autoreconf from inside the slimTS root directory
+2. Run autoreconf from inside the SlimTS root directory
 ```
 autoreconf -vfi
 ```
@@ -87,7 +87,7 @@ autoreconf -vfi
 ```
 make or make install
 ```
-The output executable is named slim. It expects to be installed properly so that it can find its plugin files. slim will look for the plugin files in a lib directory named slimTS  
+The output executable is named slim. It expects to be installed properly so that it can find its plugin files. slim will look for the plugin files in a lib directory named SlimTS  
 ```
 /usr/local/bin/slim
 /usr/local/lib/slimTS
