@@ -1,3 +1,0 @@
-#ifndef __SLIM__COMMAND_LINE_HANDLER__HPP
-#define __SLIM__COMMAND_LINE_HANDLER__HPP
-#endif

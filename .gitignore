@@ -1,5 +1,6 @@
 autom4te.cache
 compile
+configure
 configure~
 config.guess
 config.log

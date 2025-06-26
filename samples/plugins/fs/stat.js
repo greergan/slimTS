@@ -1,0 +1,13 @@
+require("console")
+const {open, close, fstat} = require("fs")
+const test_file_name = "fs.stat.temp";
+console.log("opening file =>", test_file_name, 1)
+let fd = open(test_file_name, 1)
+console.log("opened file descriptor =>",fd)
+console.log("closing file")
+close(fd)
+fd = open(test_file_name, 0)
+console.log("opening file =>", test_file_name, 0)
+console.log("opened file descriptor =>",fd)
+console.log("closing file")
+close(fd)

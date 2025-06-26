@@ -1,84 +1,58 @@
-#include <iostream>
-#include <fstream>
+#include <filesystem>
+#include <future>
 #include <string>
-#include <v8.h>
 #include "config.h"
-#include <slim.h>
-#include <slim/builtins.h>
-#include <slim/objects.h>
-#include <slim/gv8.h>
+#include <v8.h>
+#include <slim/slim.h>
+#include <slim/command_line_handler.h>
+#include <slim/common/log.h>
+#include <slim/common/memory_mapper.h>
+#include <slim/module/import_specifier.h>
+#include <slim/servers/servers.h>
+#include <slim/service/launcher.h>
 #include <slim/utilities.h>
-
-void slim::run(const std::string file_name, const std::string file_contents) {
-	bool is_module = file_name.ends_with(".mjs") ? true : false;
-	auto isolate = slim::gv8::GetIsolate();
-	//v8::Isolate::Scope isolate_scope(isolate);
-	v8::HandleScope handle_scope(isolate);
-	slim::gv8::CreateGlobalTemplate();
-	//must load plugins to be used on the global isolate prior to context scoping
-	slim::builtins::initialize(isolate, slim::gv8::GetGlobalObjectTemplate());
-	auto context = slim::gv8::GetNewContext();
-	if(context.IsEmpty()) {
-		throw("Error creating context");
-	}
-	v8::Context::Scope context_scope(context);
-	slim::objects::initialize(isolate);
-	v8::TryCatch try_catch(isolate);
-	if(is_module) {
-		auto module = slim::gv8::CompileAndInstantiateModule(file_contents, file_name);
-		if(try_catch.HasCaught()) {
-			slim::gv8::ReportException(&try_catch);
-		}
-		if(!module.IsEmpty()) {
-			bool instantiated = slim::utilities::V8BoolToBool(isolate, module->InstantiateModule(context, slim::gv8::ModuleCallbackResolver));
-			if(try_catch.HasCaught()) {
-				slim::gv8::ReportException(&try_catch);
-			}
-			if(instantiated) {
-				auto result = module->Evaluate(context);
-				if(try_catch.HasCaught()) {
-					slim::gv8::ReportException(&try_catch);
-				}
-			}
-			else {
-				std::cout << "Initial module instantiation failed\n";
-			}
-		}
-	}
-	else {
-		auto script = slim::gv8::CompileScript(file_contents, file_name);
-		if(try_catch.HasCaught()) {
-			slim::gv8::ReportException(&try_catch);
-		}
-		if(!script.IsEmpty()) {
-			bool result = slim::gv8::RunScript(script);
-			if(try_catch.HasCaught()) {
-				slim::gv8::ReportException(&try_catch);
-			}
-		}
-	}
-	return;
+namespace {
+	using namespace slim::common;
+	using namespace slim::utilities;
 }
 void slim::start(int argc, char* argv[]) {
-	if(argc == 2) {
-		std::string file_contents;
-		std::string file_name{argv[1]};
-		std::ifstream file(file_name);
-		//file.is_open ??
-		getline(file, file_contents, '\0');
-		file.close();
-		if(file_contents.length() > 2) {
-			slim::gv8::initialize(argc, argv);
-			run(file_name, file_contents);
-			stop();
-		}
+	log::trace(log::Message("slim::start()","begins",__FILE__, __LINE__));
+	auto v8_command_line_arguments = slim::command_line::set_argv(argc, argv);
+	auto& script_name_string = slim::command_line::get_script_name();
+	for(auto&& argument_string : v8_command_line_arguments) {
+		log::debug(log::Message("slim::start()","v8 commandline arguments => " + argument_string,__FILE__,__LINE__));	
 	}
+	log::debug(log::Message("slim::start()","preparing to run script => " + script_name_string,__FILE__,__LINE__));
+	slim::service::launcher::marshal_resources(v8_command_line_arguments);
+	slim::module::specifier_definition typescript_specifier_definition_struct{"file:///bin/typescript.mjs", memory_mapper::read("typescript_library", "file:///bin/typescript.mjs")};
+	auto launch_typescript_future = std::async(std::launch::async, slim::service::launcher::launch, typescript_specifier_definition_struct);
+	//slim::servers::start::less();
+	//slim::servers::start::prometheus();
+	//slim::servers::start::typescript();
+			
+	if(script_name_string.length() >= 4) {
+		log::debug(log::Message("slim::start()","script => " + script_name_string,__FILE__, __LINE__));
+		log::debug(log::Message("slim::start()","launching => " + script_name_string,__FILE__, __LINE__));
+		auto launch_future = std::async(std::launch::async, slim::service::launcher::launch, script_name_string);
+		if(launch_future.valid()) {
+			log::debug(log::Message("slim::start()","script future is valid",__FILE__, __LINE__));
+			launch_future.get();
+			log::debug(log::Message("slim::start()","resolved script future",__FILE__, __LINE__));
+		}
+		else {
+			log::debug(log::Message("slim::start()","future is not valid",__FILE__, __LINE__));
+		}
+		log::debug(log::Message("slim::start()","called launch",__FILE__, __LINE__));
+	}
+	log::trace(log::Message("slim::start()","ends, creating artificial exit",__FILE__, __LINE__));
+	exit(1);
 }
 void slim::stop() {
-	slim::gv8::stop();
+	log::trace(log::Message("slim::stop()","begins",__FILE__, __LINE__));
+	slim::service::launcher::tear_down();
+	log::trace(log::Message("slim::stop()","ends",__FILE__, __LINE__));
 }
-void slim::version(void) {
-    std::cout << "slim:  " << VERSION << "\n";
-    std::cout << "libv8: " << std::string(v8::V8::GetVersion()) << "\n";
-    return;
+void slim::version() {
+	log::info("slim:  " VERSION);
+	log::info("libv8:  " + std::string(v8::V8::GetVersion()));
 }

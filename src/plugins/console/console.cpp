@@ -10,15 +10,13 @@
 #include <unordered_map>
 #include <vector>
 #include <v8.h>
-#include <slim/gv8.h>
 #include <slim/plugin.hpp>
 #include <slim/utilities.h>
 /*
  * Reference https://console.spec.whatwg.org/#printer
  */
 namespace slim::console {
-    v8::Isolate* console_isolate = slim::gv8::GetIsolate();
-    v8::Local<v8::Array> listen_array = v8::Array::New(console_isolate);
+//    v8::Local<v8::Array> listen_array = v8::Array::New(isolate);
     bool listening = false;
     bool output_when_listening = false;
     /* remember to keep these in sync through out other definitions */
@@ -271,7 +269,7 @@ namespace slim::console {
             auto printf_string = slim::utilities::StringValue(isolate, args[index]);
             std::regex format("(%s)|(%d)|(%f)|(%i)|(%o)|(%O)");
             for(auto i = std::sregex_iterator(printf_string.begin(), printf_string.end(), format); i != std::sregex_iterator(); i++) {
-                std::cerr << "now in position " << i->position() << "\n";
+                std::cout << "now in position " << i->position() << "\n";
                 index++;
                 if(i->str() == "%s") {
                     printf_string = std::regex_replace(printf_string, std::regex("(%s)"),
@@ -330,7 +328,7 @@ namespace slim::console {
         else {
             output << colorize(configuration, value_stream.str());
         }
-        std::cerr << output.str() << "\n";
+        std::cout << output.str() << "\n";
     }
 }
 std::string slim::console::colorize(auto* configuration, const std::string string_value) {
@@ -385,7 +383,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
     }
     auto isolate = args.GetIsolate();
     v8::HandleScope scope(isolate);
-    auto context = console_isolate->GetCurrentContext();
+    auto context = isolate->GetCurrentContext();
     v8::Local<v8::Object> log_message;
     std::stringstream output;
     std::stringstream color_output;
@@ -417,7 +415,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
         }
     };
     if(listening) {
-        log_message = v8::Object::New(console_isolate);           
+        log_message = v8::Object::New(isolate);           
         auto result = log_message->DefineOwnProperty(
             context,
             slim::utilities::StringToName(isolate, "logLevel"),
@@ -479,7 +477,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
         }
     }
     if(listening) {
-        v8::Local<v8::Context> context = console_isolate->GetCurrentContext();
+        v8::Local<v8::Context> context = isolate->GetCurrentContext();
         v8::Local<v8::Promise::Resolver> resolver = v8::Promise::Resolver::New(context).ToLocalChecked();
         if(output_when_listening) {
             auto result = log_message->DefineOwnProperty(
@@ -487,7 +485,7 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
                 slim::utilities::StringToName(isolate, "logMessage"),
                 slim::utilities::StringToValue(isolate, color_output.str())
             );
-            std::cerr << color_output.str() << "\n";
+            std::cout << color_output.str() << "\n";
         }
         auto result = log_message->DefineOwnProperty(
             context,
@@ -495,10 +493,10 @@ void slim::console::local_print(const v8::FunctionCallbackInfo<v8::Value>& args,
             slim::utilities::StringToValue(isolate, output.str())
         );
         result = resolver->Resolve(context, log_message);
-        result = listen_array->Set(console_isolate->GetCurrentContext(), listen_array->Length(), resolver->GetPromise());
+        //result = listen_array->Set(isolate->GetCurrentContext(), listen_array->Length(), resolver->GetPromise());
     }
     else {
-        std::cerr << color_output.str() << "\n";
+        std::cout << color_output.str() << "\n";
     }
     return;
 }
@@ -507,7 +505,7 @@ void slim::console::assert_console(const v8::FunctionCallbackInfo<v8::Value>& ar
     puts("assert not implemented");
 }
 void slim::console::clear(const v8::FunctionCallbackInfo<v8::Value>& args) {
-    std::cerr << "\x1B[2J\x1B[H";
+    std::cout << "\x1B[2J\x1B[H";
 }
 void slim::console::count(const v8::FunctionCallbackInfo<v8::Value>& args) {
     puts("count not implemented");
@@ -542,7 +540,7 @@ void slim::console::info(const v8::FunctionCallbackInfo<v8::Value>& args) {
 void slim::console::listen(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();
     v8::HandleScope scope(isolate);
-    args.GetReturnValue().Set(listen_array);
+    //args.GetReturnValue().Set(listen_array);
 }
 void slim::console::log(const v8::FunctionCallbackInfo<v8::Value>& args) {
     local_print(args, level_configurations["log"]);
@@ -556,20 +554,20 @@ void slim::console::print_colors(const v8::FunctionCallbackInfo<v8::Value>& args
         int index = 0;
         for(auto color: colors) {
             *property = color;
-            std::cerr << colorize(&temp_configuration, *property) << " ";
+            std::cout << colorize(&temp_configuration, *property) << " ";
             index++;
             if(index == 5 || index == 10 || index == 13 || index == 16) {
-                std::cerr << "\n\t";
+                std::cout << "\n\t";
             }
         }
         *property = "default";
     };
-    std::cerr << ".text_color\n\t";
+    std::cout << ".text_color\n\t";
     print_color(&temp_configuration.text_color);
-    std::cerr << "\n\n";
-    std::cerr << ".background_color\n\t";
+    std::cout << "\n\n";
+    std::cout << ".background_color\n\t";
     print_color(&temp_configuration.background_color);
-    std::cerr << "\n";
+    std::cout << "\n";
 }
 void slim::console::table(const v8::FunctionCallbackInfo<v8::Value>& args) {
     local_print(args, level_configurations["table"]);

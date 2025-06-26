@@ -1,15 +1,14 @@
 SUBDIRS = src
 SUBDIRS += src/plugins/console
+SUBDIRS += src/plugins/csv
 SUBDIRS += src/plugins/fs
+SUBDIRS += src/plugins/http_package
 SUBDIRS += src/plugins/kafka
-SUBDIRS += src/plugins/network
+SUBDIRS += src/plugins/memoryAdaptor
+SUBDIRS += src/plugins/os
+SUBDIRS += src/plugins/path
 SUBDIRS += src/plugins/process
+SUBDIRS += src/plugins/queue
+
 slim:
 	@cd src && make
-plugins: console kafka network
-console:
-	@cd src/plugins/console && make
-kafka:
-	@cd src/plugins/kafka && make
-network:
-	@cd src/plugins/network && make
