@@ -44,7 +44,8 @@ void slim::start(int argc, char* argv[]) {
 		}
 		log::debug(log::Message("slim::start()","called launch",__FILE__, __LINE__));
 	}
-	log::trace(log::Message("slim::start()","ends",__FILE__, __LINE__));
+	log::trace(log::Message("slim::start()","ends, creating artificial exit",__FILE__, __LINE__));
+	exit(1);
 }
 void slim::stop() {
 	log::trace(log::Message("slim::stop()","begins",__FILE__, __LINE__));
