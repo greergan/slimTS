@@ -1,4 +1,4 @@
-# slimTS
+# SlimTS
 slimTS is a typescript platform written in C++ for the c++20 standards. It takes in either typescript or javascript ES6 modules which are then type checked and then run.
 
 There is an embedded tsconfig.json object which toggles specific type checking flags.
