@@ -31,21 +31,25 @@ void slim::exception_handler::v8_try_catch_handler(v8::TryCatch* try_catch) {
 	log::trace(log::Message("slim::exception_handler::try_catch_handler()","begins",__FILE__, __LINE__));
 	auto* isolate = try_catch->Message()->GetIsolate();
 	auto context = isolate->GetCurrentContext();
-	auto script_origin = try_catch->Message()->GetScriptOrigin();
 	auto message = try_catch->Message();
-	auto stack_trace = try_catch->StackTrace(context).ToLocalChecked();
-	log::debug(log::Message("script_origin.ScriptId()", std::to_string(script_origin.ScriptId()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("script_origin.ColumnOffset()", std::to_string(script_origin.ColumnOffset()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("script_origin.LineOffset()", std::to_string(script_origin.LineOffset()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("script_origin.ResourceName()", utilities::v8ValueToString(isolate, script_origin.ResourceName()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->Get()", utilities::v8StringToString(isolate, message->Get()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->GetScriptResourceName()", utilities::v8ValueToString(isolate, message->GetScriptResourceName()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->GetSourceLine()", utilities::v8StringToString(isolate, message->GetSourceLine(context).ToLocalChecked()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->ErrorLevel()", std::to_string(message->ErrorLevel()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->GetStartColumn()", std::to_string(message->GetStartColumn()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->GetEndColumn()", std::to_string(message->GetEndColumn()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->GetStartPosition()", std::to_string(message->GetStartPosition()).c_str(),__FILE__, __LINE__));
-	log::debug(log::Message("message->GetEndPosition()", std::to_string(message->GetEndPosition()).c_str(),__FILE__, __LINE__));
+	auto script_origin = message->GetScriptOrigin();
+	auto maybe_stack_trace = try_catch->StackTrace(context);
+	v8::Local<v8::Value> stack_trace;
+	if(!maybe_stack_trace.IsEmpty()) {
+		stack_trace = maybe_stack_trace.ToLocalChecked();
+	}
+	log::debug(log::Message("script_origin.ScriptId()", std::to_string(script_origin.ScriptId()),__FILE__, __LINE__));
+	log::debug(log::Message("script_origin.ColumnOffset()", std::to_string(script_origin.ColumnOffset()),__FILE__, __LINE__));
+	log::debug(log::Message("script_origin.LineOffset()", std::to_string(script_origin.LineOffset()),__FILE__, __LINE__));
+	log::debug(log::Message("script_origin.ResourceName()", utilities::v8ValueToString(isolate, script_origin.ResourceName()),__FILE__, __LINE__));
+	log::debug(log::Message("message->Get()", utilities::v8StringToString(isolate, message->Get()),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetScriptResourceName()", utilities::v8ValueToString(isolate, message->GetScriptResourceName()),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetSourceLine()", utilities::v8StringToString(isolate, message->GetSourceLine(context).ToLocalChecked()),__FILE__, __LINE__));
+	log::debug(log::Message("message->ErrorLevel()", std::to_string(message->ErrorLevel()),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetStartColumn()", std::to_string(message->GetStartColumn()),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetEndColumn()", std::to_string(message->GetEndColumn()),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetStartPosition()", std::to_string(message->GetStartPosition()),__FILE__, __LINE__));
+	log::debug(log::Message("message->GetEndPosition()", std::to_string(message->GetEndPosition()),__FILE__, __LINE__));
 	std::stringstream exception_string;
 	if(!script_origin.ResourceName()->IsUndefined()) {
 		exception_string << "\n" << utilities::v8ValueToString(isolate, script_origin.ResourceName());
