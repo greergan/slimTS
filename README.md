@@ -99,14 +99,16 @@ slim samples/hello_world.mjs
 ```
 
 ## Plugin modules  
-The bare minimum of functionality is present in most plugins. There will be an attempt to match standard Node.js interfaces over time.
+Currently modifying modules as needed to push forward movement.
 - boringssl
 - console
 - csv
 - fs
+- http_package
 - kafka
 - memoryAdaptor
 - network
 - os
 - path
 - process
+- queue
