@@ -1,5 +1,5 @@
 AC_COPYRIGHT([[Copyright 2022-2025 Jeff Greer. All rights reserved. Restrictions apply, see COPYRIGHT and LICENSE files.]])
-AC_INIT([slimTS], [0.1.0])
+AC_INIT([slimTS], [0.2.0])
 libdir='${exec_prefix}/lib/slimTS'
 moduledir='${exec_prefix}/share/slimTS'
 AC_ARG_WITH(google-v8-dir,       [--with-google-v8-dir=DIR   path to installed Google v8 source directory])
